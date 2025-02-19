@@ -37,11 +37,7 @@ export class ClientesController {
   @ApiResponse({ status: 200, description: 'Lista de clientes retornada com sucesso.' })
   @ApiQuery({ name: 'page', type: Number, required: false })
   @ApiQuery({ name: 'limit', type: Number, required: false })
-  async findAll(@Query('page', new ParseIntPipe({ optional: true })) page = 1,
-                @Query('limit', new ParseIntPipe({ optional: true })) limit = 10) {
-    const pageOptions = new PageOptionsDto();
-    pageOptions.page = page;
-    pageOptions.limit = limit;
+  async findAll(@Query(new ValidationPipe({ transform: true })) pageOptions: PageOptionsDto) {
     return this.clientesService.findAll(pageOptions);
   }
 
@@ -67,10 +63,7 @@ export class ClientesController {
   @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 409, description: 'CNPJ já cadastrado.' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateClienteDto: UpdateClienteDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateClienteDto: UpdateClienteDto) {
     return this.clientesService.update(id, updateClienteDto);
   }
 

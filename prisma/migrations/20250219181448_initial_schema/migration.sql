@@ -28,6 +28,7 @@ CREATE TABLE "Pedido" (
     "status" TEXT NOT NULL,
     "valor_total" REAL NOT NULL,
     "caminho_pdf" TEXT NOT NULL,
+    "deleted_at" DATETIME,
     CONSTRAINT "Pedido_cliente_id_fkey" FOREIGN KEY ("cliente_id") REFERENCES "Cliente" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 

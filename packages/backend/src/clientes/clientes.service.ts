@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { SoftDelete } from '../common/interfaces/soft-delete.interface';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Page } from '../common/interfaces/page.interface';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,35 +17,51 @@ export class ClientesService {
 
   async create(createClienteDto: CreateClienteDto) {
     try {
-      return await this.prisma.cliente.create({
-        data: createClienteDto,
+      return await this.prisma.$transaction(async (prisma) => {
+        // Verifica se já existe um cliente com o mesmo CNPJ
+        const existingCliente = await prisma.cliente.findFirst({
+          where: {
+            cnpj: createClienteDto.cnpj,
+            deleted_at: null,
+          },
+        });
+
+        if (existingCliente) {
+          throw new ConflictException('CNPJ já cadastrado');
+        }
+
+        // Cria o cliente
+        return await prisma.cliente.create({
+          data: createClienteDto,
+        });
       });
     } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new ConflictException('CNPJ já cadastrado');
         }
       }
-      throw error;
+      throw new BadRequestException('Não foi possível criar o cliente');
     }
   }
 
   async findAll(pageOptions?: PageOptionsDto): Promise<Page<any>> {
-    const { page = 1, limit = 10 } = pageOptions || {};
-    const skip = (page - 1) * limit;
-
-    const where = { deleted_at: null };
-
     try {
-      const [items, total] = await Promise.all([
-        this.prisma.cliente.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { razao_social: 'asc' },
-        }),
-        this.prisma.cliente.count({ where }),
-      ]);
+      const { page = 1, limit = 10 } = pageOptions || {};
+      const skip = (page - 1) * limit;
+
+      const where = { deleted_at: null };
+
+      const total = await this.prisma.cliente.count({ where });
+      const items = await this.prisma.cliente.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { razao_social: 'asc' },
+      });
 
       const pageCount = Math.ceil(total / limit);
       const hasPreviousPage = page > 1;
@@ -66,7 +86,7 @@ export class ClientesService {
 
   async findOne(id: number) {
     const cliente = await this.prisma.cliente.findFirst({
-      where: { id, deleted_at: null } as any,
+      where: { id, deleted_at: null },
       include: {
         pedidos: {
           where: { deleted_at: null },
@@ -109,7 +129,10 @@ export class ClientesService {
   }
 
   async remove(id: number) {
-    const cliente = await this.findOne(id);
+    const cliente = await this.prisma.cliente.findFirst({
+      where: { id, deleted_at: null },
+    });
+
     if (!cliente) {
       throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
     }
@@ -126,7 +149,7 @@ export class ClientesService {
 
   async findByCnpj(cnpj: string) {
     const cliente = await this.prisma.cliente.findFirst({
-      where: { cnpj, deleted_at: null } as any,
+      where: { cnpj, deleted_at: null },
       include: {
         pedidos: {
           where: { deleted_at: null },

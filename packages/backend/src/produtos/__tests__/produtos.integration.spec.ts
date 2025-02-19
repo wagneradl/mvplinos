@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { ProdutosModule } from '../produtos.module';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CreateProdutoDto } from '../dto/create-produto.dto';
+import { UpdateProdutoDto } from '../dto/update-produto.dto';
 
 describe('Produtos Integration Tests', () => {
   let app: INestApplication;
@@ -28,6 +30,20 @@ describe('Produtos Integration Tests', () => {
     await prismaService.produto.deleteMany();
     await app.close();
   });
+
+  const createTestProduto = async (data: Partial<CreateProdutoDto> = {}) => {
+    const defaultData: CreateProdutoDto = {
+      nome: 'Pão Francês',
+      preco_unitario: 0.50,
+      tipo_medida: 'un',
+      status: 'ativo',
+      ...data
+    };
+
+    return await prismaService.produto.create({
+      data: defaultData,
+    });
+  };
 
   describe('/produtos (POST)', () => {
     it('should create produto', async () => {

@@ -1,4 +1,13 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreatePedidoDto } from './create-pedido.dto';
+import { IsEnum, IsOptional } from 'class-validator';
 
-export class UpdatePedidoDto extends PartialType(CreatePedidoDto) {}
+export enum PedidoStatus {
+  PENDENTE = 'PENDENTE',
+  ATUALIZADO = 'ATUALIZADO',
+  CANCELADO = 'CANCELADO',
+}
+
+export class UpdatePedidoDto {
+  @IsEnum(PedidoStatus)
+  @IsOptional()
+  status?: PedidoStatus;
+}

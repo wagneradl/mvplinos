@@ -1,48 +1,5 @@
 decisions:
-  - id: "DEC010"
-    date: "2025-02-18T21:33:20"
-    context: "Implementação da Geração de PDF"
-    decision: "Utilizar Puppeteer para geração de PDF a partir de HTML"
-    rationale: >
-      1. Puppeteer oferece controle preciso sobre a geração de PDF
-      2. Permite uso de HTML/CSS para layout flexível
-      3. Suporte a imagens e estilos modernos
-      4. Fácil manutenção do template
-      5. Performance adequada para o volume esperado
-    impact: "Positivo para flexibilidade e manutenção"
-    status: "Implementado"
-    details:
-      consideracoes_tecnicas:
-        - "Armazenamento em /uploads/pdfs"
-        - "Servir arquivos estáticos via NestJS"
-        - "Template HTML com CSS embutido"
-        - "Logo em formato PNG com fundo transparente"
-      melhorias_futuras:
-        - "Migrar template para Next.js"
-        - "Implementar cache de PDFs"
-        - "Adicionar marca d'água"
-        - "Compactação de PDFs"
-
-  - id: "DEC011"
-    date: "2025-02-18T21:33:20"
-    context: "Armazenamento de Arquivos Estáticos"
-    decision: "Estrutura dedicada para uploads com diretórios separados por tipo"
-    rationale: >
-      1. Separação clara entre PDFs e imagens
-      2. Fácil backup e manutenção
-      3. URLs previsíveis e organizadas
-      4. Controle granular de acesso
-    impact: "Positivo para organização e manutenção"
-    status: "Implementado"
-    details:
-      estrutura:
-        - "/uploads/pdfs/: PDFs de pedidos"
-        - "/uploads/images/: Imagens do sistema"
-      consideracoes_futuras:
-        - "Implementar CDN"
-        - "Migrar para armazenamento em nuvem"
-        - "Implementar rotação de arquivos"
-
+  # Setup inicial e estrutura
   - id: "DEC001"
     date: "2025-02-18"
     context: "Setup inicial do projeto"
@@ -118,45 +75,6 @@ decisions:
       5. Documentação Swagger para API
     impact: "Positivo para manutenibilidade e qualidade"
     status: "Aprovado"
-    details:
-      testing_strategy:
-        unit: "100% cobertura em service e controller"
-        integration: "Cenários completos de CRUD"
-        validation: "Campos obrigatórios e tipos"
-      documentation:
-        swagger: "Todos endpoints documentados"
-        examples: "Incluídos para cada operação"
-      validations:
-        campos_obrigatorios:
-          - "nome"
-          - "preco_unitario"
-          - "tipo_medida"
-          - "status"
-        regras:
-          - "preco_unitario deve ser positivo"
-          - "status deve ser 'ativo' ou 'inativo'"
-      performance:
-        indices: "Planejados para otimização futura"
-        paginacao: "A ser implementada conforme necessidade"
-
-  - id: "DEC007"
-    date: "2025-02-18T17:00:00"
-    context: "Estrutura do Projeto"
-    decision: "Corrigir duplicação de schema Prisma"
-    rationale: >
-      Foi identificada uma duplicação do schema Prisma no diretório do backend,
-      sendo que o schema correto já existe na raiz do projeto. A decisão é remover
-      o schema duplicado e manter apenas o da raiz, seguindo a estrutura de monorepo.
-    impact: "Positivo para manutenção e consistência"
-    status: "Concluído"
-    details:
-      acoes:
-        - "Remover diretório /packages/backend/prisma"
-        - "Garantir que todas as referências apontem para /prisma na raiz"
-      resultados:
-        - "Estrutura mais limpa e consistente"
-        - "Sem impactos negativos identificados"
-        - "Todos os testes passando após mudança"
 
   - id: "DEC008"
     date: "2025-02-18T18:00:00"
@@ -170,53 +88,6 @@ decisions:
       5. Preparação para integração com pedidos
     impact: "Positivo para integridade dos dados e experiência do usuário"
     status: "Aprovado e Implementado"
-    details:
-      validations:
-        cnpj:
-          formato: "XX.XXX.XXX/XXXX-XX"
-          restricao: "Único no sistema"
-          tratamento: "ConflictException para duplicados"
-        telefone:
-          formato: "(XX) XXXXX-XXXX"
-          validacao: "Regex com formatação brasileira"
-        email:
-          tipo: "Email válido"
-          validacao: "class-validator @IsEmail"
-        status:
-          valores: ["ativo", "inativo"]
-          validacao: "class-validator @IsIn"
-      endpoints:
-        crud: "Operações padrão implementadas"
-        adicional: "GET /clientes/cnpj/:cnpj para busca direta"
-      testes:
-        cobertura: "100% em todas as camadas"
-        cenarios:
-          - "Criação com dados válidos"
-          - "Tentativa de CNPJ duplicado"
-          - "Busca por CNPJ existente e inexistente"
-          - "Atualização com novo CNPJ"
-          - "Validações de formato"
-      integracao_pedidos:
-        preparacao: "Include de pedidos implementado"
-        relacionamento: "1:N com cascata apenas para leitura"
-      proximos_passos:
-        - "Implementar soft delete"
-        - "Adicionar paginação na listagem"
-        - "Implementar filtros de busca"
-        - "Expandir validações de negócio"
-
-  - id: "DEC010"
-    date: "2025-02-18T20:50:06"
-    context: "Validação de Módulos Base"
-    decision: "Módulos de Clientes e Produtos validados e testados"
-    rationale: >
-      Após implementação completa e testes, os módulos base estão prontos:
-      1. Clientes: 90.41% cobertura, validações CNPJ/telefone
-      2. Produtos: 92.15% cobertura, soft delete e paginação
-      3. Testes de integração passando
-      4. Documentação atualizada
-    impact: "Base sólida para implementação de Pedidos"
-    status: "Concluído"
 
   - id: "DEC009"
     date: "2025-02-18T18:00:00"
@@ -232,30 +103,41 @@ decisions:
       4. Status do pedido
     impact: "Crítico para funcionalidade core do sistema"
     status: "Planejado"
-    details:
-      dependencias:
-        - "Módulo de Produtos (Concluído)"
-        - "Módulo de Clientes (Concluído)"
-      consideracoes:
-        modelo:
-          - "Pedido como agregador principal"
-          - "ItensPedido para relacionamento com produtos"
-          - "Valor total calculado automaticamente"
-        validacoes_previstas:
-          - "Cliente deve existir e estar ativo"
-          - "Produtos devem existir e estar ativos"
-          - "Quantidades devem ser positivas"
-          - "Preços unitários devem ser capturados dos produtos"
-        controles:
-          - "Status do pedido com transições válidas"
-          - "Histórico de alterações"
-          - "Geração e armazenamento de PDF"
-      proximos_passos:
-        prioridade_1:
-          - "Implementar CRUD base"
-          - "Validações de entidades relacionadas"
-          - "Cálculos de valores"
-        prioridade_2:
-          - "Geração de PDF"
-          - "Histórico de alterações"
-          - "Notificações de status"
+
+  - id: "DEC010"
+    date: "2025-02-18T21:33:20"
+    context: "Implementação da Geração de PDF"
+    decision: "Utilizar Puppeteer para geração de PDF a partir de HTML"
+    rationale: >
+      1. Puppeteer oferece controle preciso sobre a geração de PDF
+      2. Permite uso de HTML/CSS para layout flexível
+      3. Suporte a imagens e estilos modernos
+      4. Fácil manutenção do template
+      5. Performance adequada para o volume esperado
+    impact: "Positivo para flexibilidade e manutenção"
+    status: "Implementado"
+
+  - id: "DEC011"
+    date: "2025-02-18T21:33:20"
+    context: "Armazenamento de Arquivos Estáticos"
+    decision: "Estrutura dedicada para uploads com diretórios separados por tipo"
+    rationale: >
+      1. Separação clara entre PDFs e imagens
+      2. Fácil backup e manutenção
+      3. URLs previsíveis e organizadas
+      4. Controle granular de acesso
+    impact: "Positivo para organização e manutenção"
+    status: "Implementado"
+
+  - id: "DEC012"
+    date: "2025-02-18T20:50:06"
+    context: "Validação de Módulos Base"
+    decision: "Módulos de Clientes e Produtos validados e testados"
+    rationale: >
+      Após implementação completa e testes, os módulos base estão prontos:
+      1. Clientes: 90.41% cobertura, validações CNPJ/telefone
+      2. Produtos: 92.15% cobertura, soft delete e paginação
+      3. Testes de integração passando
+      4. Documentação atualizada
+    impact: "Base sólida para implementação de Pedidos"
+    status: "Concluído"
