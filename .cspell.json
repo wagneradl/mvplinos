@@ -1,0 +1,20 @@
+{
+  "version": "0.2",
+  "language": "en,pt,pt_BR",
+  "words": [
+    "spec",
+    "Mapper",
+    "linos",
+    "nestjs",
+    "typeorm",
+    "postgres",
+    "prisma",
+    "nextjs"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    ".git/**"
+  ]
+}

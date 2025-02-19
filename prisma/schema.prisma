@@ -1,0 +1,53 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Produto {
+  id             Int          @id @default(autoincrement())
+  nome           String
+  preco_unitario Float
+  tipo_medida    String
+  status         String
+  deleted_at     DateTime?
+  itensPedido    ItensPedido[]
+}
+
+model Cliente {
+  id            Int       @id @default(autoincrement())
+  cnpj          String    @unique
+  razao_social  String
+  nome_fantasia String
+  telefone      String
+  email         String
+  status        String
+  deleted_at    DateTime?
+  pedidos       Pedido[]
+}
+
+model Pedido {
+  id          Int          @id @default(autoincrement())
+  cliente_id  Int
+  data_pedido DateTime
+  status      String
+  valor_total Float
+  caminho_pdf String
+  deleted_at  DateTime?
+  cliente     Cliente      @relation(fields: [cliente_id], references: [id])
+  itensPedido ItensPedido[]
+}
+
+model ItensPedido {
+  id               Int      @id @default(autoincrement())
+  pedido_id        Int
+  produto_id       Int
+  quantidade       Float
+  preco_unitario   Float
+  valor_total_item Float
+  pedido           Pedido   @relation(fields: [pedido_id], references: [id])
+  produto          Produto  @relation(fields: [produto_id], references: [id])
+}

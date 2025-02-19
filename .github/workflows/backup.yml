@@ -1,0 +1,38 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Executa diariamente à meia-noite
+  workflow_dispatch:  # Permite execução manual
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run database backup
+        run: yarn backup
+
+      - name: Verify backup integrity
+        run: yarn backup:verify
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: database-backup
+          path: backups/
+          retention-days: 7  # Mantém backups por 7 dias
+
+      - name: Cleanup old backups
+        run: find backups -name 'backup_*.db' -mtime +7 -delete

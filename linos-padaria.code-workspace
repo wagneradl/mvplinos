@@ -1,0 +1,45 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "backend",
+      "path": "packages/backend"
+    },
+    {
+      "name": "frontend",
+      "path": "packages/frontend"
+    },
+    {
+      "name": "shared",
+      "path": "packages/shared"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/node_modules": true
+    },
+    "typescript.tsdk": "root/node_modules/typescript/lib",
+    "jest.disabledWorkspaceFolders": ["root"]
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "prisma.prisma",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  }
+}

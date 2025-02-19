@@ -1,0 +1,97 @@
+projeto:
+  nome: "Lino’s Padaria MVP"
+  descricao: >
+    Sistema web para gestão de pedidos B2B da padaria, com foco em operações locais e offline,
+    incluindo cadastro básico de produtos, clientes e pedidos, geração de PDF, repetição de pedidos
+    e relatórios simples.
+  versao: "1.0.0"
+  ambiente_operacional: "Local, offline, uso exclusivo na unidade da padaria"
+
+objetivos:
+  - "Implementar os módulos essenciais do back-end (API REST com NestJS) para CRUD de produtos, clientes e pedidos."
+  - "Permitir a repetição de pedidos antigos para agilizar novos cadastros."
+  - "Gerar PDFs simples dos pedidos utilizando Puppeteer."
+  - "Implementar listagens paginadas (10 itens por página) para produtos, clientes e pedidos."
+  - "Integrar o front-end (Next.js) com a API REST e o banco de dados (SQLite via Prisma)."
+  - "Executar testes automatizados (unitários, integração e E2E) e deploy local."
+
+escopo_mvp:
+  funcionalidades_basicas:
+    - "CRUD de Produtos: Campos mínimos – nome, preço_unitario, tipo_medida e status."
+    - "CRUD de Clientes: Campos mínimos – cnpj, razao_social, nome_fantasia, telefone, email e status."
+    - "CRUD de Pedidos e Itens de Pedido: Criação, edição, cancelamento, cálculo automático do valor total e geração de PDF."
+    - "Listagem com paginação de 10 itens por página para produtos, clientes e pedidos."
+    - "Funcionalidade de repetir pedidos antigos para agilizar novos cadastros."
+    - "Relatórios simples com filtros básicos (por data e cliente)."
+  funcionalidades_extras_pos_mvp:
+    - "Autenticação robusta com JWT e gerenciamento de usuários."
+    - "Relatórios avançados e painel administrativo completo."
+    - "Monitoramento remoto e integração com ferramentas DevOps."
+    - "Otimizações e refinamento na interface do usuário."
+
+planejamento:
+  fases:
+    - fase: "Desenvolvimento do Back-end"
+      descricao: >
+        Implementar a API REST utilizando NestJS, integrando com o banco de dados via Prisma (SQLite).
+        Criar endpoints para CRUD de produtos, clientes e pedidos, incluindo cálculo de valores e repetição de pedidos,
+        além da geração de PDF via Puppeteer.
+      atividades:
+        - "Criar módulo de Produtos: endpoints CRUD, testes unitários e de integração."
+        - "Criar módulo de Clientes: endpoints CRUD, testes unitários e de integração."
+        - "Criar módulo de Pedidos: endpoints CRUD, cálculo automático, repetição de pedidos, testes unitários/integr."
+        - "Implementar geração de PDF via Puppeteer."
+        - "Documentar endpoints com Swagger."
+    - fase: "Desenvolvimento do Front-end"
+      descricao: >
+        Desenvolver a interface local em Next.js e Material-UI para consumir a API REST,
+        exibindo listagens (10 itens por página), cadastros e fluxo de repetição de pedidos.
+      atividades:
+        - "Criar telas de cadastro e listagem (produtos, clientes, pedidos) com paginação."
+        - "Implementar tela de visualização detalhada de pedido, incluindo PDF."
+        - "Adicionar funcionalidade de 'repetir pedido' na listagem de pedidos."
+        - "Testes unitários (componentes) e de integração (MSW)."
+    - fase: "Integração e Testes"
+      descricao: >
+        Garantir a qualidade do sistema por meio de testes unitários, de integração e E2E,
+        executando-os automaticamente via CI/CD (GitHub Actions).
+      atividades:
+        - "Configurar ambiente de testes usando SQLite dedicado (.env.test)."
+        - "Desenvolver e executar testes unitários no backend (Jest) e frontend (Testing Library)."
+        - "Desenvolver e executar testes de integração (SuperTest no backend)."
+        - "Executar testes E2E (Jest + SuperTest) para fluxos críticos."
+        - "Atingir cobertura mínima de 80% em cada módulo."
+    - fase: "Deploy Local e Validação Final"
+      descricao: >
+        Implantar o MVP no ambiente local e realizar validações finais com a equipe da padaria,
+        garantindo que o sistema atenda aos requisitos mínimos e esteja pronto para uso.
+      atividades:
+        - "Empacotar a aplicação (opcionalmente com Yarn Workspaces) e configurar scripts de migração."
+        - "Realizar deploy local, apontando para o arquivo dev.db."
+        - "Executar scripts de backup (simples) e demonstrar procedimento."
+        - "Realizar sessão de validação e treinamento com os usuários finais."
+
+milestones:
+  - "Conclusão do desenvolvimento e testes do back-end (CRUD e PDF)."
+  - "Conclusão do desenvolvimento e testes do front-end (cadastros, listagens, repetição de pedido)."
+  - "Integração e testes E2E concluídos (fluxos críticos)."
+  - "Deploy local e treinamento da equipe."
+
+recursos:
+  equipe:
+    - "Agente IA para desenvolvimento do Back-end"
+    - "Agente IA para desenvolvimento do Front-end"
+    - "Agente IA para integração e testes"
+    - "Supervisor humano para validação final e ajustes"
+  ferramentas:
+    - "Git para controle de versão"
+    - "GitHub Actions para CI/CD (testes e linting)"
+    - "VSCode ou outra IDE"
+    - "Monorepo com Yarn Workspaces"
+    - "cSpell e ESLint/Prettier para padronização"
+  consideracoes:
+    descricao: >
+      Este documento orienta as fases de desenvolvimento do MVP de forma clara, definindo metas e atividades
+      para cada fase. As funcionalidades essenciais estão alinhadas com a documentação técnica, incluindo
+      repetição de pedidos e paginação. Futuras melhorias (autenticação robusta, relatórios avançados etc.)
+      serão consideradas após a entrega do MVP.

@@ -1,0 +1,38 @@
+name: Dependencies Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Executa todo domingo
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'yarn.lock'
+      - 'packages/*/package.json'
+
+jobs:
+  deps-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check for duplicate dependencies
+        run: yarn dedupe --check
+
+      - name: Audit dependencies
+        run: yarn audit
+
+      - name: Check for outdated dependencies
+        run: yarn outdated || true  # Não falha o workflow
+
+      - name: Validate workspace dependencies
+        run: yarn workspaces info

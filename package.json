@@ -1,0 +1,36 @@
+{
+  "name": "linos-padaria-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "backup": "node scripts/backup/backup.js",
+    "backup:verify": "node scripts/backup/verify.js",
+    "backup:list": "node scripts/backup/restore.js",
+    "backup:restore": "node scripts/backup/restore.js",
+    "backup:schedule": "node -e \"setInterval(() => require('./scripts/backup/backup.js').performBackup(), 24 * 60 * 60 * 1000)\"",
+    "prebackup": "yarn prisma generate"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "^1.10.0",
+    "typescript": "^5.0.0"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+  "packageManager": "yarn@1.22.19"
+}

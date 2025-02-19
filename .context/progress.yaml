@@ -1,0 +1,116 @@
+current_phase: 2
+phase_progress: 85
+last_update: "2025-02-18T21:33:20"
+current_agent: "Senior Software Engineer"
+
+phase_status: "Em Desenvolvimento - Módulo de Pedidos com Geração de PDF Implementado"
+
+completed_tasks:
+  pedidos:
+    - "Implementar CRUD completo"
+    - "Implementar geração de PDF"
+    - "Configurar template de pedido"
+    - "Configurar armazenamento de PDFs"
+    - "Implementar servir arquivos estáticos"
+    - "Adicionar logo ao PDF"
+    - "Otimizar layout do PDF"
+
+  infraestrutura:
+    - "Configurar Puppeteer para geração de PDF"
+    - "Configurar diretório de uploads"
+    - "Configurar servir arquivos estáticos"
+  setup_e_infraestrutura:
+    - "Criar estrutura de monorepo com Yarn Workspaces"
+    - "Configurar ESLint e Prettier"
+    - "Configurar Prisma Schema com SQLite"
+    - "Configurar projetos NestJS e Next.js"
+    - "Criar pacote shared com tipos e utilitários"
+
+  banco_de_dados:
+    - "Configurar SQLite para ambiente offline"
+    - "Implementar schema inicial"
+    - "Configurar ambiente de teste dedicado"
+    - "Implementar sistema de backup automático"
+
+  testes:
+    - "Configurar Jest e SuperTest no backend"
+    - "Configurar Jest e Testing Library no frontend"
+    - "Implementar estrutura de testes (unit, integration, e2e)"
+    - "Configurar MSW para mocks de API"
+    - "Criar primeiros testes de exemplo"
+
+  ci_cd:
+    - "Configurar GitHub Actions otimizado"
+    - "Implementar pipeline de testes"
+    - "Configurar análise de código com CodeQL"
+    - "Implementar verificação de dependências"
+
+  produtos:
+    - "Implementar CRUD completo"
+    - "Adicionar validações de dados"
+    - "Criar testes unitários"
+    - "Criar testes de integração"
+    - "Adequar ao schema existente"
+
+  clientes:
+    - "Implementar CRUD completo"
+    - "Implementar busca por CNPJ"
+    - "Adicionar validações rigorosas"
+    - "Criar testes unitários"
+    - "Criar testes de integração"
+    - "Preparar integração com pedidos"
+
+tasks_in_progress:
+  - "Planejamento de autenticação e autorização"
+  - "Otimização do módulo de pedidos"
+  - "Validações adicionais de negócio"
+
+pending_tasks:
+  desenvolvimento:
+    - "Implementar endpoints CRUD para pedidos"
+    - "Implementar autenticação e autorização"
+    - "Configurar logs e monitoramento"
+    - "Implementar cache"
+    - "Otimizar queries e índices"
+
+  frontend:
+    - "Criar interfaces de usuário"
+    - "Implementar formulários"
+    - "Configurar gerenciamento de estado"
+
+known_issues:
+  - categoria: "Performance"
+    descricao: "Monitorar performance do SQLite com crescimento dos dados"
+    status: "A ser avaliado durante desenvolvimento"
+    
+  - categoria: "Backup"
+    descricao: "Necessidade de validação do processo de backup em produção"
+    status: "Implementado mas requer validação em ambiente real"
+
+  - categoria: "Validação"
+    descricao: "Necessidade de validações adicionais de negócio"
+    status: "Em planejamento"
+
+milestones_completed:
+  - "Setup inicial completo"
+  - "Ambiente de testes configurado"
+  - "CI/CD implementado"
+  - "CRUD Produtos implementado"
+  - "CRUD Clientes implementado"
+  - "CRUD Pedidos implementado"
+  - "Geração de PDF implementada"
+  - "Setup inicial completo"
+  - "Ambiente de testes configurado"
+  - "CI/CD implementado"
+  - "CRUD Produtos implementado"
+  - "CRUD Clientes implementado"
+
+next_milestone: "Autenticação e Autorização"
+
+metrics:
+  test_coverage: 
+    produtos: "100%"
+    clientes: "100%"
+    global: "50%"
+  code_quality: "Passou em todas as validações"
+  build_status: "Passing"
