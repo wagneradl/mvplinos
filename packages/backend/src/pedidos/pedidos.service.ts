@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto, PedidoStatus } from './dto/update-pedido.dto';
+import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -99,17 +100,40 @@ export class PedidosService {
     }
   }
 
-  async findAll(page = 1, limit = 10) {
+  async findAll(filter: FilterPedidoDto) {
     try {
+      const { page = 1, limit = 10, startDate, endDate, clienteId } = filter;
       const skip = (page - 1) * limit;
-      const where = { deleted_at: null };
 
-      const [total, pedidos] = await Promise.all([
-        this.prisma.pedido.count({ where }),
+      const where: Prisma.PedidoWhereInput = {
+        deleted_at: null,
+      };
+
+      if (startDate && endDate) {
+        const dataInicial = new Date(startDate);
+        dataInicial.setHours(0, 0, 0, 0);
+        
+        const dataFinal = new Date(endDate);
+        dataFinal.setHours(23, 59, 59, 999);
+
+        where.data_pedido = {
+          gte: dataInicial,
+          lte: dataFinal,
+        };
+      }
+
+      if (clienteId) {
+        where.cliente_id = clienteId;
+      }
+
+      const [data, total] = await Promise.all([
         this.prisma.pedido.findMany({
-          where,
           skip,
-          take: Number(limit),
+          take: limit,
+          where,
+          orderBy: {
+            data_pedido: 'desc',
+          },
           include: {
             cliente: true,
             itensPedido: {
@@ -118,12 +142,12 @@ export class PedidosService {
               },
             },
           },
-          orderBy: { data_pedido: 'desc' },
         }),
+        this.prisma.pedido.count({ where }),
       ]);
 
       return {
-        data: pedidos,
+        data,
         meta: {
           total,
           page,
@@ -137,33 +161,112 @@ export class PedidosService {
   }
 
   async findOne(id: number) {
-    const pedido = await this.prisma.pedido.findFirst({
-      where: { id, deleted_at: null },
-      include: {
-        cliente: true,
-        itensPedido: {
-          include: {
-            produto: true,
+    try {
+      const pedido = await this.prisma.pedido.findFirst({
+        where: { id, deleted_at: null },
+        include: {
+          cliente: true,
+          itensPedido: {
+            include: {
+              produto: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!pedido) {
-      throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      if (!pedido) {
+        throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+
+      return pedido;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao buscar pedido');
     }
-
-    return pedido;
   }
 
   async update(id: number, updatePedidoDto: UpdatePedidoDto) {
     try {
-      await this.findOne(id);
+      const pedido = await this.prisma.pedido.findFirst({
+        where: { id }, 
+        include: {
+          cliente: true,
+          itensPedido: {
+            include: {
+              produto: true,
+            },
+          },
+        },
+      });
+
+      if (!pedido) {
+        throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+
+      if (pedido.status === PedidoStatus.CANCELADO) {
+        throw new BadRequestException('Não é possível atualizar um pedido cancelado');
+      }
+
+      // Atualizar o pedido
+      const pedidoAtualizado = await this.prisma.pedido.update({
+        where: { id },
+        data: updatePedidoDto,
+        include: {
+          cliente: true,
+          itensPedido: {
+            include: {
+              produto: true,
+            },
+          },
+        },
+      });
+
+      // Gerar novo PDF se o status foi alterado
+      if (updatePedidoDto.status && updatePedidoDto.status !== pedido.status) {
+        const timestamp = Date.now();
+        const pdfPath = await this.pdfService.generatePedidoPdf({
+          ...pedidoAtualizado,
+          id: `${pedidoAtualizado.id}-${timestamp}` // Gerar um ID único para o PDF
+        });
+        
+        // Atualizar o caminho do PDF no pedido
+        return await this.prisma.pedido.update({
+          where: { id },
+          data: { caminho_pdf: pdfPath },
+          include: {
+            cliente: true,
+            itensPedido: {
+              include: {
+                produto: true,
+              },
+            },
+          },
+        });
+      }
+
+      return pedidoAtualizado;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao atualizar pedido');
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      const pedido = await this.findOne(id);
 
       return await this.prisma.pedido.update({
         where: { id },
-        data: {
-          status: updatePedidoDto.status || PedidoStatus.ATUALIZADO,
+        data: { 
+          deleted_at: new Date(),
+          status: PedidoStatus.CANCELADO
         },
         include: {
           cliente: true,
@@ -178,40 +281,46 @@ export class PedidosService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new BadRequestException('Erro ao atualizar pedido');
-    }
-  }
-
-  async remove(id: number) {
-    try {
-      await this.findOne(id);
-
-      return await this.prisma.pedido.update({
-        where: { id },
-        data: {
-          deleted_at: new Date(),
-          status: PedidoStatus.CANCELADO,
-        },
-      });
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
       throw new BadRequestException('Erro ao remover pedido');
     }
   }
 
-  async repeatOrder(id: number) {
+  async repeat(id: number) {
     try {
-      const originalPedido = await this.findOne(id);
+      const pedidoOriginal = await this.findOne(id);
 
-      return await this.create({
-        cliente_id: originalPedido.cliente_id,
-        itens: originalPedido.itensPedido.map((item) => ({
+      // Verificar se o cliente ainda está ativo
+      const cliente = await this.prisma.cliente.findFirst({
+        where: { id: pedidoOriginal.cliente_id, deleted_at: null },
+      });
+
+      if (!cliente) {
+        throw new NotFoundException(`Cliente com ID ${pedidoOriginal.cliente_id} não encontrado`);
+      }
+
+      // Verificar se todos os produtos ainda estão ativos
+      const produtosIds = pedidoOriginal.itensPedido.map(item => item.produto_id);
+      const produtos = await this.prisma.produto.findMany({
+        where: { 
+          id: { in: produtosIds },
+          deleted_at: null
+        },
+      });
+
+      if (produtos.length !== produtosIds.length) {
+        throw new BadRequestException('Um ou mais produtos do pedido original não estão mais disponíveis');
+      }
+
+      // Criar novo pedido com os mesmos dados
+      const novoPedido = await this.create({
+        cliente_id: pedidoOriginal.cliente_id,
+        itens: pedidoOriginal.itensPedido.map(item => ({
           produto_id: item.produto_id,
           quantidade: item.quantidade,
         })),
       });
+
+      return novoPedido;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

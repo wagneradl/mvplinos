@@ -17,6 +17,7 @@ export class CreatePedidoDto {
   cliente_id: number;
 
   @IsArray()
+  @IsNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => CreateItemPedidoDto)
   itens: CreateItemPedidoDto[];

@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id            Int       @id @default(autoincrement())
+  cnpj          String    @unique
+  razao_social  String
+  nome_fantasia String
+  email         String
+  telefone      String
+  status        String    @default("ativo")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+  pedidos       Pedido[]
+}
+
+model Produto {
+  id             Int          @id @default(autoincrement())
+  nome           String
+  preco_unitario Float
+  tipo_medida    String
+  status         String       @default("ativo")
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  deleted_at     DateTime?
+  itensPedido    ItemPedido[]
+}
+
+model Pedido {
+  id           Int          @id @default(autoincrement())
+  cliente_id   Int
+  data_pedido  DateTime     @default(now())
+  valor_total  Float
+  status       String       @default("PENDENTE")
+  pdf_path     String?
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  deleted_at   DateTime?
+  cliente      Cliente      @relation(fields: [cliente_id], references: [id])
+  itensPedido  ItemPedido[]
+}
+
+model ItemPedido {
+  id             Int      @id @default(autoincrement())
+  pedido_id      Int
+  produto_id     Int
+  quantidade     Float
+  preco_unitario Float
+  valor_total_item Float
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  pedido         Pedido   @relation(fields: [pedido_id], references: [id])
+  produto        Produto  @relation(fields: [produto_id], references: [id])
+}

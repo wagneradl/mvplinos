@@ -7,9 +7,11 @@ module.exports = {
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: './coverage-integration',
-  testEnvironment: 'node',
+  testEnvironment: '<rootDir>/test/prisma-test-environment.js',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   setupFilesAfterEnv: ['<rootDir>/test/setup-integration.ts'],
+  testTimeout: 30000,
+  maxWorkers: 1,
 };

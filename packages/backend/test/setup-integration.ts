@@ -2,40 +2,43 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
-import { execSync } from 'child_process';
+import * as dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente
+dotenv.config();
 
 export let app: INestApplication;
 export let prismaService: PrismaService;
 
-// Extensão global do Jest para timeout mais longo em testes de integração
-jest.setTimeout(30000);
-
 // Configuração do banco de dados de teste antes de todos os testes
 beforeAll(async () => {
-  // Garantir que estamos usando o banco de dados de teste
-  process.env.DATABASE_URL = 'file:./test.db';
-
   try {
-    // Se houver uma instância anterior do PrismaService, desconectar
-    if (prismaService) {
-      await prismaService.$disconnect();
-    }
-
-    // Limpar e recriar o banco de dados de teste
-    execSync('rm -f test.db && yarn prisma migrate deploy', {
-      env: process.env,
-      stdio: 'pipe', // Mudar para pipe para evitar logs desnecessários
-    });
-
     // Criar e configurar a aplicação NestJS
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(new ValidationPipe({
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+      forbidNonWhitelisted: true,
+      whitelist: true,
+      forbidUnknownValues: true
+    }));
+    
     prismaService = app.get(PrismaService);
     await app.init();
+
+    // Limpar o banco de dados antes de começar os testes
+    await prismaService.$executeRaw`PRAGMA foreign_keys = OFF;`;
+    await prismaService.$transaction([
+      prismaService.$executeRaw`DELETE FROM ItensPedido;`,
+      prismaService.$executeRaw`DELETE FROM Pedido;`,
+      prismaService.$executeRaw`DELETE FROM Cliente;`,
+      prismaService.$executeRaw`DELETE FROM Produto;`,
+    ]);
+    await prismaService.$executeRaw`PRAGMA foreign_keys = ON;`;
   } catch (error) {
     console.error('Setup failed:', error);
     throw error;
@@ -45,13 +48,14 @@ beforeAll(async () => {
 // Limpar o banco de dados após cada teste
 afterEach(async () => {
   try {
-    await prismaService.$transaction(async (tx) => {
-      // Ordem específica para respeitar as foreign keys
-      await tx.itensPedido.deleteMany();
-      await tx.pedido.deleteMany();
-      await tx.cliente.deleteMany();
-      await tx.produto.deleteMany();
-    });
+    await prismaService.$executeRaw`PRAGMA foreign_keys = OFF;`;
+    await prismaService.$transaction([
+      prismaService.$executeRaw`DELETE FROM ItensPedido;`,
+      prismaService.$executeRaw`DELETE FROM Pedido;`,
+      prismaService.$executeRaw`DELETE FROM Cliente;`,
+      prismaService.$executeRaw`DELETE FROM Produto;`,
+    ]);
+    await prismaService.$executeRaw`PRAGMA foreign_keys = ON;`;
   } catch (error) {
     console.error('Erro ao limpar o banco de dados:', error);
     throw error;

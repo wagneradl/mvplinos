@@ -12,6 +12,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { FilterPedidoDto } from './dto/filter-pedido.dto';
 
 @ApiTags('pedidos')
 @Controller('pedidos')
@@ -26,13 +27,16 @@ export class PedidosController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos os pedidos' })
-  @ApiResponse({ status: 200, description: 'Lista de pedidos retornada.' })
-  findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.pedidosService.findAll(page, limit);
+  @ApiOperation({ 
+    summary: 'Listar todos os pedidos',
+    description: 'Lista pedidos com suporte a filtros por data e cliente, além de paginação'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de pedidos retornada com metadados de paginação.' 
+  })
+  findAll(@Query() filterDto: FilterPedidoDto) {
+    return this.pedidosService.findAll(filterDto);
   }
 
   @Get(':id')
@@ -59,7 +63,7 @@ export class PedidosController {
   @Post(':id/repeat')
   @ApiOperation({ summary: 'Repetir pedido existente' })
   @ApiResponse({ status: 201, description: 'Novo pedido criado baseado no original.' })
-  repeatOrder(@Param('id') id: string) {
-    return this.pedidosService.repeatOrder(+id);
+  repeat(@Param('id') id: string) {
+    return this.pedidosService.repeat(+id);
   }
 }
