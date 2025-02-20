@@ -2,16 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProdutosService } from '../produtos.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { createMockPrismaService, createTestProduto } from '../../test/prisma.mock.helper';
 
 describe('ProdutosService', () => {
   let service: ProdutosService;
-  let mockPrismaService;
-  const mockProduto = createTestProduto();
+  let prisma: PrismaService;
+
+  const mockPrismaService = {
+    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    produto: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
-    mockPrismaService = createMockPrismaService();
-    
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProdutosService,
@@ -23,6 +30,7 @@ describe('ProdutosService', () => {
     }).compile();
 
     service = module.get<ProdutosService>(ProdutosService);
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -30,156 +38,46 @@ describe('ProdutosService', () => {
   });
 
   describe('create', () => {
-    it('should create a produto', async () => {
-      const createDto = {
-        nome: mockProduto.nome,
-        preco_unitario: mockProduto.preco_unitario,
-        tipo_medida: mockProduto.tipo_medida,
-        status: mockProduto.status,
-      };
+    const createProdutoDto = {
+      nome: 'Produto Teste',
+      preco_unitario: 100,
+      tipo_medida: 'un',
+      status: 'ativo',
+    };
 
-      mockPrismaService.$transaction.mockImplementationOnce((callback) => callback(mockPrismaService));
-      mockPrismaService.produto.create.mockResolvedValueOnce({
-        ...createDto,
-        id: 1,
-        deleted_at: null,
-        created_at: mockProduto.created_at,
-        updated_at: mockProduto.updated_at,
-      });
+    it('should create a new produto', async () => {
+      mockPrismaService.produto.create.mockResolvedValueOnce({ id: 1, ...createProdutoDto });
 
-      const result = await service.create(createDto);
-      expect(result).toEqual({
-        ...createDto,
-        id: 1,
-        deleted_at: null,
-        created_at: mockProduto.created_at,
-        updated_at: mockProduto.updated_at,
-      });
+      const result = await service.create(createProdutoDto);
+
+      expect(result).toEqual({ id: 1, ...createProdutoDto });
       expect(mockPrismaService.produto.create).toHaveBeenCalledWith({
-        data: createDto,
+        data: createProdutoDto,
       });
     });
 
-    it('should throw BadRequestException when create fails', async () => {
-      const createDto = {
-        nome: 'Test',
-        preco_unitario: 10,
-        tipo_medida: 'un',
-        status: 'ativo',
-      };
+    it('should throw BadRequestException on database error', async () => {
+      mockPrismaService.produto.create.mockRejectedValueOnce(new Error());
 
-      mockPrismaService.$transaction.mockImplementationOnce((callback) => {
-        throw new Error('Create failed');
-      });
-
-      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createProdutoDto)).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated produtos', async () => {
-      const mockProdutos = [mockProduto];
-      const pageOptions = { page: 1, limit: 10 };
-      
-      mockPrismaService.produto.findMany.mockResolvedValueOnce(mockProdutos);
-      mockPrismaService.produto.count.mockResolvedValueOnce(1);
+    const pageOptions = { page: 1, limit: 10 };
+    const produtos = [
+      { id: 1, nome: 'Produto A', preco_unitario: 100, tipo_medida: 'un' },
+      { id: 2, nome: 'Produto B', preco_unitario: 200, tipo_medida: 'kg' },
+    ];
+
+    it('should return paginated results', async () => {
+      mockPrismaService.produto.count.mockResolvedValueOnce(2);
+      mockPrismaService.produto.findMany.mockResolvedValueOnce(produtos);
 
       const result = await service.findAll(pageOptions);
-      
-      expect(result).toEqual({
-        data: mockProdutos,
-        meta: {
-          page: 1,
-          limit: 10,
-          itemCount: 1,
-          pageCount: 1,
-          hasPreviousPage: false,
-          hasNextPage: false,
-        },
-      });
-
-      expect(mockPrismaService.produto.findMany).toHaveBeenCalledWith({
-        where: { deleted_at: null },
-        skip: 0,
-        take: 10,
-        orderBy: { nome: 'asc' },
-      });
-    });
-
-    it('should throw BadRequestException when findAll fails', async () => {
-      mockPrismaService.produto.findMany.mockRejectedValueOnce(new Error('Find failed'));
-
-      await expect(service.findAll()).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return a produto', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-
-      const result = await service.findOne(1);
-      expect(result).toEqual(mockProduto);
-      expect(mockPrismaService.produto.findFirst).toHaveBeenCalledWith({
-        where: { id: 1, deleted_at: null },
-      });
-    });
-
-    it('should throw NotFoundException when produto not found', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
-
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('update', () => {
-    it('should update a produto', async () => {
-      const updateDto = { nome: 'Updated Produto' };
-
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.produto.update.mockResolvedValueOnce({
-        ...mockProduto,
-        ...updateDto,
-      });
-
-      const result = await service.update(1, updateDto);
-      expect(result).toEqual({
-        ...mockProduto,
-        ...updateDto,
-      });
-      expect(mockPrismaService.produto.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: updateDto,
-      });
-    });
-
-    it('should throw NotFoundException when produto not found', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
-
-      await expect(service.update(999, { nome: 'test' })).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw BadRequestException when update fails', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.produto.update.mockRejectedValueOnce(new Error('Update failed'));
-
-      await expect(service.update(1, { nome: 'test' })).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('findAll', () => {
-    it('should return paginated products', async () => {
-      const mockProducts = [
-        { ...mockProduto, id: 1 },
-        { ...mockProduto, id: 2 },
-      ];
-      
-      mockPrismaService.produto.count.mockResolvedValueOnce(2);
-      mockPrismaService.produto.findMany.mockResolvedValueOnce(mockProducts);
-
-      const result = await service.findAll({ page: 1, limit: 10 });
 
       expect(result).toEqual({
-        data: mockProducts,
+        data: produtos,
         meta: {
           page: 1,
           limit: 10,
@@ -205,7 +103,7 @@ describe('ProdutosService', () => {
       mockPrismaService.produto.count.mockResolvedValueOnce(0);
       mockPrismaService.produto.findMany.mockResolvedValueOnce([]);
 
-      const result = await service.findAll({ page: 1, limit: 10 });
+      const result = await service.findAll(pageOptions);
 
       expect(result).toEqual({
         data: [],
@@ -220,41 +118,122 @@ describe('ProdutosService', () => {
       });
     });
 
-    it('should throw BadRequestException when findAll fails', async () => {
-      mockPrismaService.produto.count.mockRejectedValueOnce(new Error('Find failed'));
+    it('should use default pagination if no options provided', async () => {
+      mockPrismaService.produto.count.mockResolvedValueOnce(2);
+      mockPrismaService.produto.findMany.mockResolvedValueOnce(produtos);
 
-      await expect(service.findAll({ page: 1, limit: 10 })).rejects.toThrow(
-        new BadRequestException('Erro ao buscar produtos')
-      );
+      await service.findAll();
+
+      expect(mockPrismaService.produto.findMany).toHaveBeenCalledWith({
+        where: { deleted_at: null },
+        skip: 0,
+        take: 10,
+        orderBy: { nome: 'asc' },
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    const id = 1;
+    const produto = {
+      id,
+      nome: 'Produto Teste',
+      descricao: 'Descrição do produto teste',
+      preco_unitario: 100,
+      tipo_medida: 'un',
+      status: 'ativo',
+    };
+
+    it('should find a produto by id', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce(produto);
+
+      const result = await service.findOne(id);
+
+      expect(result).toEqual(produto);
+      expect(mockPrismaService.produto.findFirst).toHaveBeenCalledWith({
+        where: { id, deleted_at: null },
+      });
+    });
+
+    it('should throw NotFoundException if produto not found', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
+
+      await expect(service.findOne(id)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException on database error', async () => {
+      mockPrismaService.produto.findFirst.mockRejectedValueOnce(new Error());
+
+      await expect(service.findOne(id)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('update', () => {
+    const id = 1;
+    const updateProdutoDto = {
+      nome: 'Produto Atualizado',
+      preco_unitario: 150,
+      tipo_medida: 'kg',
+    };
+
+    it('should update a produto', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.produto.update.mockResolvedValueOnce({ id, ...updateProdutoDto });
+
+      const result = await service.update(id, updateProdutoDto);
+
+      expect(result).toEqual({ id, ...updateProdutoDto });
+      expect(mockPrismaService.produto.update).toHaveBeenCalledWith({
+        where: { id },
+        data: updateProdutoDto,
+      });
+    });
+
+    it('should throw NotFoundException if produto not found', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
+
+      await expect(service.update(id, updateProdutoDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException on database error', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.produto.update.mockRejectedValueOnce(new Error());
+
+      await expect(service.update(id, updateProdutoDto)).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('remove', () => {
-    it('should soft delete a produto', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.produto.update.mockResolvedValueOnce({
-        ...mockProduto,
-        deleted_at: new Date(),
-      });
+    const id = 1;
 
-      await service.remove(1);
+    it('should soft delete a produto', async () => {
+      const now = new Date();
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.produto.update.mockResolvedValueOnce({ id, deleted_at: now });
+
+      const result = await service.remove(id);
+
+      expect(result).toEqual({ id, deleted_at: now });
+      expect(mockPrismaService.produto.findFirst).toHaveBeenCalledWith({
+        where: { id, deleted_at: null },
+      });
       expect(mockPrismaService.produto.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { deleted_at: expect.any(Date) },
+        where: { id },
+        data: { deleted_at: expect.any(Date), status: 'inativo' },
       });
     });
 
-    it('should throw NotFoundException when produto not found', async () => {
+    it('should throw NotFoundException if produto not found', async () => {
       mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
 
-      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
+      await expect(service.remove(id)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException when remove fails', async () => {
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.produto.update.mockRejectedValueOnce(new Error('Remove failed'));
+    it('should throw BadRequestException on database error', async () => {
+      mockPrismaService.produto.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.produto.update.mockRejectedValueOnce(new Error());
 
-      await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+      await expect(service.remove(id)).rejects.toThrow(BadRequestException);
     });
   });
 });

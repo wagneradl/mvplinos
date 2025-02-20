@@ -5,6 +5,8 @@ import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto, PedidoStatus } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { Prisma } from '@prisma/client';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class PedidosService {
@@ -15,6 +17,62 @@ export class PedidosService {
 
   async create(createPedidoDto: CreatePedidoDto) {
     const { cliente_id, itens } = createPedidoDto;
+
+    // Validar se o pedido tem itens
+    if (!itens || itens.length === 0) {
+      throw new BadRequestException('O pedido deve ter pelo menos um item');
+    }
+
+    // Buscar informações dos produtos
+    const produtosIds = itens.map(item => item.produto_id);
+    const produtos = await this.prisma.produto.findMany({
+      where: {
+        id: {
+          in: produtosIds
+        }
+      }
+    });
+
+    // Mapear produtos por ID para fácil acesso
+    const produtosMap = new Map(produtos.map(p => [p.id, p]));
+
+    // Criar array com informações completas dos itens
+    const produtosInfo = itens.map(item => {
+      const produto = produtosMap.get(item.produto_id);
+      if (!produto) {
+        throw new NotFoundException(`Produto com ID ${item.produto_id} não encontrado`);
+      }
+
+      // Validar se o produto está ativo
+      if (produto.status === 'inativo') {
+        throw new BadRequestException(`${produto.nome} está inativo`);
+      }
+
+      // Validar se o produto não está deletado
+      if (produto.deleted_at) {
+        throw new BadRequestException(`${produto.nome} não está disponível`);
+      }
+
+      // Validar quantidade
+      if (item.quantidade <= 0) {
+        throw new BadRequestException('A quantidade deve ser maior que zero');
+      }
+
+      // Usar sempre o preço atual do produto
+      const valor_total_item = Number((item.quantidade * produto.preco_unitario).toFixed(2));
+
+      return {
+        produto_id: item.produto_id,
+        quantidade: item.quantidade,
+        preco_unitario: produto.preco_unitario,
+        valor_total_item
+      };
+    });
+
+    // Calcular o valor total do pedido
+    const valorTotal = Number(produtosInfo.reduce((total, item) => {
+      return total + item.valor_total_item;
+    }, 0).toFixed(2));
 
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -27,66 +85,48 @@ export class PedidosService {
           throw new NotFoundException(`Cliente com ID ${cliente_id} não encontrado`);
         }
 
-        // Buscar informações dos produtos e calcular valores
-        const produtosInfo = await Promise.all(
-          itens.map(async (item) => {
-            const produto = await tx.produto.findFirst({
-              where: { id: item.produto_id, deleted_at: null },
-            });
+        // Validar se o cliente está ativo
+        if (cliente.status === 'inativo') {
+          throw new BadRequestException('Cliente está inativo');
+        }
 
-            if (!produto) {
-              throw new NotFoundException(`Produto com ID ${item.produto_id} não encontrado`);
-            }
-
-            const valorTotalItem = produto.preco_unitario * item.quantidade;
-
-            return {
-              produto_id: item.produto_id,
-              quantidade: item.quantidade,
-              preco_unitario: produto.preco_unitario,
-              valor_total_item: valorTotalItem,
-            };
-          }),
-        );
-
-        const valor_total = produtosInfo.reduce((sum, item) => sum + item.valor_total_item, 0);
-
+        // Criar o pedido com os itens
         const pedido = await tx.pedido.create({
           data: {
             cliente_id,
             data_pedido: new Date(),
+            valor_total: valorTotal,
             status: PedidoStatus.PENDENTE,
-            valor_total,
-            caminho_pdf: '', // Será atualizado após gerar o PDF
+            pdf_path: '', // Será atualizado após gerar o PDF
             itensPedido: {
               create: produtosInfo,
-            },
+            }
           },
           include: {
             cliente: true,
             itensPedido: {
               include: {
-                produto: true,
-              },
-            },
-          },
+                produto: true
+              }
+            }
+          }
         });
 
         // Gerar PDF do pedido
         const pdfPath = await this.pdfService.generatePedidoPdf(pedido);
-
-        // Atualizar o caminho do PDF no pedido
+        
+        // Atualizar o pedido com o caminho do PDF
         return await tx.pedido.update({
           where: { id: pedido.id },
-          data: { caminho_pdf: pdfPath },
+          data: { pdf_path: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
               include: {
-                produto: true,
-              },
-            },
-          },
+                produto: true
+              }
+            }
+          }
         });
       });
     } catch (error) {
@@ -209,6 +249,11 @@ export class PedidosService {
         throw new BadRequestException('Não é possível atualizar um pedido cancelado');
       }
 
+      // Validar se está tentando cancelar um pedido atualizado
+      if (updatePedidoDto.status === PedidoStatus.CANCELADO && pedido.status === PedidoStatus.ATUALIZADO) {
+        throw new BadRequestException('Não é possível cancelar um pedido atualizado');
+      }
+
       // Atualizar o pedido
       const pedidoAtualizado = await this.prisma.pedido.update({
         where: { id },
@@ -231,10 +276,10 @@ export class PedidosService {
           id: `${pedidoAtualizado.id}-${timestamp}` // Gerar um ID único para o PDF
         });
         
-        // Atualizar o caminho do PDF no pedido
+        // Atualizar o pedido com o caminho do PDF
         return await this.prisma.pedido.update({
           where: { id },
-          data: { caminho_pdf: pdfPath },
+          data: { pdf_path: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
@@ -327,5 +372,109 @@ export class PedidosService {
       }
       throw new BadRequestException('Erro ao repetir pedido');
     }
+  }
+
+  async updateItemQuantidade(pedidoId: number, itemId: number, quantidade: number) {
+    try {
+      const pedido = await this.prisma.pedido.findFirst({
+        where: { id: pedidoId },
+        include: {
+          itensPedido: true
+        }
+      });
+
+      if (!pedido) {
+        throw new NotFoundException(`Pedido com ID ${pedidoId} não encontrado`);
+      }
+
+      if (pedido.status === PedidoStatus.CANCELADO) {
+        throw new BadRequestException('Não é possível atualizar um pedido cancelado');
+      }
+
+      const item = await this.prisma.itemPedido.findFirst({
+        where: { id: itemId, pedido_id: pedidoId },
+        include: {
+          produto: true
+        }
+      });
+
+      if (!item) {
+        throw new NotFoundException(`Item com ID ${itemId} não encontrado no pedido ${pedidoId}`);
+      }
+
+      // Validar quantidade
+      if (quantidade <= 0) {
+        throw new BadRequestException('A quantidade deve ser maior que zero');
+      }
+
+      // Atualizar item e recalcular valores
+      const valor_total_item = Number((quantidade * item.preco_unitario).toFixed(2));
+
+      const itemAtualizado = await this.prisma.itemPedido.update({
+        where: { id: itemId },
+        data: {
+          quantidade,
+          valor_total_item
+        }
+      });
+
+      // Recalcular valor total do pedido
+      const itensAtualizados = pedido.itensPedido.map(i => {
+        if (i.id === itemId) {
+          return itemAtualizado;
+        }
+        return i;
+      });
+
+      const valor_total = Number(itensAtualizados.reduce((total, i) => {
+        return total + (i.id === itemId ? valor_total_item : i.valor_total_item);
+      }, 0).toFixed(2));
+
+      // Atualizar pedido
+      return await this.prisma.pedido.update({
+        where: { id: pedidoId },
+        data: {
+          valor_total,
+          status: PedidoStatus.ATUALIZADO
+        },
+        include: {
+          cliente: true,
+          itensPedido: {
+            include: {
+              produto: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao atualizar quantidade do item');
+    }
+  }
+
+  async getPdfPath(id: number): Promise<string> {
+    const pedido = await this.prisma.pedido.findFirst({
+      where: { id, deleted_at: null }
+    });
+
+    if (!pedido) {
+      throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+    }
+
+    if (!pedido.pdf_path) {
+      throw new NotFoundException(`PDF do pedido com ID ${id} não encontrado`);
+    }
+
+    const fullPath = join(process.cwd(), pedido.pdf_path);
+    if (!existsSync(fullPath)) {
+      throw new NotFoundException(`Arquivo PDF do pedido com ID ${id} não encontrado no sistema`);
+    }
+
+    return fullPath;
   }
 }

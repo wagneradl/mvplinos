@@ -33,7 +33,7 @@ beforeAll(async () => {
     // Limpar o banco de dados antes de começar os testes
     await prismaService.$executeRaw`PRAGMA foreign_keys = OFF;`;
     await prismaService.$transaction([
-      prismaService.$executeRaw`DELETE FROM ItensPedido;`,
+      prismaService.$executeRaw`DELETE FROM ItemPedido;`,
       prismaService.$executeRaw`DELETE FROM Pedido;`,
       prismaService.$executeRaw`DELETE FROM Cliente;`,
       prismaService.$executeRaw`DELETE FROM Produto;`,
@@ -50,7 +50,7 @@ afterEach(async () => {
   try {
     await prismaService.$executeRaw`PRAGMA foreign_keys = OFF;`;
     await prismaService.$transaction([
-      prismaService.$executeRaw`DELETE FROM ItensPedido;`,
+      prismaService.$executeRaw`DELETE FROM ItemPedido;`,
       prismaService.$executeRaw`DELETE FROM Pedido;`,
       prismaService.$executeRaw`DELETE FROM Cliente;`,
       prismaService.$executeRaw`DELETE FROM Produto;`,

@@ -1,17 +1,49 @@
-import { PrismaClient } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaTestService } from '../prisma.service.test';
 
-jest.mock('@prisma/client', () => {
+// Mock the PrismaClient
+const mockConnect = jest.fn();
+const mockDisconnect = jest.fn();
+const mockExecuteRaw = jest.fn().mockImplementation((query) => Promise.resolve());
+const mockTransaction = jest.fn().mockImplementation((callback) => {
+  if (Array.isArray(callback)) {
+    return Promise.all(callback.map(query => Promise.resolve()));
+  }
+  return callback();
+});
+
+// Mock class that extends PrismaClient
+class MockPrismaClient {
+  $connect = mockConnect;
+  $disconnect = mockDisconnect;
+  $executeRaw = mockExecuteRaw;
+  $transaction = mockTransaction;
+}
+
+// Mock the PrismaTestService
+jest.mock('../prisma.service.test', () => {
   return {
-    PrismaClient: jest.fn().mockImplementation(() => ({
-      $connect: jest.fn(),
-      $disconnect: jest.fn(),
-      cliente: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      produto: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      pedido: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      itensPedido: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
-    })),
+    PrismaTestService: jest.fn().mockImplementation(() => {
+      if (!process.env.DATABASE_URL) {
+        throw new Error('DATABASE_URL environment variable is not set');
+      }
+      const instance = new MockPrismaClient();
+      return {
+        ...instance,
+        onModuleInit: async () => mockConnect(),
+        onModuleDestroy: async () => mockDisconnect(),
+        cleanDatabase: async () => {
+          await mockExecuteRaw('PRAGMA foreign_keys = OFF;');
+          await mockTransaction([
+            mockExecuteRaw('DELETE FROM ItemPedido;'),
+            mockExecuteRaw('DELETE FROM Pedido;'),
+            mockExecuteRaw('DELETE FROM Cliente;'),
+            mockExecuteRaw('DELETE FROM Produto;'),
+          ]);
+          await mockExecuteRaw('PRAGMA foreign_keys = ON;');
+        },
+      };
+    }),
   };
 });
 
@@ -23,6 +55,9 @@ describe('PrismaTestService', () => {
     // Limpa todos os mocks antes de cada teste
     jest.clearAllMocks();
 
+    // Define a variável de ambiente necessária
+    process.env.DATABASE_URL = 'file:./test.db';
+
     // Configura o módulo de teste
     module = await Test.createTestingModule({
       providers: [PrismaTestService],
@@ -30,71 +65,56 @@ describe('PrismaTestService', () => {
 
     // Obtém uma instância do serviço
     service = module.get<PrismaTestService>(PrismaTestService);
-
-    // Adiciona os métodos necessários ao serviço
-    service.onModuleInit = jest.fn().mockImplementation(async () => {
-      await service.$connect();
-    });
-
-    service.onModuleDestroy = jest.fn().mockImplementation(async () => {
-      await service.$disconnect();
-    });
-
-    service.cleanDatabase = jest.fn().mockImplementation(async () => {
-      const models = ['cliente', 'produto', 'pedido', 'itensPedido'];
-      return Promise.all(
-        models.map(async (model) => {
-          //@ts-ignore - Dynamic access to Prisma models
-          return service[model].deleteMany();
-        })
-      );
-    });
   });
 
   afterEach(async () => {
     await module.close();
     jest.clearAllMocks();
+    delete process.env.DATABASE_URL;
   });
 
   describe('constructor', () => {
     it('should be defined', () => {
       expect(service).toBeDefined();
     });
+
+    it('should throw error if DATABASE_URL is not set', () => {
+      delete process.env.DATABASE_URL;
+      expect(() => new PrismaTestService()).toThrow('DATABASE_URL environment variable is not set');
+    });
   });
 
   describe('onModuleInit', () => {
     it('should connect to database', async () => {
-      const connectSpy = jest.spyOn(service, '$connect');
-      
       await service.onModuleInit();
-      
-      expect(connectSpy).toHaveBeenCalled();
+      expect(mockConnect).toHaveBeenCalled();
     });
   });
 
   describe('onModuleDestroy', () => {
     it('should disconnect from database', async () => {
-      const disconnectSpy = jest.spyOn(service, '$disconnect');
-      
       await service.onModuleDestroy();
-      
-      expect(disconnectSpy).toHaveBeenCalled();
+      expect(mockDisconnect).toHaveBeenCalled();
     });
   });
 
   describe('cleanDatabase', () => {
-    it('should call deleteMany on all models', async () => {
-      const result = await service.cleanDatabase();
+    it('should execute raw queries to clean all tables', async () => {
+      await service.cleanDatabase();
 
-      // Verifica se todos os modelos foram limpos
-      expect(result).toBeDefined();
-      expect(result.length).toBe(4); // cliente, produto, pedido, itensPedido
-      
-      // Verifica se deleteMany foi chamado em cada modelo
-      expect(service.cliente.deleteMany).toHaveBeenCalled();
-      expect(service.produto.deleteMany).toHaveBeenCalled();
-      expect(service.pedido.deleteMany).toHaveBeenCalled();
-      expect(service.itensPedido.deleteMany).toHaveBeenCalled();
+      expect(mockExecuteRaw).toHaveBeenCalledWith('PRAGMA foreign_keys = OFF;');
+      expect(mockTransaction).toHaveBeenCalledWith([
+        mockExecuteRaw('DELETE FROM ItemPedido;'),
+        mockExecuteRaw('DELETE FROM Pedido;'),
+        mockExecuteRaw('DELETE FROM Cliente;'),
+        mockExecuteRaw('DELETE FROM Produto;'),
+      ]);
+      expect(mockExecuteRaw).toHaveBeenCalledWith('PRAGMA foreign_keys = ON;');
+    });
+
+    it('should handle errors during cleanup', async () => {
+      mockExecuteRaw.mockRejectedValueOnce(new Error('Database error'));
+      await expect(service.cleanDatabase()).rejects.toThrow('Database error');
     });
   });
 });

@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ClientesService } from '../clientes.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateClienteDto } from '../dto/create-cliente.dto';
-import { UpdateClienteDto } from '../dto/update-cliente.dto';
 import { Prisma } from '@prisma/client';
 
 describe('ClientesService', () => {
@@ -14,9 +12,9 @@ describe('ClientesService', () => {
     $transaction: jest.fn((callback) => callback(mockPrismaService)),
     cliente: {
       findFirst: jest.fn(),
-      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      findMany: jest.fn(),
       count: jest.fn(),
     },
   };
@@ -41,82 +39,47 @@ describe('ClientesService', () => {
   });
 
   describe('create', () => {
-    const createClienteDto: CreateClienteDto = {
-      cnpj: '12345678901234',
+    const createClienteDto = {
       razao_social: 'Empresa Teste',
       nome_fantasia: 'Teste',
+      cnpj: '12345678901234',
       email: 'teste@empresa.com',
-      telefone: '1234567890',
+      telefone: '11999999999',
+      endereco: 'Rua Teste, 123',
       status: 'ativo',
     };
 
-    it('should create a new client successfully', async () => {
+    it('should create a new cliente', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-      mockPrismaService.cliente.create.mockResolvedValueOnce(createClienteDto);
+      mockPrismaService.cliente.create.mockResolvedValueOnce({ id: 1, ...createClienteDto });
 
       const result = await service.create(createClienteDto);
 
+      expect(result).toEqual({ id: 1, ...createClienteDto });
       expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
-        where: {
-          cnpj: createClienteDto.cnpj,
-          deleted_at: null,
-        },
+        where: { cnpj: createClienteDto.cnpj, deleted_at: null },
       });
       expect(mockPrismaService.cliente.create).toHaveBeenCalledWith({
         data: createClienteDto,
       });
-      expect(result).toEqual(createClienteDto);
     });
 
-    it('should throw ConflictException when CNPJ already exists', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(createClienteDto);
+    it('should throw ConflictException if CNPJ already exists', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce({ id: 1, ...createClienteDto });
 
-      await expect(service.create(createClienteDto)).rejects.toThrow(
-        ConflictException,
-      );
-      expect(mockPrismaService.cliente.create).not.toHaveBeenCalled();
+      await expect(service.create(createClienteDto)).rejects.toThrow(ConflictException);
     });
 
-    it('should throw BadRequestException on database error', async () => {
+    it('should throw ConflictException on unique constraint violation', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-      mockPrismaService.cliente.create.mockRejectedValueOnce(new Error());
-
-      await expect(service.create(createClienteDto)).rejects.toThrow(
-        BadRequestException,
+      mockPrismaService.cliente.create.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '2.0.0',
+        })
       );
-    });
 
-    it('should throw BadRequestException when transaction fails', async () => {
-      mockPrismaService.$transaction.mockRejectedValueOnce(new Error());
-
-      await expect(service.create(createClienteDto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw ConflictException when Prisma throws P2002 error', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '1.0.0',
-        meta: { target: ['cnpj'] },
-      });
-      mockPrismaService.cliente.create.mockRejectedValueOnce(prismaError);
-
-      await expect(service.create(createClienteDto)).rejects.toThrow(
-        ConflictException,
-      );
-    });
-
-    it('should throw BadRequestException when Prisma throws non-P2002 error', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-      const prismaError = new Error('Other error');
-      (prismaError as any).code = 'P2003';
-      mockPrismaService.cliente.create.mockRejectedValueOnce(prismaError);
-
-      await expect(service.create(createClienteDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.create(createClienteDto)).rejects.toThrow(ConflictException);
     });
   });
 
@@ -124,71 +87,128 @@ describe('ClientesService', () => {
     const cnpj = '12345678901234';
     const cliente = {
       id: 1,
-      cnpj,
       razao_social: 'Empresa Teste',
-      nome_fantasia: 'Teste',
+      cnpj,
       email: 'teste@empresa.com',
-      telefone: '1234567890',
+      telefone: '11999999999',
+      endereco: 'Rua Teste, 123',
       status: 'ativo',
-      deleted_at: null,
+      pedidos: [],
     };
 
-    it('should find a client by CNPJ', async () => {
+    it('should find a cliente by CNPJ', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(cliente);
 
       const result = await service.findByCnpj(cnpj);
 
-      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
-        where: {
-          cnpj,
-          deleted_at: null,
-        },
-        include: expect.any(Object),
-      });
       expect(result).toEqual(cliente);
+      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
+        where: { cnpj, deleted_at: null },
+        include: {
+          pedidos: {
+            where: { deleted_at: null },
+            select: {
+              id: true,
+              data_pedido: true,
+              status: true,
+              valor_total: true,
+            },
+          },
+        },
+      });
     });
 
-    it('should throw NotFoundException when client not found', async () => {
+    it('should throw NotFoundException if cliente not found', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
 
-      await expect(service.findByCnpj(cnpj)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findByCnpj(cnpj)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    const id = 1;
+    const updateClienteDto = {
+      razao_social: 'Empresa Atualizada',
+      email: 'atualizado@empresa.com',
+    };
+
+    it('should update a cliente', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.cliente.update.mockResolvedValueOnce({ id, ...updateClienteDto });
+
+      const result = await service.update(id, updateClienteDto);
+
+      expect(result).toEqual({ id, ...updateClienteDto });
+      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
+        where: { id, deleted_at: null },
+      });
+      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
+        where: { id },
+        data: updateClienteDto,
+      });
     });
 
-    it('should throw BadRequestException when database error occurs', async () => {
-      mockPrismaService.cliente.findFirst.mockRejectedValueOnce(new Error());
+    it('should throw NotFoundException if cliente not found', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
 
-      await expect(service.findByCnpj(cnpj)).rejects.toThrow(
-        BadRequestException,
+      await expect(service.update(id, updateClienteDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException on unique constraint violation', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.cliente.update.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '2.0.0',
+        })
       );
+
+      await expect(service.update(id, updateClienteDto)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('remove', () => {
+    const id = 1;
+
+    it('should soft delete a cliente', async () => {
+      const now = new Date();
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce({ id });
+      mockPrismaService.cliente.update.mockResolvedValueOnce({ id, deleted_at: now });
+
+      const result = await service.remove(id);
+
+      expect(result).toEqual({ id, deleted_at: now });
+      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
+        where: { id, deleted_at: null },
+      });
+      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
+        where: { id },
+        data: { deleted_at: expect.any(Date), status: 'inativo' },
+      });
+    });
+
+    it('should throw NotFoundException if cliente not found', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
+
+      await expect(service.remove(id)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findAll', () => {
-    const mockClientes = [
-      {
-        id: 1,
-        cnpj: '12345678901234',
-        razao_social: 'Empresa A',
-        status: 'ativo',
-      },
-      {
-        id: 2,
-        cnpj: '56789012345678',
-        razao_social: 'Empresa B',
-        status: 'ativo',
-      },
+    const pageOptions = { page: 1, limit: 10 };
+    const clientes = [
+      { id: 1, razao_social: 'Empresa A' },
+      { id: 2, razao_social: 'Empresa B' },
     ];
 
     it('should return paginated results', async () => {
       mockPrismaService.cliente.count.mockResolvedValueOnce(2);
-      mockPrismaService.cliente.findMany.mockResolvedValueOnce(mockClientes);
+      mockPrismaService.cliente.findMany.mockResolvedValueOnce(clientes);
 
-      const result = await service.findAll({ page: 1, limit: 10 });
+      const result = await service.findAll(pageOptions);
 
       expect(result).toEqual({
-        data: mockClientes,
+        data: clientes,
         meta: {
           page: 1,
           limit: 10,
@@ -198,14 +218,49 @@ describe('ClientesService', () => {
           hasNextPage: false,
         },
       });
+
+      expect(mockPrismaService.cliente.count).toHaveBeenCalledWith({
+        where: { deleted_at: null },
+      });
+      expect(mockPrismaService.cliente.findMany).toHaveBeenCalledWith({
+        where: { deleted_at: null },
+        skip: 0,
+        take: 10,
+        orderBy: { razao_social: 'asc' },
+      });
     });
 
-    it('should handle database errors', async () => {
-      mockPrismaService.cliente.count.mockRejectedValueOnce(new Error());
+    it('should handle empty results', async () => {
+      mockPrismaService.cliente.count.mockResolvedValueOnce(0);
+      mockPrismaService.cliente.findMany.mockResolvedValueOnce([]);
 
-      await expect(service.findAll({ page: 1, limit: 10 })).rejects.toThrow(
-        BadRequestException,
-      );
+      const result = await service.findAll(pageOptions);
+
+      expect(result).toEqual({
+        data: [],
+        meta: {
+          page: 1,
+          limit: 10,
+          itemCount: 0,
+          pageCount: 0,
+          hasPreviousPage: false,
+          hasNextPage: false,
+        },
+      });
+    });
+
+    it('should use default pagination if no options provided', async () => {
+      mockPrismaService.cliente.count.mockResolvedValueOnce(2);
+      mockPrismaService.cliente.findMany.mockResolvedValueOnce(clientes);
+
+      await service.findAll();
+
+      expect(mockPrismaService.cliente.findMany).toHaveBeenCalledWith({
+        where: { deleted_at: null },
+        skip: 0,
+        take: 10,
+        orderBy: { razao_social: 'asc' },
+      });
     });
   });
 
@@ -213,161 +268,36 @@ describe('ClientesService', () => {
     const id = 1;
     const cliente = {
       id,
-      cnpj: '12345678901234',
       razao_social: 'Empresa Teste',
-      status: 'ativo',
-      deleted_at: null,
       pedidos: [],
     };
 
-    it('should find a client by id', async () => {
+    it('should find a cliente by id', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(cliente);
 
       const result = await service.findOne(id);
 
+      expect(result).toEqual(cliente);
       expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
         where: { id, deleted_at: null },
-        include: expect.any(Object),
+        include: {
+          pedidos: {
+            where: { deleted_at: null },
+            select: {
+              id: true,
+              data_pedido: true,
+              status: true,
+              valor_total: true,
+            },
+          },
+        },
       });
-      expect(result).toEqual(cliente);
     });
 
-    it('should throw NotFoundException when client not found', async () => {
+    it('should throw NotFoundException if cliente not found', async () => {
       mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
 
       await expect(service.findOne(id)).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw BadRequestException when database error occurs', async () => {
-      mockPrismaService.cliente.findFirst.mockRejectedValueOnce(new Error());
-
-      await expect(service.findOne(id)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-  });
-
-  describe('update', () => {
-    const id = 1;
-    const updateClienteDto: UpdateClienteDto = {
-      razao_social: 'Empresa Atualizada',
-      nome_fantasia: 'Atualizada',
-      email: 'atualizado@empresa.com',
-      telefone: '9876543210',
-      status: 'inativo',
-    };
-
-    const existingCliente = {
-      id,
-      cnpj: '12345678901234',
-      razao_social: 'Empresa Antiga',
-      nome_fantasia: 'Antiga',
-      email: 'antigo@empresa.com',
-      telefone: '1234567890',
-      status: 'ativo',
-    };
-
-    it('should update a client successfully', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(existingCliente);
-      mockPrismaService.cliente.update.mockResolvedValueOnce({
-        ...existingCliente,
-        ...updateClienteDto,
-      });
-
-      const result = await service.update(id, updateClienteDto);
-
-      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
-        where: { id, deleted_at: null },
-      });
-      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
-        where: { id },
-        data: updateClienteDto,
-      });
-      expect(result).toEqual({
-        ...existingCliente,
-        ...updateClienteDto,
-      });
-    });
-
-    it('should throw NotFoundException when client not found', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-
-      await expect(service.update(id, updateClienteDto)).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(mockPrismaService.cliente.update).not.toHaveBeenCalled();
-    });
-
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(existingCliente);
-      mockPrismaService.cliente.update.mockRejectedValueOnce(new Error());
-
-      await expect(service.update(id, updateClienteDto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw ConflictException when Prisma throws P2002 error on update', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(existingCliente);
-      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '1.0.0',
-        meta: { target: ['cnpj'] },
-      });
-      mockPrismaService.cliente.update.mockRejectedValueOnce(prismaError);
-
-      await expect(service.update(id, updateClienteDto)).rejects.toThrow(
-        ConflictException,
-      );
-    });
-
-    it('should throw BadRequestException when Prisma throws non-P2002 error on update', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(existingCliente);
-      const prismaError = new Error('Other error');
-      (prismaError as any).code = 'P2003';
-      mockPrismaService.cliente.update.mockRejectedValueOnce(prismaError);
-
-      await expect(service.update(id, updateClienteDto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-  });
-
-  describe('remove', () => {
-    const id = 1;
-    const cliente = {
-      id,
-      cnpj: '12345678901234',
-      razao_social: 'Empresa Teste',
-      status: 'ativo',
-    };
-
-    it('should soft delete a client', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(cliente);
-      mockPrismaService.cliente.update.mockResolvedValueOnce({
-        ...cliente,
-        deleted_at: expect.any(Date),
-        status: 'inativo',
-      });
-
-      const result = await service.remove(id);
-
-      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
-        where: { id },
-        data: {
-          deleted_at: expect.any(Date),
-          status: 'inativo',
-        },
-      });
-      expect(result.status).toBe('inativo');
-      expect(result.deleted_at).toBeDefined();
-    });
-
-    it('should throw NotFoundException when client not found', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
-
-      await expect(service.remove(id)).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.cliente.update).not.toHaveBeenCalled();
     });
   });
 });

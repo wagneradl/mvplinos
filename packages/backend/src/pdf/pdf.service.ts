@@ -8,14 +8,15 @@ import { readFileSync, existsSync, writeFileSync } from 'fs';
 export class PdfService implements OnModuleInit {
   private readonly logger = new Logger(PdfService.name);
   private readonly pdfDir = join(process.cwd(), 'uploads', 'pdfs');
-  private readonly imagesDir = join(process.cwd(), 'uploads', 'images');
+  private readonly logoPath = join(__dirname, '..', 'assets', 'images', 'logo.png');
   private readonly isTest = process.env.NODE_ENV === 'test';
 
   async onModuleInit() {
     // Garantir que os diretórios necessários existem
     await mkdir(this.pdfDir, { recursive: true });
-    await mkdir(this.imagesDir, { recursive: true });
-    this.logger.log(`Diretórios inicializados: ${this.pdfDir}, ${this.imagesDir}`);
+    this.logger.log(`Diretórios inicializados: ${this.pdfDir}`);
+    this.logger.log(`Logo path: ${this.logoPath}`);
+    this.logger.log(`Logo exists: ${existsSync(this.logoPath)}`);
   }
 
   async generatePedidoPdf(pedidoData: any): Promise<string> {
@@ -49,37 +50,73 @@ export class PdfService implements OnModuleInit {
       
       // Se a logo existir, carregar como base64
       let logoBase64 = '';
-      const logoPath = join(this.imagesDir, 'logo.png');
-      if (existsSync(logoPath)) {
-        const logoBuffer = readFileSync(logoPath);
+      this.logger.log(`Verificando logo em: ${this.logoPath}`);
+      if (existsSync(this.logoPath)) {
+        this.logger.log('Logo encontrada, convertendo para base64');
+        const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+        this.logger.log(`Logo base64 length: ${logoBase64.length}`);
+      } else {
+        this.logger.warn('Logo não encontrada');
       }
 
-      // Gerar HTML com logo
+      // Gerar timestamp único para evitar cache do PDF
+      const timestamp = Date.now();
+      
       const html = `
+        <!DOCTYPE html>
         <html>
           <head>
+            <meta charset="utf-8">
+            <title>Pedido #${pedidoData.id}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              .header { text-align: center; margin-bottom: 30px; }
-              .logo { width: 160px; height: auto; margin-bottom: 10px; }
-              .info { margin-bottom: 20px; }
-              table { width: 100%; border-collapse: collapse; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; }
-              .total { margin-top: 20px; text-align: right; font-weight: bold; }
+              body {
+                font-family: Arial, sans-serif;
+                margin: 40px;
+                color: #333;
+              }
+              .header {
+                text-align: center;
+                margin-bottom: 30px;
+              }
+              .logo {
+                max-width: 200px;
+                margin-bottom: 20px;
+              }
+              .info {
+                margin: 20px 0;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+              }
+              th, td {
+                padding: 10px;
+                border: 1px solid #ddd;
+                text-align: left;
+              }
+              th {
+                background-color: #f5f5f5;
+              }
+              .total {
+                text-align: right;
+                font-weight: bold;
+                margin-top: 20px;
+                font-size: 1.2em;
+              }
             </style>
           </head>
           <body>
             <div class="header">
-              ${logoBase64 ? `<img src="${logoBase64}" alt="Lino's Padaria" class="logo" />` : ''}
-              <h1>Lino's Padaria</h1>
+              ${logoBase64 ? `<img src="${logoBase64}" class="logo" alt="Logo">` : ''}
               <h2>Pedido #${pedidoData.id}</h2>
             </div>
-            
+
             <div class="info">
               <h3>Dados do Cliente</h3>
               <p>Razão Social: ${pedidoData.cliente.razao_social}</p>
+              <p>Nome Fantasia: ${pedidoData.cliente.nome_fantasia}</p>
               <p>CNPJ: ${pedidoData.cliente.cnpj}</p>
               <p>Telefone: ${pedidoData.cliente.telefone}</p>
               <p>Email: ${pedidoData.cliente.email}</p>
@@ -121,7 +158,7 @@ export class PdfService implements OnModuleInit {
 
       await page.setContent(html);
       
-      const pdfPath = join(this.pdfDir, `pedido-${pedidoData.id}.pdf`);
+      const pdfPath = join(this.pdfDir, `pedido-${pedidoData.id}-${timestamp}.pdf`);
       this.logger.log(`Gerando PDF em: ${pdfPath}`);
       
       // Garantir que o diretório existe
@@ -138,10 +175,10 @@ export class PdfService implements OnModuleInit {
         }
       });
       
-      this.logger.log(`PDF gerado com sucesso para pedido ${pedidoData.id}`);
+      this.logger.log(`PDF gerado com sucesso para pedido ${pedidoData.id}-${timestamp}`);
       
       // Retorna o caminho relativo para salvar no banco
-      return `uploads/pdfs/pedido-${pedidoData.id}.pdf`;
+      return `uploads/pdfs/pedido-${pedidoData.id}-${timestamp}.pdf`;
     } catch (error) {
       this.logger.error(`Erro ao gerar PDF para pedido ${pedidoData?.id}:`, error);
       throw error;

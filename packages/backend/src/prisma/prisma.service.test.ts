@@ -1,14 +1,22 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente
+dotenv.config();
 
 @Injectable()
 export class PrismaTestService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+
     super({
       datasources: {
         db: {
-          url: 'file:./test.db'
-        }
+          url: process.env.DATABASE_URL,
+        },
       },
       log: ['error']
     });
@@ -23,19 +31,23 @@ export class PrismaTestService extends PrismaClient implements OnModuleInit, OnM
   }
 
   async cleanDatabase() {
-    const models = Reflect.ownKeys(this).filter(key => {
-      return typeof key === 'string' && 
-             !key.startsWith('_') && 
-             !['$connect', '$disconnect', 'cleanDatabase'].includes(key as string);
-    });
+    try {
+      // Desativar temporariamente as foreign keys
+      await this.$executeRaw`PRAGMA foreign_keys = OFF;`;
 
-    return Promise.all(
-      models.map(async (modelKey) => {
-        if (typeof modelKey === 'string') {
-          //@ts-ignore - Dynamic access to Prisma models
-          return this[modelKey].deleteMany();
-        }
-      })
-    );
+      // Limpar todas as tabelas em ordem
+      await this.$transaction([
+        this.$executeRaw`DELETE FROM ItemPedido;`,
+        this.$executeRaw`DELETE FROM Pedido;`,
+        this.$executeRaw`DELETE FROM Cliente;`,
+        this.$executeRaw`DELETE FROM Produto;`,
+      ]);
+
+      // Reativar as foreign keys
+      await this.$executeRaw`PRAGMA foreign_keys = ON;`;
+    } catch (error) {
+      console.error('Erro ao limpar o banco de dados:', error);
+      throw error;
+    }
   }
 }

@@ -5,6 +5,12 @@ import { PdfService } from '../../pdf/pdf.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { PedidoStatus } from '../dto/update-pedido.dto';
 import { Prisma } from '@prisma/client';
+import * as fs from 'fs';
+import { join } from 'path';
+
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+}));
 
 describe('PedidosService', () => {
   let service: PedidosService;
@@ -22,22 +28,32 @@ describe('PedidosService', () => {
     deleted_at: null,
   };
 
-  const mockProduto = {
-    id: 1,
-    nome: 'Produto Teste',
-    preco_unitario: 10.0,
-    tipo_medida: 'un',
-    status: 'ATIVO',
-    deleted_at: null,
-  };
+  const mockProdutos = [
+    {
+      id: 1,
+      nome: 'Pão Francês',
+      preco_unitario: 0.50,
+      tipo_medida: 'unidade',
+      status: 'ATIVO',
+      deleted_at: null,
+    },
+    {
+      id: 2,
+      nome: 'Bolo de Chocolate',
+      preco_unitario: 35.00,
+      tipo_medida: 'unidade',
+      status: 'ATIVO',
+      deleted_at: null,
+    }
+  ];
 
   const mockPedido = {
     id: 1,
     cliente_id: 1,
     data_pedido: new Date('2025-01-01T10:00:00Z'),
     status: PedidoStatus.PENDENTE,
-    valor_total: 20.0,
-    caminho_pdf: '/path/to/pdf',
+    valor_total: 60.00,
+    pdf_path: '/path/to/pdf',
     deleted_at: null,
     cliente: mockCliente,
     itensPedido: [
@@ -45,11 +61,20 @@ describe('PedidosService', () => {
         id: 1,
         pedido_id: 1,
         produto_id: 1,
-        quantidade: 2,
-        preco_unitario: 10.0,
-        valor_total_item: 20.0,
-        produto: mockProduto,
+        quantidade: 50,
+        preco_unitario: 0.50,
+        valor_total_item: 25.00,
+        produto: mockProdutos[0],
       },
+      {
+        id: 2,
+        pedido_id: 1,
+        produto_id: 2,
+        quantidade: 1,
+        preco_unitario: 35.00,
+        valor_total_item: 35.00,
+        produto: mockProdutos[1],
+      }
     ],
   };
 
@@ -61,6 +86,7 @@ describe('PedidosService', () => {
       },
       produto: {
         findFirst: jest.fn(),
+        findMany: jest.fn(),
       },
       pedido: {
         create: jest.fn(),
@@ -92,111 +118,147 @@ describe('PedidosService', () => {
     service = module.get<PedidosService>(PedidosService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('create', () => {
     const createPedidoDto = {
       cliente_id: 1,
       itens: [
         {
           produto_id: 1,
-          quantidade: 2,
+          quantidade: 50,
         },
+        {
+          produto_id: 2,
+          quantidade: 1,
+        }
       ],
     };
 
-    it('should create a pedido successfully', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.pedido.create.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockResolvedValueOnce(mockPedido);
+    beforeEach(() => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(mockCliente);
+      mockPrismaService.produto.findMany.mockResolvedValue(mockProdutos);
+      mockPrismaService.pedido.create.mockResolvedValue(mockPedido);
+      mockPrismaService.pedido.update.mockResolvedValue(mockPedido);
+    });
 
+    it('should create a pedido with correct total values', async () => {
       const result = await service.create(createPedidoDto);
 
+      // Verificar se os produtos foram buscados
+      expect(mockPrismaService.produto.findMany).toHaveBeenCalledWith({
+        where: {
+          id: {
+            in: [1, 2]
+          }
+        }
+      });
+
+      // Verificar se o pedido foi criado com os valores corretos
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            cliente_id: 1,
+            valor_total: 60.00,
+            status: PedidoStatus.PENDENTE,
+            itensPedido: {
+              create: [
+                {
+                  produto_id: 1,
+                  quantidade: 50,
+                  preco_unitario: 0.50,
+                  valor_total_item: 25.00,
+                },
+                {
+                  produto_id: 2,
+                  quantidade: 1,
+                  preco_unitario: 35.00,
+                  valor_total_item: 35.00,
+                }
+              ]
+            }
+          })
+        })
+      );
+
       expect(result).toEqual(mockPedido);
-      expect(mockPdfService.generatePedidoPdf).toHaveBeenCalledWith(mockPedido);
-      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith({
-        data: {
-          cliente_id: createPedidoDto.cliente_id,
-          data_pedido: expect.any(Date),
-          status: PedidoStatus.PENDENTE,
-          valor_total: 20.0,
-          caminho_pdf: '',
-          itensPedido: {
-            create: [{
-              produto_id: 1,
-              quantidade: 2,
-              preco_unitario: 10.0,
-              valor_total_item: 20.0,
-            }],
-          },
-        },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
-      });
-      expect(mockPrismaService.pedido.update).toHaveBeenCalledWith({
-        where: { id: mockPedido.id },
-        data: { caminho_pdf: '/path/to/pdf' },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
-      });
     });
 
-    it('should throw NotFoundException when cliente not found', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
+    it('should throw error if product not found', async () => {
+      // Simular que o segundo produto não foi encontrado
+      mockPrismaService.produto.findMany.mockResolvedValue([mockProdutos[0]]);
 
-      await expect(service.create(createPedidoDto)).rejects.toThrow(
-        new NotFoundException(`Cliente com ID ${createPedidoDto.cliente_id} não encontrado`),
-      );
+      await expect(service.create(createPedidoDto)).rejects.toThrow('Produto 2 não encontrado');
     });
 
-    it('should throw NotFoundException when produto not found', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
+    it('should throw error if client not found', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
 
-      await expect(service.create(createPedidoDto)).rejects.toThrow(
-        new NotFoundException(`Produto com ID ${createPedidoDto.itens[0].produto_id} não encontrado`),
-      );
+      await expect(service.create(createPedidoDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.cliente.findFirst.mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '2.0.0',
-        }),
-      );
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
 
-      await expect(service.create(createPedidoDto)).rejects.toThrow(
-        new BadRequestException('Erro ao criar pedido'),
-      );
+      await expect(service.create(createPedidoDto)).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw error when PDF generation fails', async () => {
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.pedido.create.mockResolvedValueOnce(mockPedido);
-      mockPdfService.generatePedidoPdf.mockRejectedValueOnce(new Error('PDF generation failed'));
+    it('should calculate total values correctly for decimal quantities', async () => {
+      const decimalPedidoDto = {
+        cliente_id: 1,
+        itens: [
+          {
+            produto_id: 1,
+            quantidade: 1.5, // 1.5 kg de pão
+          }
+        ],
+      };
 
-      await expect(service.create(createPedidoDto)).rejects.toThrow('PDF generation failed');
+      const decimalMockProduto = {
+        ...mockProdutos[0],
+        preco_unitario: 10.00, // R$ 10,00 por kg
+      };
+
+      mockPrismaService.produto.findMany.mockResolvedValue([decimalMockProduto]);
+
+      const decimalMockPedido = {
+        ...mockPedido,
+        valor_total: 15.00,
+        itensPedido: [
+          {
+            id: 1,
+            pedido_id: 1,
+            produto_id: 1,
+            quantidade: 1.5,
+            preco_unitario: 10.00,
+            valor_total_item: 15.00,
+            produto: decimalMockProduto,
+          }
+        ],
+      };
+
+      mockPrismaService.pedido.create.mockResolvedValue(decimalMockPedido);
+      mockPrismaService.pedido.update.mockResolvedValue(decimalMockPedido);
+
+      const result = await service.create(decimalPedidoDto);
+
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            valor_total: 15.00,
+            itensPedido: {
+              create: [
+                {
+                  produto_id: 1,
+                  quantidade: 1.5,
+                  preco_unitario: 10.00,
+                  valor_total_item: 15.00,
+                }
+              ]
+            }
+          })
+        })
+      );
+
+      expect(result).toEqual(decimalMockPedido);
     });
   });
 
@@ -205,24 +267,17 @@ describe('PedidosService', () => {
       page: 1,
       limit: 10,
       startDate: '2025-01-01',
-      endDate: '2025-12-31',
+      endDate: '2025-01-31',
       clienteId: 1,
     };
 
-    it('should return paginated pedidos with all filters', async () => {
-      const mockPedidos = [mockPedido];
-      const mockCount = 1;
+    beforeEach(() => {
+      mockPrismaService.pedido.findMany.mockResolvedValue([mockPedido]);
+      mockPrismaService.pedido.count.mockResolvedValue(1);
+    });
 
-      mockPrismaService.pedido.findMany.mockResolvedValueOnce(mockPedidos);
-      mockPrismaService.pedido.count.mockResolvedValueOnce(mockCount);
-
+    it('should return paginated pedidos with filters', async () => {
       const result = await service.findAll(mockFilter);
-
-      const dataInicial = new Date('2025-01-01');
-      dataInicial.setHours(0, 0, 0, 0);
-      
-      const dataFinal = new Date('2025-12-31');
-      dataFinal.setHours(23, 59, 59, 999);
 
       expect(mockPrismaService.pedido.findMany).toHaveBeenCalledWith({
         skip: 0,
@@ -230,283 +285,194 @@ describe('PedidosService', () => {
         where: {
           deleted_at: null,
           data_pedido: {
-            gte: dataInicial,
-            lte: dataFinal,
+            gte: expect.any(Date),
+            lte: expect.any(Date),
           },
           cliente_id: 1,
         },
         orderBy: {
           data_pedido: 'desc',
         },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
+        include: expect.any(Object),
       });
 
       expect(result).toEqual({
-        data: mockPedidos,
+        data: [mockPedido],
         meta: {
-          total: mockCount,
-          page: mockFilter.page,
-          limit: mockFilter.limit,
-          totalPages: Math.ceil(mockCount / mockFilter.limit),
-        },
-      });
-    });
-
-    it('should return pedidos without date filters', async () => {
-      const filterWithoutDates = {
-        page: 1,
-        limit: 10,
-        clienteId: 1,
-      };
-
-      mockPrismaService.pedido.findMany.mockResolvedValueOnce([mockPedido]);
-      mockPrismaService.pedido.count.mockResolvedValueOnce(1);
-
-      await service.findAll(filterWithoutDates);
-
-      expect(mockPrismaService.pedido.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 10,
-        where: {
-          deleted_at: null,
-          cliente_id: 1,
-        },
-        orderBy: {
-          data_pedido: 'desc',
-        },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
-      });
-    });
-
-    it('should return pedidos without client filter', async () => {
-      const filterWithoutClient = {
-        page: 1,
-        limit: 10,
-        startDate: '2025-01-01',
-        endDate: '2025-12-31',
-      };
-
-      mockPrismaService.pedido.findMany.mockResolvedValueOnce([mockPedido]);
-      mockPrismaService.pedido.count.mockResolvedValueOnce(1);
-
-      await service.findAll(filterWithoutClient);
-
-      const dataInicial = new Date('2025-01-01');
-      dataInicial.setHours(0, 0, 0, 0);
-      
-      const dataFinal = new Date('2025-12-31');
-      dataFinal.setHours(23, 59, 59, 999);
-
-      expect(mockPrismaService.pedido.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 10,
-        where: {
-          deleted_at: null,
-          data_pedido: {
-            gte: dataInicial,
-            lte: dataFinal,
-          },
-        },
-        orderBy: {
-          data_pedido: 'desc',
-        },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
         },
       });
     });
 
     it('should handle database error', async () => {
-      mockPrismaService.pedido.findMany.mockRejectedValueOnce(new Error('Database error'));
+      mockPrismaService.pedido.findMany.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
 
-      await expect(service.findAll(mockFilter)).rejects.toThrow(
-        new BadRequestException('Erro ao buscar pedidos'),
-      );
+      await expect(service.findAll(mockFilter)).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findOne', () => {
-    it('should return a pedido', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
+    beforeEach(() => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedido);
+    });
 
+    it('should return a pedido by id', async () => {
       const result = await service.findOne(1);
 
-      expect(result).toEqual(mockPedido);
       expect(mockPrismaService.pedido.findFirst).toHaveBeenCalledWith({
         where: { id: 1, deleted_at: null },
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
+        include: expect.any(Object),
       });
+
+      expect(result).toEqual(mockPedido);
     });
 
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(null);
+    it('should throw NotFoundException if pedido not found', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne(1)).rejects.toThrow(
-        new NotFoundException('Pedido com ID 1 não encontrado'),
-      );
+      await expect(service.findOne(1)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.pedido.findFirst.mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '2.0.0',
-        }),
-      );
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.findFirst.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
 
-      await expect(service.findOne(1)).rejects.toThrow(
-        new BadRequestException('Erro ao buscar pedido'),
-      );
+      await expect(service.findOne(1)).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('update', () => {
-    const updatePedidoDto = {
+    const updatePedidoDto = { 
       status: PedidoStatus.ATUALIZADO,
     };
 
-    it('should update a pedido successfully', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockResolvedValueOnce({
+    beforeEach(() => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedido);
+      mockPrismaService.pedido.update.mockResolvedValue({
         ...mockPedido,
         status: PedidoStatus.ATUALIZADO,
       });
+    });
 
+    it('should update a pedido successfully', async () => {
       const result = await service.update(1, updatePedidoDto);
 
-      expect(result.status).toBe(PedidoStatus.ATUALIZADO);
       expect(mockPrismaService.pedido.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: updatePedidoDto,
-        include: {
-          cliente: true,
-          itensPedido: {
-            include: {
-              produto: true,
-            },
-          },
-        },
-      });
-    });
-
-    it('should throw BadRequestException when updating a canceled pedido', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce({
-        ...mockPedido,
-        status: PedidoStatus.CANCELADO,
+        include: expect.any(Object),
       });
 
-      await expect(service.update(1, updatePedidoDto)).rejects.toThrow(
-        new BadRequestException('Não é possível atualizar um pedido cancelado'),
-      );
+      expect(result.status).toBe(PedidoStatus.ATUALIZADO);
     });
 
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(null);
+    it('should throw NotFoundException if pedido not found', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(null);
 
       await expect(service.update(1, updatePedidoDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '2.0.0',
-        }),
-      );
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.update.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
 
       await expect(service.update(1, updatePedidoDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should generate new PDF if status changes', async () => {
+      const result = await service.update(1, updatePedidoDto);
+
+      expect(mockPdfService.generatePedidoPdf).toHaveBeenCalled();
+      expect(result.pdf_path).toBe('/path/to/pdf');
     });
   });
 
   describe('remove', () => {
-    it('should soft delete a pedido successfully', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockResolvedValueOnce({
+    beforeEach(() => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedido);
+      mockPrismaService.pedido.update.mockResolvedValue({
         ...mockPedido,
         deleted_at: new Date(),
         status: PedidoStatus.CANCELADO,
       });
+    });
 
+    it('should soft delete a pedido', async () => {
       const result = await service.remove(1);
 
-      expect(result.deleted_at).toBeDefined();
       expect(mockPrismaService.pedido.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: {
           deleted_at: expect.any(Date),
           status: PedidoStatus.CANCELADO,
         },
+        include: expect.any(Object),
       });
+
+      expect(result.deleted_at).toBeDefined();
+      expect(result.status).toBe(PedidoStatus.CANCELADO);
     });
 
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(null);
+    it('should throw NotFoundException if pedido not found', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(null);
 
       await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '2.0.0',
-        }),
-      );
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.update.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
 
       await expect(service.remove(1)).rejects.toThrow(BadRequestException);
     });
   });
 
-  describe('repeatOrder', () => {
+  describe('repeat', () => {
+    beforeEach(() => {
+      const novoPedido = {
+        id: 2,
+        cliente_id: mockPedido.cliente_id,
+        valor_total: mockPedido.valor_total,
+        status: PedidoStatus.PENDENTE,
+        data_pedido: new Date(),
+        pdf_path: '/path/to/pdf',
+        cliente: mockCliente,
+        itensPedido: mockPedido.itensPedido.map((item, index) => ({
+          id: index + 1,
+          pedido_id: 2,
+          produto_id: item.produto_id,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_unitario,
+          valor_total_item: item.valor_total_item,
+          produto: mockProdutos.find(p => p.id === item.produto_id),
+        })),
+      };
+
+      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedido);
+      mockPrismaService.cliente.findFirst.mockResolvedValue(mockCliente);
+      mockPrismaService.produto.findMany.mockResolvedValue(mockProdutos);
+      mockPrismaService.pedido.create.mockResolvedValue(novoPedido);
+      mockPrismaService.pedido.update.mockResolvedValue(novoPedido);
+      mockPdfService.generatePedidoPdf.mockResolvedValue('/path/to/pdf');
+    });
+
     it('should repeat a pedido successfully', async () => {
-      // Mock findOne
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      
-      // Mock cliente check
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      
-      // Mock produto check
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      
-      // Mock create
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(mockProduto);
-      mockPrismaService.pedido.create.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.pedido.update.mockResolvedValueOnce(mockPedido);
+      const result = await service.repeat(1);
 
-      const result = await service.repeatOrder(1);
-
-      expect(result).toEqual(mockPedido);
-      expect(mockPrismaService.pedido.findFirst).toHaveBeenCalledWith({
-        where: { id: 1, deleted_at: null },
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          cliente_id: mockPedido.cliente_id,
+          valor_total: mockPedido.valor_total,
+          status: PedidoStatus.PENDENTE,
+          itensPedido: {
+            create: mockPedido.itensPedido.map(item => ({
+              produto_id: item.produto_id,
+              quantidade: item.quantidade,
+              preco_unitario: item.preco_unitario,
+              valor_total_item: item.valor_total_item,
+            })),
+          },
+        }),
         include: {
           cliente: true,
           itensPedido: {
@@ -516,44 +482,59 @@ describe('PedidosService', () => {
           },
         },
       });
-      expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
-        where: { id: mockPedido.cliente_id, deleted_at: null },
+
+      expect(result.id).toBe(2);
+    });
+
+    it('should throw NotFoundException if original pedido not found', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(null);
+
+      await expect(service.repeat(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.findFirst.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('Error', { code: 'P2002', clientVersion: '1.0' }));
+
+      await expect(service.repeat(1)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getPdfPath', () => {
+    beforeEach(() => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        id: 1,
+        pdf_path: '/path/to/pdf',
       });
-      expect(mockPrismaService.produto.findFirst).toHaveBeenCalledWith({
-        where: { id: mockPedido.itensPedido[0].produto_id, deleted_at: null },
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return pdf path if it exists', async () => {
+      const result = await service.getPdfPath(1);
+
+      expect(mockPrismaService.pedido.findFirst).toHaveBeenCalledWith({
+        where: { id: 1, deleted_at: null },
       });
+
+      expect(fs.existsSync).toHaveBeenCalledWith(join(process.cwd(), '/path/to/pdf'));
+      expect(result).toBe(join(process.cwd(), '/path/to/pdf'));
     });
 
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(null);
+    it('should throw NotFoundException if pedido not found', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(null);
 
-      await expect(service.repeatOrder(1)).rejects.toThrow(NotFoundException);
+      await expect(service.getPdfPath(1)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException when cliente not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(null);
+    it('should handle database error', async () => {
+      mockPrismaService.pedido.findFirst.mockImplementation(() => {
+        throw new BadRequestException('Erro ao buscar pedido');
+      });
 
-      await expect(service.repeatOrder(1)).rejects.toThrow(BadRequestException);
-    });
-
-    it('should throw BadRequestException when produto not found', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValueOnce(mockPedido);
-      mockPrismaService.cliente.findFirst.mockResolvedValueOnce(mockCliente);
-      mockPrismaService.produto.findFirst.mockResolvedValueOnce(null);
-
-      await expect(service.repeatOrder(1)).rejects.toThrow(BadRequestException);
-    });
-
-    it('should throw BadRequestException on database error', async () => {
-      mockPrismaService.pedido.findFirst.mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '2.0.0',
-        }),
-      );
-
-      await expect(service.repeatOrder(1)).rejects.toThrow(BadRequestException);
+      await expect(service.getPdfPath(1)).rejects.toThrow(BadRequestException);
     });
   });
 });

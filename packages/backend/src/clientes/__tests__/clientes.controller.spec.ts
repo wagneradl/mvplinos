@@ -127,64 +127,69 @@ describe('ClientesController', () => {
   });
 
   describe('findOne', () => {
-    it('should return a cliente by id', async () => {
-      const result = await controller.findOne(1);
+    it('should find a cliente by id', async () => {
+      const id = 1;
+      const result = await controller.findOne(id);
       expect(result).toEqual(mockCliente);
-      expect(service.findOne).toHaveBeenCalledWith(1);
+      expect(service.findOne).toHaveBeenCalledWith(id);
     });
 
     it('should handle service errors', async () => {
+      const id = 1;
       jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
-      await expect(controller.findOne(1)).rejects.toThrow();
+      await expect(controller.findOne(id)).rejects.toThrow();
     });
   });
 
   describe('findByCnpj', () => {
-    it('should return a cliente by CNPJ', async () => {
-      jest.spyOn(service, 'findByCnpj').mockResolvedValue(mockCliente);
-      const result = await controller.findByCnpj('12.345.678/0001-90');
+    it('should find a cliente by CNPJ', async () => {
+      const cnpj = '12.345.678/0001-90';
+      const result = await controller.findByCnpj(cnpj);
       expect(result).toEqual(mockCliente);
-      expect(service.findByCnpj).toHaveBeenCalledWith('12.345.678/0001-90');
+      expect(service.findByCnpj).toHaveBeenCalledWith(cnpj);
     });
 
     it('should handle service errors', async () => {
+      const cnpj = '12.345.678/0001-90';
       jest.spyOn(service, 'findByCnpj').mockRejectedValue(new Error());
-      await expect(controller.findByCnpj('12.345.678/0001-90')).rejects.toThrow();
+      await expect(controller.findByCnpj(cnpj)).rejects.toThrow();
     });
   });
 
   describe('update', () => {
     it('should update a cliente', async () => {
+      const id = 1;
       const updateDto: UpdateClienteDto = {
         nome_fantasia: 'Empresa Atualizada',
       };
 
-      const result = await controller.update(1, updateDto);
+      const result = await controller.update(id, updateDto);
       expect(result).toEqual(mockCliente);
-      expect(service.update).toHaveBeenCalledWith(1, updateDto);
+      expect(service.update).toHaveBeenCalledWith(id, updateDto);
     });
 
-    it('should handle invalid id format', async () => {
+    it('should handle service errors', async () => {
+      const id = 1;
       const updateDto: UpdateClienteDto = {
         nome_fantasia: 'Empresa Atualizada',
       };
 
-      jest.spyOn(service, 'update').mockRejectedValue(new Error('Invalid ID'));
-      await expect(controller.update(1, updateDto)).rejects.toThrow();
+      jest.spyOn(service, 'update').mockRejectedValue(new Error());
+      await expect(controller.update(id, updateDto)).rejects.toThrow();
     });
   });
 
   describe('remove', () => {
     it('should remove a cliente', async () => {
-      jest.spyOn(service, 'remove').mockResolvedValue(mockCliente);
-      const result = await controller.remove(1);
-      expect(result).toEqual(mockCliente);
-      expect(service.remove).toHaveBeenCalledWith(1);
+      const id = 1;
+      await controller.remove(id);
+      expect(service.remove).toHaveBeenCalledWith(id);
     });
 
-    it('should handle invalid id format', async () => {
-      jest.spyOn(service, 'remove').mockRejectedValue(new Error('Invalid ID'));
-      await expect(controller.remove(1)).rejects.toThrow();
+    it('should handle service errors', async () => {
+      const id = 1;
+      jest.spyOn(service, 'remove').mockRejectedValue(new Error());
+      await expect(controller.remove(id)).rejects.toThrow();
     });
   });
 });

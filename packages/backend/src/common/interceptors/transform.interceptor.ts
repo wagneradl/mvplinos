@@ -10,9 +10,9 @@ import { map } from 'rxjs/operators';
 export interface Response<T> {
   items: T[];
   meta: {
-    itemCount: number;
-    pageSize: number;
+    total: number;
     page: number;
+    limit: number;
     totalPages: number;
   };
 }
@@ -32,10 +32,10 @@ export class TransformInterceptor<T>
           return {
             items: data.data,
             meta: {
-              itemCount: data.meta.itemCount || data.meta.total,
-              pageSize: data.meta.limit || 10,
+              total: data.meta.total,
               page: data.meta.page || 1,
-              totalPages: data.meta.pageCount || Math.ceil(data.meta.total / (data.meta.limit || 10)),
+              limit: data.meta.limit || 10,
+              totalPages: Math.ceil(data.meta.total / (data.meta.limit || 10)),
             },
           };
         }
@@ -45,9 +45,9 @@ export class TransformInterceptor<T>
           return {
             items: data,
             meta: {
-              itemCount: data.length,
-              pageSize: 10,
+              total: data.length,
               page: 1,
+              limit: 10,
               totalPages: 1,
             },
           };
@@ -62,9 +62,9 @@ export class TransformInterceptor<T>
         return {
           items: [data],
           meta: {
-            itemCount: 1,
-            pageSize: 1,
+            total: 1,
             page: 1,
+            limit: 1,
             totalPages: 1,
           },
         };

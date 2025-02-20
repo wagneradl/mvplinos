@@ -12,9 +12,10 @@ export class CreateProdutoDto {
   @Min(0)
   preco_unitario: number;
 
-  @ApiProperty({ description: 'Tipo de medida do produto (kg, un, etc)' })
+  @ApiProperty({ description: 'Tipo de medida do produto', enum: ['un', 'kg', 'lt'] })
   @IsString()
   @IsNotEmpty()
+  @IsIn(['un', 'kg', 'lt'])
   tipo_medida: string;
 
   @ApiProperty({ description: 'Status do produto', enum: ['ativo', 'inativo'] })

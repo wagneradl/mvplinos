@@ -1,105 +1,85 @@
-current_state:
-  overview: >
-    O Sistema de Gestão de Pedidos da Lino's Padaria está em fase avançada de desenvolvimento,
-    com os módulos principais implementados e testados. A arquitetura está baseada em um monorepo
-    com backend NestJS, frontend Next.js e SQLite como banco de dados.
+estado_atual:
+  visao_geral: >
+    O MVP está em fase avançada de desenvolvimento, com funcionalidades core do backend implementadas
+    e testadas. O frontend está em desenvolvimento, com foco nas telas principais. O sistema já
+    suporta operações básicas de gestão de pedidos, incluindo geração de PDF e repetição de pedidos.
 
-  completed_modules:
-    produtos:
-      status: "Completo"
-      coverage: "92.15%"
-      features:
-        - "CRUD completo"
-        - "Soft delete"
-        - "Paginação"
-        - "Validações"
-        - "Testes unitários e de integração"
-
-    clientes:
-      status: "Completo"
-      coverage: "98.57%"
-      features:
-        - "CRUD completo"
-        - "Busca por CNPJ"
-        - "Validações (CNPJ, telefone, email)"
-        - "Soft delete"
-        - "Paginação"
-        - "Testes unitários e de integração"
-
-    pedidos:
-      status: "Parcialmente completo"
-      features:
-        - "CRUD básico"
-        - "Geração de PDF"
-        - "Template configurado"
-        - "Armazenamento de arquivos"
-      pending:
-        - "Validações adicionais de negócio"
-        - "Otimizações de performance"
-        - "Testes completos"
-
-  infrastructure:
-    database: "SQLite com Prisma"
-    testing: "Jest, SuperTest, Testing Library"
-    ci_cd: "GitHub Actions configurado"
-    code_quality: "ESLint, Prettier, CodeQL"
-
-critical_next_steps:
-  1: "Implementar autenticação e autorização"
-  2: "Completar testes do módulo de pedidos"
-  3: "Implementar validações adicionais de negócio"
-  4: "Desenvolver interface do usuário"
-  5: "Configurar logs e monitoramento"
-
-attention_points:
-  performance:
-    - "Monitorar performance do SQLite com crescimento dos dados"
-    - "Implementar estratégias de cache quando necessário"
-    - "Otimizar queries complexas no módulo de pedidos"
-
-  security:
-    - "Implementar autenticação e autorização como prioridade"
-    - "Validar acesso a arquivos estáticos"
-    - "Implementar rate limiting em endpoints sensíveis"
-
-  maintenance:
-    - "Validar processo de backup em produção"
-    - "Monitorar uso de disco para PDFs gerados"
-    - "Implementar rotina de limpeza de arquivos temporários"
-
-technical_context:
-  architecture:
-    - "Monorepo com Yarn Workspaces"
-    - "Backend NestJS com estrutura modular"
-    - "Frontend Next.js (a ser implementado)"
-    - "SQLite para armazenamento local"
-    - "Prisma como ORM"
-
-  code_organization:
+  modulos_completos:
     backend:
-      - "src/produtos: Módulo de produtos completo"
-      - "src/clientes: Módulo de clientes completo"
-      - "src/pedidos: Módulo de pedidos em desenvolvimento"
-      - "src/shared: Utilitários e tipos compartilhados"
+      - "CRUD completo de Produtos"
+      - "CRUD completo de Clientes"
+      - "CRUD completo de Pedidos"
+      - "Geração de PDF"
+      - "Repetição de pedidos"
+      - "Testes de integração"
+    
+    frontend:
+      - "Tela de Produtos"
+      - "Tela de Clientes"
+      
+    infraestrutura:
+      - "Banco de dados SQLite"
+      - "Prisma ORM"
+      - "Ambiente de testes"
 
-  testing_strategy:
-    coverage_targets:
-      - "Mínimo de 80% de cobertura por módulo"
-      - "Foco em testes de integração para fluxos críticos"
-      - "Ambiente de teste isolado com SQLite dedicado"
+proximos_passos:
+  criticos:
+    - "Finalizar tela de Pedidos no frontend"
+    - "Implementar relatórios básicos"
+    - "Adicionar paginação nas listagens"
+    - "Configurar deploy local"
+    
+  importantes:
+    - "Implementar filtros avançados"
+    - "Adicionar validações de horário"
+    - "Configurar backup automático"
+    
+  desejáveis:
+    - "Melhorar UX das listagens"
+    - "Adicionar mais testes E2E"
+    - "Implementar cache"
 
-  dependencies:
-    critical:
-      - "Puppeteer para geração de PDF"
-      - "Prisma para acesso ao banco"
-      - "NestJS para backend"
-      - "Jest para testes"
+pontos_atencao:
+  codigo:
+    - "Manter padrão de validações no backend"
+    - "Seguir convenções de nomenclatura"
+    - "Documentar novas APIs"
+    
+  arquitetura:
+    - "Manter separação de responsabilidades"
+    - "Evitar duplicação de lógica de negócio"
+    - "Seguir princípios SOLID"
+    
+  qualidade:
+    - "Manter cobertura de testes"
+    - "Validar regras de negócio"
+    - "Testar casos de erro"
 
-handoff_notes: >
-  O sistema está em um estado sólido com módulos base implementados e testados.
-  O foco agora deve ser na implementação de autenticação, finalização do módulo
-  de pedidos e desenvolvimento do frontend. A arquitetura está bem documentada
-  e os padrões de código estabelecidos devem ser seguidos. Os testes são
-  críticos e devem manter a cobertura mínima de 80%. Atenção especial deve
-  ser dada ao monitoramento de performance e implementação de cache conforme
-  necessário.
+contexto_tecnico:
+  backend:
+    framework: "NestJS"
+    orm: "Prisma"
+    banco: "SQLite"
+    testes: "Jest + SuperTest"
+    
+  frontend:
+    framework: "Next.js 13"
+    ui: "Material-UI"
+    estado: "React Context"
+    
+  patterns:
+    - "Repository Pattern no backend"
+    - "Service Layer para lógica de negócio"
+    - "DTO para validação de inputs"
+    - "Testes de integração para APIs"
+
+documentacao:
+  tecnica:
+    - "API documentada com Swagger"
+    - "README atualizado"
+    - "Documentação de testes"
+    
+  negocio:
+    - "Regras de negócio documentadas"
+    - "Fluxos de pedido definidos"
+    - "Validações necessárias"

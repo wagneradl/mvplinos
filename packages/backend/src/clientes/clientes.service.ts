@@ -74,7 +74,7 @@ export class ClientesService {
       });
 
       if (!cliente) {
-        throw new NotFoundException('Cliente não encontrado');
+        throw new NotFoundException(`Cliente com CNPJ ${cnpj} não encontrado`);
       }
 
       return cliente;
@@ -194,7 +194,7 @@ export class ClientesService {
       });
 
       if (!cliente) {
-        throw new NotFoundException('Cliente não encontrado');
+        throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
       }
 
       return cliente;

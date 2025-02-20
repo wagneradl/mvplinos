@@ -1,116 +1,54 @@
-current_phase: 2
-phase_progress: 95
-last_update: "2025-02-19T22:24:55"
-current_agent: "Senior Software Engineer"
+status_atual:
+  progresso_geral: "75%"
+  backend: "90%"
+  frontend: "60%"
+  infraestrutura: "80%"
 
-phase_status: "Em Desenvolvimento - Módulo de Pedidos com Geração de PDF Implementado"
-
-completed_tasks:
-  pedidos:
-    - "Implementar CRUD completo"
-    - "Implementar geração de PDF"
-    - "Configurar template de pedido"
-    - "Configurar armazenamento de PDFs"
-    - "Implementar servir arquivos estáticos"
-    - "Adicionar logo ao PDF"
-    - "Otimizar layout do PDF"
-
-  infraestrutura:
-    - "Configurar Puppeteer para geração de PDF"
-    - "Configurar diretório de uploads"
-    - "Configurar servir arquivos estáticos"
-  setup_e_infraestrutura:
-    - "Criar estrutura de monorepo com Yarn Workspaces"
-    - "Configurar ESLint e Prettier"
-    - "Configurar Prisma Schema com SQLite"
-    - "Configurar projetos NestJS e Next.js"
-    - "Criar pacote shared com tipos e utilitários"
-
-  banco_de_dados:
-    - "Configurar SQLite para ambiente offline"
-    - "Implementar schema inicial"
-    - "Configurar ambiente de teste dedicado"
-    - "Implementar sistema de backup automático"
-
-  testes:
-    - "Configurar Jest e SuperTest no backend"
-    - "Configurar Jest e Testing Library no frontend"
-    - "Implementar estrutura de testes (unit, integration, e2e)"
-    - "Configurar MSW para mocks de API"
-    - "Criar primeiros testes de exemplo"
-
-  ci_cd:
-    - "Configurar GitHub Actions otimizado"
-    - "Implementar pipeline de testes"
-    - "Configurar análise de código com CodeQL"
-    - "Implementar verificação de dependências"
-
-  produtos:
-    - "Implementar CRUD completo"
-    - "Adicionar validações de dados"
-    - "Criar testes unitários"
-    - "Criar testes de integração"
-    - "Adequar ao schema existente"
-
-  clientes:
-    - "Implementar CRUD completo"
-    - "Implementar busca por CNPJ"
-    - "Adicionar validações rigorosas"
-    - "Criar testes unitários"
-    - "Criar testes de integração"
-    - "Preparar integração com pedidos"
-
-tasks_in_progress:
-  - "Planejamento de autenticação e autorização"
-  - "Otimização do módulo de pedidos"
-  - "Validações adicionais de negócio"
-
-pending_tasks:
-  desenvolvimento:
-    - "Implementar endpoints CRUD para pedidos"
-    - "Implementar autenticação e autorização"
-    - "Configurar logs e monitoramento"
-    - "Implementar cache"
-    - "Otimizar queries e índices"
-
+tasks_completadas:
+  backend:
+    - "Implementação do CRUD de Produtos"
+    - "Implementação do CRUD de Clientes"
+    - "Implementação do CRUD de Pedidos"
+    - "Geração de PDF para pedidos"
+    - "Funcionalidade de repetir pedido"
+    - "Validações de negócio para pedidos"
+    - "Cálculo automático de valores"
+    - "Testes de integração para Pedidos"
+    - "Validações de produtos inativos/deletados"
+    - "Validações de clientes inativos"
+    - "Atualização de quantidades em itens do pedido"
   frontend:
-    - "Criar interfaces de usuário"
-    - "Implementar formulários"
-    - "Configurar gerenciamento de estado"
+    - "Tela de Produtos"
+    - "Tela de Clientes"
+    - "Layout base da aplicação"
+  infraestrutura:
+    - "Configuração do banco SQLite"
+    - "Configuração do Prisma ORM"
+    - "Setup do ambiente de testes"
+    - "Integração com PDF Service"
 
-known_issues:
-  - categoria: "Performance"
-    descricao: "Monitorar performance do SQLite com crescimento dos dados"
-    status: "A ser avaliado durante desenvolvimento"
-    
-  - categoria: "Backup"
-    descricao: "Necessidade de validação do processo de backup em produção"
-    status: "Implementado mas requer validação em ambiente real"
+tasks_em_andamento:
+  backend:
+    - "Implementação de relatórios básicos"
+    - "Filtros avançados para listagens"
+    - "Paginação nas listagens"
+  frontend:
+    - "Tela de Pedidos"
+    - "Componente de listagem com filtros"
+    - "Interface para relatórios"
+  infraestrutura:
+    - "Scripts de deploy local"
+    - "Configuração de backup"
 
-  - categoria: "Validação"
-    descricao: "Necessidade de validações adicionais de negócio"
-    status: "Em planejamento"
-
-milestones_completed:
-  - "Setup inicial completo"
-  - "Ambiente de testes configurado"
-  - "CI/CD implementado"
-  - "CRUD Produtos implementado"
-  - "CRUD Clientes implementado"
-  - "CRUD Pedidos implementado"
-  - "Geração de PDF implementada"
-  - "Setup inicial completo"
-  - "Ambiente de testes configurado"
-  - "CI/CD implementado"
-  - "CRUD Produtos implementado"
-  - "CRUD Clientes implementado"
-
-next_milestone: "Autenticação e Autorização"
-
-metrics:
-  test_coverage: 
-    produtos: "100%"
-    clientes: "100%"
-    global: "50%"
-  code_quality: "Passou em todas as validações"
-  build_status: "Passing"
+issues_conhecidas:
+  backend:
+    - "Necessidade de validação de horários de pedido"
+    - "Implementar limites de quantidade por produto"
+    - "Histórico de alterações de status não implementado"
+  frontend:
+    - "Paginação não implementada nas listagens"
+    - "Filtros avançados pendentes"
+    - "Interface para repetição de pedidos pendente"
+  infraestrutura:
+    - "Backup automático não implementado"
+    - "Monitoramento de performance pendente"

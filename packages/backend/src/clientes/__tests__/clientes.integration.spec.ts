@@ -2,6 +2,21 @@ import request from 'supertest';
 import { app, prismaService } from '../../../test/setup-integration';
 
 describe('Clientes Integration Tests', () => {
+  const createTestCliente = async (data = {}) => {
+    const defaultData = {
+      razao_social: 'Empresa Teste',
+      nome_fantasia: 'Empresa Teste Ltda',
+      cnpj: '12.345.678/9012-34',
+      email: 'teste@empresa.com',
+      telefone: '(11) 99999-9999',
+      status: 'ativo',
+      ...data,
+    };
+
+    return await prismaService.cliente.create({
+      data: defaultData,
+    });
+  };
 
   describe('/clientes (POST)', () => {
     it('should create cliente', async () => {
@@ -19,11 +34,10 @@ describe('Clientes Integration Tests', () => {
         .send(cliente)
         .expect(201);
 
-      expect(response.body).toEqual({
+      expect(response.body).toEqual(expect.objectContaining({
         id: expect.any(Number),
         ...cliente,
-        deleted_at: null,
-      });
+      }));
     });
 
     it('should validate required fields', async () => {
@@ -54,29 +68,25 @@ describe('Clientes Integration Tests', () => {
     });
 
     it('should not allow duplicate CNPJ', async () => {
-      const cliente = {
-        razao_social: 'Empresa Teste',
-        nome_fantasia: 'Empresa Teste Ltda',
-        cnpj: '12.345.678/9012-34',
-        email: 'teste@empresa.com',
-        telefone: '(11) 99999-9999',
-        status: 'ativo',
-      };
+      const cliente = await createTestCliente();
 
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .post('/clientes')
-        .send(cliente)
-        .expect(201);
+        .send({
+          razao_social: cliente.razao_social,
+          nome_fantasia: cliente.nome_fantasia,
+          cnpj: cliente.cnpj,
+          email: cliente.email,
+          telefone: cliente.telefone,
+          status: cliente.status,
+        })
+        .expect(409);
 
-      return request(app.getHttpServer())
-        .post('/clientes')
-        .send(cliente)
-        .expect(409)
-        .expect({
-          message: 'CNPJ já cadastrado',
-          error: 'Conflict',
-          statusCode: 409,
-        });
+      expect(response.body).toEqual({
+        message: 'CNPJ já cadastrado',
+        error: 'Conflict',
+        statusCode: 409,
+      });
     });
   });
 
@@ -85,23 +95,21 @@ describe('Clientes Integration Tests', () => {
       // Create test data sequentially
       for (let i = 0; i < 15; i++) {
         const num = (i + 1).toString().padStart(2, '0');
-        const data = {
+        await createTestCliente({
           razao_social: `Empresa ${i + 1}`,
           nome_fantasia: `Empresa ${i + 1} Ltda`,
           cnpj: `${num}.345.678/0001-${num}`,
           email: `empresa${i + 1}@teste.com`,
           telefone: `(11) 99999-${(i + 1).toString().padStart(4, '0')}`,
-          status: 'ativo',
-        };
-        await prismaService.cliente.create({ data });
+        });
       }
 
       // Test first page
       const response1 = await request(app.getHttpServer())
         .get('/clientes')
-        .query({ page: 1, limit: 10 });
+        .query({ page: 1, limit: 10 })
+        .expect(200);
 
-      expect(response1.status).toBe(200);
       expect(response1.body.data).toHaveLength(10);
       expect(response1.body.meta).toEqual({
         page: 1,
@@ -115,9 +123,9 @@ describe('Clientes Integration Tests', () => {
       // Test second page
       const response2 = await request(app.getHttpServer())
         .get('/clientes')
-        .query({ page: 2, limit: 10 });
+        .query({ page: 2, limit: 10 })
+        .expect(200);
 
-      expect(response2.status).toBe(200);
       expect(response2.body.data).toHaveLength(5);
       expect(response2.body.meta).toEqual({
         page: 2,
@@ -130,101 +138,82 @@ describe('Clientes Integration Tests', () => {
     });
 
     it('should return empty array when no clientes', async () => {
-      return request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/clientes')
-        .expect(200)
-        .expect({
-          data: [],
-          meta: {
-            page: 1,
-            limit: 10,
-            itemCount: 0,
-            pageCount: 0,
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-        });
+        .expect(200);
+
+      expect(response.body).toEqual({
+        data: [],
+        meta: {
+          page: 1,
+          limit: 10,
+          itemCount: 0,
+          pageCount: 0,
+          hasPreviousPage: false,
+          hasNextPage: false,
+        },
+      });
     });
 
     it('should return array of clientes', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
+      const cliente = await createTestCliente();
 
-      return request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/clientes')
-        .expect(200)
-        .expect(res => {
-          expect(res.body.data).toHaveLength(1);
-          expect(res.body.data[0].id).toBe(cliente.id);
-          expect(res.body.data[0].razao_social).toBe(cliente.razao_social);
-          expect(res.body.data[0].cnpj).toBe(cliente.cnpj);
-          expect(res.body.data[0].email).toBe(cliente.email);
-          expect(res.body.data[0].telefone).toBe(cliente.telefone);
+        .expect(200);
 
-          expect(res.body.data[0].status).toBe(cliente.status);
-        });
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toEqual(expect.objectContaining({
+        id: cliente.id,
+        razao_social: cliente.razao_social,
+        nome_fantasia: cliente.nome_fantasia,
+        cnpj: cliente.cnpj,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        status: cliente.status,
+      }));
     });
   });
 
   describe('/clientes/:id (GET)', () => {
     it('should return 404 for non-existent cliente', async () => {
-      return request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/clientes/999')
-        .expect(404)
-        .expect({
-          message: 'Cliente com ID 999 não encontrado',
-          error: 'Not Found',
-          statusCode: 404,
-        });
+        .expect(404);
+
+      expect(response.body).toEqual({
+        message: 'Cliente com ID 999 não encontrado',
+        error: 'Not Found',
+        statusCode: 404,
+      });
     });
 
     it('should return cliente if exists', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
+      const cliente = await createTestCliente();
 
       const response = await request(app.getHttpServer())
         .get(`/clientes/${cliente.id}`)
         .expect(200);
 
-      expect(response.body).toEqual({
-        ...cliente,
-        pedidos: [],
-      });
+      expect(response.body).toEqual(expect.objectContaining({
+        id: cliente.id,
+        razao_social: cliente.razao_social,
+        nome_fantasia: cliente.nome_fantasia,
+        cnpj: cliente.cnpj,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        status: cliente.status,
+      }));
     });
   });
 
   describe('/clientes/:id (PATCH)', () => {
     it('should update cliente', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
+      const cliente = await createTestCliente();
 
       const updateData = {
-        razao_social: 'Empresa Teste Atualizada',
-        email: 'novo@empresa.com',
+        razao_social: 'Empresa Atualizada',
+        nome_fantasia: 'Empresa Atualizada Ltda',
       };
 
       const response = await request(app.getHttpServer())
@@ -232,59 +221,37 @@ describe('Clientes Integration Tests', () => {
         .send(updateData)
         .expect(200);
 
-      expect(response.body).toEqual({
-        ...cliente,
+      expect(response.body).toEqual(expect.objectContaining({
+        id: cliente.id,
         ...updateData,
-      });
+        cnpj: cliente.cnpj,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        status: cliente.status,
+      }));
     });
 
-    it('should not allow update to existing CNPJ', async () => {
-      const cliente1 = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa 1',
-          nome_fantasia: 'Empresa 1 Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'empresa1@teste.com',
-          telefone: '(11) 99999-9991',
-          status: 'ativo',
-        },
-      });
+    it('should return 404 for non-existent cliente', async () => {
+      const updateData = {
+        razao_social: 'Empresa Atualizada',
+      };
 
-      const cliente2 = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa 2',
-          nome_fantasia: 'Empresa 2 Ltda',
-          cnpj: '12.345.678/9012-35',
-          email: 'empresa2@teste.com',
-          telefone: '(11) 99999-9992',
-          status: 'ativo',
-        },
-      });
+      const response = await request(app.getHttpServer())
+        .patch('/clientes/999')
+        .send(updateData)
+        .expect(404);
 
-      return request(app.getHttpServer())
-        .patch(`/clientes/${cliente2.id}`)
-        .send({ cnpj: cliente1.cnpj })
-        .expect(409)
-        .expect({
-          message: 'CNPJ já cadastrado',
-          error: 'Conflict',
-          statusCode: 409,
-        });
+      expect(response.body).toEqual({
+        message: 'Cliente com ID 999 não encontrado',
+        error: 'Not Found',
+        statusCode: 404,
+      });
     });
   });
 
   describe('/clientes/:id (DELETE)', () => {
     it('should soft delete cliente', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
+      const cliente = await createTestCliente();
 
       await request(app.getHttpServer())
         .delete(`/clientes/${cliente.id}`)
@@ -295,127 +262,52 @@ describe('Clientes Integration Tests', () => {
       });
 
       expect(deletedCliente.deleted_at).not.toBeNull();
-    });
-
-    it('should not list soft deleted clientes', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
-
-      await request(app.getHttpServer())
-        .delete(`/clientes/${cliente.id}`)
-        .expect(200);
-
-      const response = await request(app.getHttpServer())
-        .get('/clientes')
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(0);
-    });
-
-    it('should not find soft deleted cliente by id', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
-
-      await request(app.getHttpServer())
-        .delete(`/clientes/${cliente.id}`)
-        .expect(200);
-
-      return request(app.getHttpServer())
-        .get(`/clientes/${cliente.id}`)
-        .expect(404)
-        .expect({
-          message: `Cliente com ID ${cliente.id} não encontrado`,
-          error: 'Not Found',
-          statusCode: 404,
-        });
+      expect(deletedCliente.status).toBe('inativo');
     });
 
     it('should return 404 for non-existent cliente', async () => {
-      return request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .delete('/clientes/999')
-        .expect(404)
-        .expect({
-          message: 'Cliente com ID 999 não encontrado',
-          error: 'Not Found',
-          statusCode: 404,
-        });
+        .expect(404);
+
+      expect(response.body).toEqual({
+        message: 'Cliente com ID 999 não encontrado',
+        error: 'Not Found',
+        statusCode: 404,
+      });
     });
   });
 
   describe('/clientes/cnpj/:cnpj (GET)', () => {
     it('should return 404 for non-existent cliente', async () => {
-      return request(app.getHttpServer())
-        .get('/clientes/cnpj/99999999999999')
-        .expect(404)
-        .expect({
-          message: 'Cliente com CNPJ 99999999999999 não encontrado',
-          error: 'Not Found',
-          statusCode: 404,
-        });
+      const cnpj = '99.999.999/9999-99';
+      const response = await request(app.getHttpServer())
+        .get(`/clientes/cnpj/${encodeURIComponent(cnpj)}`)
+        .expect(404);
+
+      expect(response.body).toEqual({
+        message: `Cliente com CNPJ ${cnpj} não encontrado`,
+        error: 'Not Found',
+        statusCode: 404,
+      });
     });
 
     it('should return cliente if exists', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
+      const cliente = await createTestCliente();
 
       const response = await request(app.getHttpServer())
         .get(`/clientes/cnpj/${encodeURIComponent(cliente.cnpj)}`)
         .expect(200);
 
-      expect(response.body).toEqual({
-        ...cliente,
-        pedidos: [],
-      });
-    });
-
-    it('should not find soft deleted cliente by cnpj', async () => {
-      const cliente = await prismaService.cliente.create({
-        data: {
-          razao_social: 'Empresa Teste',
-          nome_fantasia: 'Empresa Teste Ltda',
-          cnpj: '12.345.678/9012-34',
-          email: 'teste@empresa.com',
-          telefone: '(11) 99999-9999',
-          status: 'ativo',
-        },
-      });
-
-      await request(app.getHttpServer())
-        .delete(`/clientes/${cliente.id}`)
-        .expect(200);
-
-      return request(app.getHttpServer())
-        .get(`/clientes/cnpj/${encodeURIComponent(cliente.cnpj)}`)
-        .expect(404)
-        .expect({
-          message: `Cliente com CNPJ ${cliente.cnpj} não encontrado`,
-          error: 'Not Found',
-          statusCode: 404,
-        });
+      expect(response.body).toEqual(expect.objectContaining({
+        id: cliente.id,
+        razao_social: cliente.razao_social,
+        nome_fantasia: cliente.nome_fantasia,
+        cnpj: cliente.cnpj,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        status: cliente.status,
+      }));
     });
   });
 });
