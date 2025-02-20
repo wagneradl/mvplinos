@@ -31,20 +31,112 @@ export class ClientesService {
         }
 
         // Cria o cliente
-        return await prisma.cliente.create({
-          data: createClienteDto,
-        });
+        try {
+          return await prisma.cliente.create({
+            data: createClienteDto,
+          });
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            throw new ConflictException('CNPJ já cadastrado');
+          }
+          throw new BadRequestException('Não foi possível criar o cliente');
+        }
       });
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
       }
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new ConflictException('CNPJ já cadastrado');
-        }
+      if (error instanceof BadRequestException) {
+        throw error;
       }
       throw new BadRequestException('Não foi possível criar o cliente');
+    }
+  }
+
+  async findByCnpj(cnpj: string) {
+    try {
+      const cliente = await this.prisma.cliente.findFirst({
+        where: { 
+          cnpj,
+          deleted_at: null 
+        },
+        include: {
+          pedidos: {
+            where: { deleted_at: null },
+            select: {
+              id: true,
+              data_pedido: true,
+              status: true,
+              valor_total: true,
+            },
+          },
+        },
+      });
+
+      if (!cliente) {
+        throw new NotFoundException('Cliente não encontrado');
+      }
+
+      return cliente;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao buscar cliente');
+    }
+  }
+
+  async update(id: number, updateClienteDto: UpdateClienteDto) {
+    try {
+      const cliente = await this.prisma.cliente.findFirst({
+        where: { id, deleted_at: null },
+      });
+
+      if (!cliente) {
+        throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+      }
+
+      try {
+        return await this.prisma.cliente.update({
+          where: { id },
+          data: updateClienteDto,
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+          throw new ConflictException('CNPJ já cadastrado');
+        }
+        throw new BadRequestException('Não foi possível atualizar o cliente');
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof ConflictException) {
+        throw error;
+      }
+      throw new BadRequestException('Não foi possível atualizar o cliente');
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      const cliente = await this.prisma.cliente.findFirst({
+        where: { id, deleted_at: null },
+      });
+
+      if (!cliente) {
+        throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+      }
+
+      return await this.prisma.cliente.update({
+        where: { id },
+        data: { 
+          deleted_at: new Date(),
+          status: 'inativo'
+        },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Não foi possível remover o cliente');
     }
   }
 
@@ -85,88 +177,32 @@ export class ClientesService {
   }
 
   async findOne(id: number) {
-    const cliente = await this.prisma.cliente.findFirst({
-      where: { id, deleted_at: null },
-      include: {
-        pedidos: {
-          where: { deleted_at: null },
-          select: {
-            id: true,
-            data_pedido: true,
-            status: true,
-            valor_total: true,
+    try {
+      const cliente = await this.prisma.cliente.findFirst({
+        where: { id, deleted_at: null },
+        include: {
+          pedidos: {
+            where: { deleted_at: null },
+            select: {
+              id: true,
+              data_pedido: true,
+              status: true,
+              valor_total: true,
+            },
           },
         },
-      },
-    });
-
-    if (!cliente) {
-      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
-    }
-
-    return cliente;
-  }
-
-  async update(id: number, updateClienteDto: UpdateClienteDto) {
-    const cliente = await this.findOne(id);
-    if (!cliente) {
-      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
-    }
-
-    try {
-      return await this.prisma.cliente.update({
-        where: { id },
-        data: updateClienteDto,
       });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new ConflictException('CNPJ já cadastrado');
-        }
+
+      if (!cliente) {
+        throw new NotFoundException('Cliente não encontrado');
       }
-      throw new BadRequestException('Não foi possível atualizar o cliente');
-    }
-  }
 
-  async remove(id: number) {
-    const cliente = await this.prisma.cliente.findFirst({
-      where: { id, deleted_at: null },
-    });
-
-    if (!cliente) {
-      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
-    }
-
-    try {
-      return await this.prisma.cliente.update({
-        where: { id },
-        data: { deleted_at: new Date() },
-      });
+      return cliente;
     } catch (error) {
-      throw new BadRequestException('Não foi possível remover o cliente');
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao buscar cliente');
     }
-  }
-
-  async findByCnpj(cnpj: string) {
-    const cliente = await this.prisma.cliente.findFirst({
-      where: { cnpj, deleted_at: null },
-      include: {
-        pedidos: {
-          where: { deleted_at: null },
-          select: {
-            id: true,
-            data_pedido: true,
-            status: true,
-            valor_total: true,
-          },
-        },
-      },
-    });
-
-    if (!cliente) {
-      throw new NotFoundException(`Cliente com CNPJ ${cnpj} não encontrado`);
-    }
-
-    return cliente;
   }
 }

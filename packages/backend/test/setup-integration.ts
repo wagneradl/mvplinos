@@ -16,10 +16,15 @@ beforeAll(async () => {
   process.env.DATABASE_URL = 'file:./test.db';
 
   try {
+    // Se houver uma instância anterior do PrismaService, desconectar
+    if (prismaService) {
+      await prismaService.$disconnect();
+    }
+
     // Limpar e recriar o banco de dados de teste
     execSync('rm -f test.db && yarn prisma migrate deploy', {
       env: process.env,
-      stdio: 'inherit',
+      stdio: 'pipe', // Mudar para pipe para evitar logs desnecessários
     });
 
     // Criar e configurar a aplicação NestJS
@@ -42,13 +47,10 @@ afterEach(async () => {
   try {
     await prismaService.$transaction(async (tx) => {
       // Ordem específica para respeitar as foreign keys
-      await tx.$executeRawUnsafe('DELETE FROM ItensPedido;');
-      await tx.$executeRawUnsafe('DELETE FROM Pedido;');
-      await tx.$executeRawUnsafe('DELETE FROM Cliente;');
-      await tx.$executeRawUnsafe('DELETE FROM Produto;');
-      
-      // Resetar as sequences
-      await tx.$executeRawUnsafe('DELETE FROM sqlite_sequence;');
+      await tx.itensPedido.deleteMany();
+      await tx.pedido.deleteMany();
+      await tx.cliente.deleteMany();
+      await tx.produto.deleteMany();
     });
   } catch (error) {
     console.error('Erro ao limpar o banco de dados:', error);
@@ -58,6 +60,15 @@ afterEach(async () => {
 
 // Fechar conexão com o banco após todos os testes
 afterAll(async () => {
-  await prismaService.$disconnect();
-  await app.close();
+  try {
+    if (prismaService) {
+      await prismaService.$disconnect();
+    }
+    if (app) {
+      await app.close();
+    }
+  } catch (error) {
+    console.error('Erro ao fechar conexões:', error);
+    throw error;
+  }
 });

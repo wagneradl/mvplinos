@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function createAdminUser() {
+export async function createAdminUser() {
   try {
     const adminEmail = 'admin@linospadaria.com';
     
@@ -38,4 +38,7 @@ async function createAdminUser() {
   }
 }
 
-createAdminUser();
+// Execute apenas se o script for chamado diretamente
+if (require.main === module) {
+  createAdminUser();
+}

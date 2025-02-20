@@ -1,40 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { PedidosModule } from '../pedidos.module';
-import { PrismaService } from '../../prisma/prisma.service';
+import { app, prismaService } from '../../../test/setup-integration';
 
 describe('Pedidos Integration Tests', () => {
-  let app: INestApplication;
-  let prismaService: PrismaService;
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [PedidosModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
-    await app.init();
-
-    prismaService = moduleFixture.get<PrismaService>(PrismaService);
-  });
-
-  beforeEach(async () => {
-    // Limpar todas as tabelas relacionadas
-    await prismaService.itensPedido.deleteMany();
-    await prismaService.pedido.deleteMany();
-    await prismaService.produto.deleteMany();
-    await prismaService.cliente.deleteMany();
-  });
-
-  afterAll(async () => {
-    await prismaService.itensPedido.deleteMany();
-    await prismaService.pedido.deleteMany();
-    await prismaService.produto.deleteMany();
-    await prismaService.cliente.deleteMany();
-    await app.close();
-  });
 
   describe('/pedidos (POST)', () => {
     it('should create pedido', async () => {

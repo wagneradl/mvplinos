@@ -1,0 +1,2431 @@
+$ jest --coverage
+FAIL src/clientes/__tests__/clientes.service.spec.ts (5.146 s)
+  ● ClientesService › create › should throw ConflictException when CNPJ already exists
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected constructor: ConflictException
+    Received constructor: BadRequestException
+
+    Received message: "Não foi possível criar o cliente"
+
+          52 |         throw error;
+          53 |       }
+        > 54 |       throw new BadRequestException('Não foi possível criar o cliente');
+             |             ^
+          55 |     }
+          56 |   }
+          57 |
+
+      at ClientesService.create (clientes/clientes.service.ts:54:13)
+      at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:84:28)
+      at Object.toThrow (../../../node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:84:55)
+
+  ● ClientesService › findOne › should return a cliente with pedidos
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    @@ -1,8 +1,18 @@
+      Object {
+        "include": Object {
+    -     "pedidos": true,
+    +     "pedidos": Object {
+    +       "select": Object {
+    +         "data_pedido": true,
+    +         "id": true,
+    +         "status": true,
+    +         "valor_total": true,
+    +       },
+    +       "where": Object {
+    +         "deleted_at": null,
+    +       },
+    +     },
+        },
+        "where": Object {
+          "deleted_at": null,
+          "id": 1,
+        },,
+
+    Number of calls: 1
+
+      142 |         pedidos: mockPedidos,
+      143 |       });
+    > 144 |       expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
+          |                                                   ^
+      145 |         where: { id: 1, deleted_at: null },
+      146 |         include: { pedidos: true },
+      147 |       });
+
+      at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:144:51)
+
+PASS src/clientes/__tests__/clientes.controller.spec.ts (5.429 s)
+PASS src/produtos/__tests__/produtos.service.spec.ts (6.006 s)
+  ● Console
+
+    console.error
+      Error in findAll: Error: Find failed
+          at Object.<anonymous> (/Users/wagner/Projetos/Linos/MVP7/packages/backend/src/produtos/__tests__/produtos.service.spec.ts:110:64)
+          at Promise.then.completed (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      54 |       };
+      55 |     } catch (error) {
+    > 56 |       console.error('Error in findAll:', error);
+         |               ^
+      57 |       throw new BadRequestException('Erro ao buscar produtos');
+      58 |     }
+      59 |   }
+
+      at ProdutosService.error [as findAll] (produtos/produtos.service.ts:56:15)
+      at Object.<anonymous> (produtos/__tests__/produtos.service.spec.ts:112:7)
+
+PASS src/produtos/__tests__/produtos.controller.spec.ts (6.021 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 1)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 2)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 3)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 4)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Produto` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 5)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Cliente` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 6)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.Pedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 7)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "prisma:error 
+    Invalid `this[modelKey].deleteMany()` invocation in
+    /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+
+      33 models.map(async (modelKey) => {
+      34   if (typeof modelKey === 'string') {
+      35     //@ts-ignore - Dynamic access to Prisma models
+    → 36     return this[modelKey].deleteMany(
+    The table `main.ItensPedido` does not exist in the current database.".
+
+      at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+      at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+      at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+      at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+          at async Promise.all (index 8)
+
+FAIL src/produtos/__tests__/produtos.integration.spec.ts (6.289 s)
+  ● Console
+
+    console.log
+      prisma:info Starting a sqlite pool with 21 connections.
+
+      at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+
+  ● Produtos Integration Tests › /produtos (POST) › should create produto
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos (POST) › should validate required fields
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos (GET) › should return paginated produtos
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos (GET) › should return empty array when no produtos
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos (GET) › should return array of produtos
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (GET) › should return 404 for non-existent produto
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (GET) › should return produto if exists
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (PATCH) › should update produto
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (DELETE) › should soft delete produto
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (DELETE) › should not list soft deleted produtos
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (DELETE) › should not find soft deleted produto by id
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+  ● Produtos Integration Tests › /produtos/:id (DELETE) › should return 404 for non-existent produto
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+
+
+  ● Test suite failed to run
+
+    TypeError: this[modelKey].deleteMany is not a function
+
+      34 |         if (typeof modelKey === 'string') {
+      35 |           //@ts-ignore - Dynamic access to Prisma models
+    > 36 |           return this[modelKey].deleteMany();
+         |                                 ^
+      37 |         }
+      38 |       })
+      39 |     );
+
+      at deleteMany (prisma/prisma.service.test.ts:36:33)
+          at Array.map (<anonymous>)
+      at Proxy.map (prisma/prisma.service.test.ts:33:14)
+      at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+      at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:28:22)
+
+$ /Users/wagner/Projetos/Linos/MVP7/node_modules/.bin/prisma migrate deploy
+Environment variables loaded from .env
+Prisma schema loaded from ../../prisma/schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+1 migration found in prisma/migrations
+
+
+No pending migrations to apply.

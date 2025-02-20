@@ -1,377 +1,105 @@
-projeto:
-  nome: "Lino's Padaria MVP"
-  versao: "1.0.0"
-  objetivo: >
-    Desenvolver um MVP funcional para a gestão de pedidos B2B da padaria, operando localmente e offline.
-    O sistema deverá gerenciar cadastros básicos de produtos, clientes, pedidos (e itens do pedido),
-    calcular automaticamente os valores, gerar PDFs simples para cada pedido e permitir a repetição de pedidos
-    antigos para agilizar novos cadastros.
-  escopo_mvp:
-    - "Cadastro e gerenciamento básico de produtos e clientes com campos mínimos obrigatórios."
-    - "Criação, edição e cancelamento de pedidos com cálculo automático e geração de PDF."
-    - "Listagem de produtos, clientes e pedidos com paginação de 10 itens por página."
-    - "Funcionalidade de 'repetir pedido' a partir de pedidos antigos."
-    - "Relatórios simples com filtros básicos (ex.: por data e cliente)."
-    - "Operação local e offline para uma única unidade."
+current_state:
+  overview: >
+    O Sistema de Gestão de Pedidos da Lino's Padaria está em fase avançada de desenvolvimento,
+    com os módulos principais implementados e testados. A arquitetura está baseada em um monorepo
+    com backend NestJS, frontend Next.js e SQLite como banco de dados.
 
-arquitetura:
-  descricao: >
-    Arquitetura simples e modular, baseada nos princípios do Clean Architecture e DDD, mas focada apenas
-    nas funcionalidades essenciais do MVP. As camadas foram definidas de forma a minimizar complexidade
-    e garantir a integração consistente entre front-end, back-end e banco de dados, priorizando simplicidade
-    e facilidade de manutenção com SQLite como banco de dados.
-  camadas:
-    dominio: "Entidades mínimas: Produto, Cliente, Pedido, ItensPedido."
-    aplicacao: "Casos de uso básicos para operações CRUD, geração de PDF e repetição de pedidos."
-    infraestrutura: "Integração com SQLite via Prisma e regras de negócio simplificadas."
-    apresentacao: "Interface web local (Next.js) e API REST simples (NestJS)."
+  completed_modules:
+    produtos:
+      status: "Completo"
+      coverage: "92.15%"
+      features:
+        - "CRUD completo"
+        - "Soft delete"
+        - "Paginação"
+        - "Validações"
+        - "Testes unitários e de integração"
 
-stack_tecnologico:
-  frontend:
-    framework: "Next.js"
-    versao: "13"
-    linguagem: "TypeScript"
-    ui_framework: "Material-UI (MUI)"
-    versao_mui: "5"
-    gerenciamento_estado: "React Context"
-    observacoes: >
-      Interface local e simples, sem necessidade de recursos avançados de SEO ou SSR, focando na usabilidade e
-      facilidade de navegação com paginação (10 itens por página) e funcionalidade de repetir pedidos.
-  backend:
-    plataforma: "Node.js"
-    versao: "20 LTS"
-    framework: "NestJS"
-    versao_nestjs: "10"
-    linguagem: "TypeScript"
-    servidor_web: "Express (integrado ao NestJS)"
-    observacoes: >
-      API REST simples para operações CRUD e geração de PDF. O endpoint para repetir pedidos antigos agiliza
-      o fluxo de cadastro.
-  acesso_a_dados:
-    orm: "Prisma"
-    versao: "5.x"
-    banco_dados: "SQLite"
-    versao_sqlite: "3"
-    observacoes: >
-      Escolha ideal para MVP offline, oferecendo zero configuração, arquivo único de banco,
-      backup simplificado e excelente integração com Prisma. Suporta perfeitamente o volume
-      de dados esperado e paginação necessária.
-  geracao_pdf:
-    biblioteca: "Puppeteer"
-    versao: "19+"
-    observacoes: >
-      Geração de PDFs a partir de templates HTML simples renderizados via Next.js.
-  autenticacao:
-    metodo: "Implementação simples (a ser aprimorada pós-MVP)"
-    observacoes: >
-      Devido ao ambiente local e offline, autenticação avançada não é prioritária para o MVP e poderá ser
-      incorporada em uma fase futura.
-  pagination:
-    descricao: "Listagem de produtos, clientes e pedidos com paginação de 10 itens por página, conforme boas práticas."
+    clientes:
+      status: "Completo"
+      coverage: "98.57%"
+      features:
+        - "CRUD completo"
+        - "Busca por CNPJ"
+        - "Validações (CNPJ, telefone, email)"
+        - "Soft delete"
+        - "Paginação"
+        - "Testes unitários e de integração"
 
-estrutura_banco:
-  tabelas:
-    Produto:
-      campos:
-        - id: "Integer, PK, autoincrement"
-        - nome: "Text, NOT NULL"
-        - preco_unitario: "Real, NOT NULL"
-        - tipo_medida: "Text, NOT NULL (ex.: 'kg', 'unidade')"
-        - status: "Text, NOT NULL ('ativo' ou 'inativo')"
-    Cliente:
-      campos:
-        - id: "Integer, PK, autoincrement"
-        - cnpj: "Text, NOT NULL, UNIQUE"
-        - razao_social: "Text, NOT NULL"
-        - nome_fantasia: "Text, NOT NULL"
-        - telefone: "Text, NOT NULL"
-        - email: "Text, NOT NULL"
-        - status: "Text, NOT NULL ('ativo' ou 'inativo')"
-    Pedido:
-      campos:
-        - id: "Integer, PK, autoincrement"
-        - cliente_id: "Integer, FK para Cliente, NOT NULL"
-        - data_pedido: "Text, NOT NULL (ISO8601)"
-        - status: "Text, NOT NULL ('novo', 'finalizado', 'cancelado')"
-        - valor_total: "Real, NOT NULL"
-        - caminho_pdf: "Text, NOT NULL"
-    ItensPedido:
-      campos:
-        - id: "Integer, PK, autoincrement"
-        - pedido_id: "Integer, FK para Pedido, NOT NULL"
-        - produto_id: "Integer, FK para Produto, NOT NULL"
-        - quantidade: "Real, NOT NULL"
-        - preco_unitario: "Real, NOT NULL (valor no momento do pedido)"
-        - valor_total_item: "Real, NOT NULL (quantidade * preco_unitario)"
+    pedidos:
+      status: "Parcialmente completo"
+      features:
+        - "CRUD básico"
+        - "Geração de PDF"
+        - "Template configurado"
+        - "Armazenamento de arquivos"
+      pending:
+        - "Validações adicionais de negócio"
+        - "Otimizações de performance"
+        - "Testes completos"
 
-prisma_schema: |
-  datasource db {
-    provider = "sqlite"
-    url      = "file:./dev.db"
-  }
+  infrastructure:
+    database: "SQLite com Prisma"
+    testing: "Jest, SuperTest, Testing Library"
+    ci_cd: "GitHub Actions configurado"
+    code_quality: "ESLint, Prettier, CodeQL"
 
-  generator client {
-    provider = "prisma-client-js"
-  }
+critical_next_steps:
+  1: "Implementar autenticação e autorização"
+  2: "Completar testes do módulo de pedidos"
+  3: "Implementar validações adicionais de negócio"
+  4: "Desenvolver interface do usuário"
+  5: "Configurar logs e monitoramento"
 
-  model Produto {
-    id             Int       @id @default(autoincrement())
-    nome           String
-    preco_unitario Float
-    tipo_medida    String
-    status         String
-    itensPedido    ItensPedido[]
-  }
+attention_points:
+  performance:
+    - "Monitorar performance do SQLite com crescimento dos dados"
+    - "Implementar estratégias de cache quando necessário"
+    - "Otimizar queries complexas no módulo de pedidos"
 
-  model Cliente {
-    id            Int       @id @default(autoincrement())
-    cnpj          String    @unique
-    razao_social  String
-    nome_fantasia String
-    telefone      String
-    email         String
-    status        String
-    pedidos       Pedido[]
-  }
+  security:
+    - "Implementar autenticação e autorização como prioridade"
+    - "Validar acesso a arquivos estáticos"
+    - "Implementar rate limiting em endpoints sensíveis"
 
-  model Pedido {
-    id          Int       @id @default(autoincrement())
-    cliente_id  Int
-    data_pedido DateTime
-    status      String
-    valor_total Float
-    caminho_pdf String
-    cliente     Cliente   @relation(fields: [cliente_id], references: [id])
-    itensPedido ItensPedido[]
-  }
+  maintenance:
+    - "Validar processo de backup em produção"
+    - "Monitorar uso de disco para PDFs gerados"
+    - "Implementar rotina de limpeza de arquivos temporários"
 
-  model ItensPedido {
-    id               Int      @id @default(autoincrement())
-    pedido_id        Int
-    produto_id       Int
-    quantidade       Float
-    preco_unitario   Float
-    valor_total_item Float
-    pedido           Pedido   @relation(fields: [pedido_id], references: [id])
-    produto          Produto  @relation(fields: [produto_id], references: [id])
+technical_context:
+  architecture:
+    - "Monorepo com Yarn Workspaces"
+    - "Backend NestJS com estrutura modular"
+    - "Frontend Next.js (a ser implementado)"
+    - "SQLite para armazenamento local"
+    - "Prisma como ORM"
 
-integracao:
-  descricao: >
-    O back-end (NestJS) expõe uma API REST simples para operações CRUD, listagem com paginação e geração de PDFs.
-    O front-end (Next.js) consome esses endpoints para gerenciar cadastros, listagens e a funcionalidade de repetir pedidos.
-    A listagem exibirá 10 itens por página, e um endpoint específico permitirá repetir um pedido antigo como base para um novo.
-  seguranca:
-    observacoes: >
-      Devido ao ambiente local e offline, medidas avançadas de segurança são menos críticas no MVP.
-      Funcionalidades de autenticação robusta serão planejadas para fases futuras.
-
-testes:
-  estrategia_geral:
-    descricao: >
-      Abordagem de testes para garantir qualidade e confiabilidade do sistema, considerando a estrutura monorepo.
-      Todos os módulos (frontend, backend, shared) devem seguir convenções unificadas, garantindo consistência.
-    cobertura_minima: ">= 80% por módulo"
-    execucao_automatica: "Via GitHub Actions em cada commit"
-    ambiente_testes:
-      descricao: "Utilização de SQLite dedicado para testes"
-      config: ".env.test apontando para arquivo dev-test.db ou similar"
-  unitarios:
+  code_organization:
     backend:
-      objetivo: "Validar funções e métodos essenciais de cada módulo de forma isolada"
-      ferramenta: "Jest v29.x"
-      escopo:
-        - "Serviços de domínio"
-        - "Repositórios"
-        - "Controllers"
-        - "DTOs e validações"
-      praticas:
-        - "Utilização de mocks para dependências externas"
-        - "Isolamento completo de camadas"
-        - "Testes determinísticos"
-      scripts:
-        - "test": "jest --coverage"
-        - "test:watch": "jest --watch"
-    frontend:
-      objetivo: "Validar componentes React e suas interações"
-      ferramentas:
-        - "Jest v29.x"
-        - "@testing-library/react"
-        - "@testing-library/user-event"
-      escopo:
-        - "Componentes individuais"
-        - "Hooks customizados"
-        - "Funções utilitárias"
-        - "Validações de formulário"
-      praticas:
-        - "Testes baseados em comportamento"
-        - "Simulação de interações do usuário"
-        - "Mocks de chamadas à API"
-      scripts:
-        - "test": "react-scripts test --env=jsdom"
-        - "test:coverage": "react-scripts test --env=jsdom --coverage"
-  integracao:
-    backend:
-      objetivo: "Verificar a comunicação entre API e banco de dados"
-      ferramenta: "SuperTest integrado ao Jest"
-      escopo:
-        - "Endpoints CRUD"
-        - "Validações de entrada"
-        - "Transações de banco de dados"
-      ambiente:
-        descricao: "SQLite dedicado para testes"
-        config: "Migrations e seeds usando .env.test"
-      scripts:
-        - "test:integration": "jest --config jest.integration.config.js"
-        - "migrate:test": "prisma migrate deploy --env-file .env.test"
-    frontend:
-      objetivo: "Validar integração entre componentes e módulos"
-      ferramentas:
-        - "Jest"
-        - "Testing Library"
-        - "MSW (Mock Service Worker)"
-      escopo:
-        - "Fluxos de navegação"
-        - "Comunicação entre componentes"
-        - "Simulação de APIs (MSW)"
-      praticas:
-        - "Mocks de serviços externos"
-        - "Simulação de estados da aplicação"
-        - "Testes de rotas e navegação"
-  e2e:
-    objetivo: "Simular fluxos críticos do sistema de ponta a ponta"
-    ferramenta: "Jest + SuperTest"
-    cenarios_criticos:
-      - "Criação completa de pedido"
-      - "Repetição de pedido existente"
-      - "Geração e visualização de PDF"
-      - "Paginação nas listagens"
-    ambiente:
-      descricao: "Banco de dados limpo para cada suite de testes"
-      setup: "Migrations e seeds automatizados em .env.test"
-    scripts:
-      - "test:e2e": "jest --config jest.e2e.config.js"
-      - "setup_db": "yarn migrate:test && yarn seed:test"
-  ci_cd:
-    descricao: "Pipeline de integração contínua no GitHub Actions"
-    etapas:
-      - "Lint e formatação"
-      - "Testes unitários com cobertura"
-      - "Testes de integração"
-      - "Testes E2E"
-    gates:
-      - "Cobertura mínima de 80%"
-      - "Todos os testes passando"
-      - "Lint sem erros"
-    artefatos:
-      - "Relatórios de cobertura"
-      - "Logs de teste"
-      - "Screenshots de falhas (Frontend, se aplicável)"
-  mocks_e_fixtures:
-    descricao: "Estrutura de dados para testes"
-    tipos:
-      - "Mocks de serviços externos"
-      - "Factories para entidades"
-      - "Seeds para banco de dados de teste"
-    localizacao: "./test/fixtures"
-    convencoes:
-      - "Prefixo 'mock' para serviços mockados"
-      - "Prefixo 'factory' para geradores de entidades"
-      - "Sufixo '.fixture' para dados estáticos"
-  documentacao_testes:
-    guias:
-      - "Como executar os testes (front e back)"
-      - "Como adicionar novos testes"
-      - "Convenções e boas práticas"
-      - "Troubleshooting comum"
-    localizacao: "./docs/testing.md"
-    atualizacao: "Obrigatória a cada nova feature"
+      - "src/produtos: Módulo de produtos completo"
+      - "src/clientes: Módulo de clientes completo"
+      - "src/pedidos: Módulo de pedidos em desenvolvimento"
+      - "src/shared: Utilitários e tipos compartilhados"
 
-boas_praticas:
-  clean_code: "Manter código limpo, legível e modular conforme 'Clean Code'."
-  solid: "Aplicar princípios SOLID em cada módulo."
-  type_safety: "Utilizar TypeScript para detecção precoce de erros."
-  # Sessão testes movida para a chave 'testes' acima
+  testing_strategy:
+    coverage_targets:
+      - "Mínimo de 80% de cobertura por módulo"
+      - "Foco em testes de integração para fluxos críticos"
+      - "Ambiente de teste isolado com SQLite dedicado"
 
-estado_atual:
-  backend:
-    modulos:
-      pedidos:
-        status: "Completo com geração de PDF"
-        features:
-          - "CRUD completo"
-          - "Geração de PDF com Puppeteer"
-          - "Template HTML personalizado"
-          - "Logo no cabeçalho do PDF"
-          - "Armazenamento de PDFs em /uploads/pdfs"
-          - "Servir arquivos estáticos"
-        melhorias_futuras:
-          - "Migrar template para Next.js"
-          - "Implementar cache de PDFs"
-          - "Adicionar marca d'água"
-          - "Compactação de PDFs"
-        dependencias:
-          - "puppeteer"
-        arquivos_chave:
-          - "src/pdf/pdf.service.ts"
-          - "src/pedidos/pedidos.service.ts"
-          - "src/pedidos/pedidos.controller.ts"
-        diretorios:
-          - "uploads/pdfs/: PDFs gerados"
-          - "uploads/images/: Imagens do sistema"
-        observacoes: >
-          Módulo implementado com foco na geração de PDFs profissionais.
-          A estrutura permite fácil customização do template e suporta
-          recursos visuais como logos e estilos CSS.
-      clientes:
-        status: "Completo e testado"
-        coverage: "90.41%"
-        features:
-          - "CRUD completo"
-          - "Validação de CNPJ"
-          - "Soft delete"
-          - "Paginação"
+  dependencies:
+    critical:
+      - "Puppeteer para geração de PDF"
+      - "Prisma para acesso ao banco"
+      - "NestJS para backend"
+      - "Jest para testes"
 
-      produtos:
-        status: "Completo e testado"
-        coverage: "92.15%"
-        features:
-          - "CRUD completo"
-          - "Soft delete"
-          - "Paginação"
-
-    infraestrutura:
-      - "Testes de integração configurados"
-      - "Ambiente de teste isolado"
-      - "Documentação Swagger atualizada"
-
-proximos_passos:
-  criticos:
-    - "Configurar autenticação e autorização"
-    - "Implementar logs e monitoramento"
-
-  importantes:
-    - "Implementar cache"
-    - "Otimizar queries"
-    - "Melhorar tratamento de erros"
-
-consideracoes_finais:
-  pontos_atencao:
-    pdf:
-      - "Garantir que o diretório /uploads tenha permissões adequadas"
-      - "Monitorar espaço em disco para PDFs gerados"
-      - "Considerar política de retenção de PDFs antigos"
-      - "Avaliar necessidade de backup dos PDFs"
-    puppeteer:
-      - "Garantir que todas dependências do Puppeteer estão instaladas"
-      - "Monitorar uso de memória durante geração de PDFs"
-      - "Considerar implementação de fila para geração assíncrona"
-    arquivos_estaticos:
-      - "Configurar CORS adequadamente"
-      - "Implementar controle de acesso aos arquivos"
-      - "Considerar limites de tamanho de upload"
-
-  descricao: >
-    Esta documentação técnica foi atualizada para refletir o uso de SQLite, além de incluir 
-    instruções específicas para configuração de testes em um monorepo. Assim, assegura-se 
-    que front-end, back-end e banco de dados (SQLite) estejam alinhados. Funcionalidades extras, 
-    como autenticação robusta, serão planejadas após a entrega do MVP.
+handoff_notes: >
+  O sistema está em um estado sólido com módulos base implementados e testados.
+  O foco agora deve ser na implementação de autenticação, finalização do módulo
+  de pedidos e desenvolvimento do frontend. A arquitetura está bem documentada
+  e os padrões de código estabelecidos devem ser seguidos. Os testes são
+  críticos e devem manter a cobertura mínima de 80%. Atenção especial deve
+  ser dada ao monitoramento de performance e implementação de cache conforme
+  necessário.

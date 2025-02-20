@@ -129,6 +129,21 @@ decisions:
     impact: "Positivo para organização e manutenção"
     status: "Implementado"
 
+  - id: "DEC013"
+    date: "2025-02-19T22:24:55"
+    context: "Cobertura de Testes dos Módulos Base"
+    decision: "Aumentar cobertura de testes do módulo de Clientes"
+    rationale: >
+      Após análise detalhada, a cobertura de testes do módulo de Clientes foi
+      melhorada significativamente:
+      1. Service: 98.57% cobertura total
+      2. Controller: Testes completos para todas as operações
+      3. Tratamento de erros testado
+      4. Validações de entrada testadas
+      5. Cenários de borda cobertos
+    impact: "Maior confiabilidade e manutenibilidade do código"
+    status: "Concluído"
+
   - id: "DEC012"
     date: "2025-02-18T20:50:06"
     context: "Validação de Módulos Base"

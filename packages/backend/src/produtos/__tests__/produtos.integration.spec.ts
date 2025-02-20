@@ -1,35 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { ProdutosModule } from '../produtos.module';
-import { PrismaService } from '../../prisma/prisma.service';
+import { app, prismaService } from '../../../test/setup-integration';
 import { CreateProdutoDto } from '../dto/create-produto.dto';
 import { UpdateProdutoDto } from '../dto/update-produto.dto';
 
 describe('Produtos Integration Tests', () => {
-  let app: INestApplication;
-  let prismaService: PrismaService;
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ProdutosModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
-    await app.init();
-
-    prismaService = moduleFixture.get<PrismaService>(PrismaService);
-  });
-
-  beforeEach(async () => {
-    await prismaService.produto.deleteMany();
-  });
-
-  afterAll(async () => {
-    await prismaService.produto.deleteMany();
-    await app.close();
-  });
 
   const createTestProduto = async (data: Partial<CreateProdutoDto> = {}) => {
     const defaultData: CreateProdutoDto = {
@@ -41,7 +15,10 @@ describe('Produtos Integration Tests', () => {
     };
 
     return await prismaService.produto.create({
-      data: defaultData,
+      data: {
+        ...defaultData,
+        deleted_at: null
+      },
     });
   };
 

@@ -1,0 +1,128 @@
+2025-02-20T00:00:32.682459Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/produtos/__tests__/produtos.integration.spec.ts")}
+2025-02-20T00:00:32.682479Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:00:32.782437Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/daemon/d1f2b060745dafe1-turbo.log.2025-02-20"), AnchoredSystemPathBuf(".turbo/daemon/d1f2b060745dafe1-turbo.log.2025-02-19")}
+2025-02-20T00:00:32.782461Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T00:00:43.982287Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/produtos/__tests__/produtos.integration.spec.ts")}
+2025-02-20T00:00:43.982323Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:01:06.682784Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/pedidos/__tests__/pedidos.integration.spec.ts")}
+2025-02-20T00:01:06.682814Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:05:24.288639Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:05:24.289513Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:05:38.182591Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:05:38.182646Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:40:23.972095Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/test/__tests__/test.helper.spec.ts"), AnchoredSystemPathBuf("packages/backend/src/test/__tests__")}
+2025-02-20T00:40:23.972838Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:40:30.866642Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/test/__tests__/test.module.spec.ts")}
+2025-02-20T00:40:30.866658Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:40:52.966800Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/prisma/__tests__"), AnchoredSystemPathBuf("packages/backend/src/prisma/__tests__/prisma.service.test.spec.ts")}
+2025-02-20T00:40:52.966809Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:41:26.267289Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:41:26.267380Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:41:37.368004Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-8.pdf")}
+2025-02-20T00:41:37.368024Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:41:38.667338Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-13.pdf")}
+2025-02-20T00:41:38.667347Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:41:42.367870Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:41:42.367879Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:07.569112Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/scripts/__tests__"), AnchoredSystemPathBuf("packages/backend/src/scripts/__tests__/create-admin.spec.ts")}
+2025-02-20T00:44:07.569135Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:18.769942Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:44:18.769959Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:27.270234Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-18.pdf")}
+2025-02-20T00:44:27.270253Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:31.571651Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:44:31.571667Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:52.870523Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/package.json")}
+2025-02-20T00:44:52.870555Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:44:53.133806Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json"), AnchoredSystemPathBuf("yarn.lock")}
+2025-02-20T00:44:53.133815Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T00:44:53.353197Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("yarn.lock")}
+2025-02-20T00:44:53.353207Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T00:45:17.871422Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-23.pdf")}
+2025-02-20T00:45:17.871459Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:46:15.571597Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/scripts/__tests__/create-admin.spec.ts")}
+2025-02-20T00:46:15.571632Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:46:35.271681Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-28.pdf")}
+2025-02-20T00:46:35.271720Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:47:15.172074Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/prisma/__tests__/prisma.service.test.spec.ts")}
+2025-02-20T00:47:15.172092Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:48:00.573072Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:48:00.573089Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:48:08.972919Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-29.pdf")}
+2025-02-20T00:48:08.972989Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:48:10.172847Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-34.pdf")}
+2025-02-20T00:48:10.172870Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:48:13.673895Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:48:13.673923Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:53:37.978010Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/scripts/__tests__/create-admin.spec.ts")}
+2025-02-20T00:53:37.978107Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:53:54.777232Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/scripts/create-admin.ts")}
+2025-02-20T00:53:54.777261Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:56:34.980292Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/prisma/__tests__/prisma.service.test.spec.ts")}
+2025-02-20T00:56:34.980337Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:58:00.481064Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/prisma/__tests__/prisma.service.test.spec.ts")}
+2025-02-20T00:58:00.481173Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:58:46.681576Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:58:46.681614Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T00:58:54.582494Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T00:58:54.582554Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:04:40.586323Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/jest.config.js")}
+2025-02-20T01:04:40.586359Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:05:09.887261Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T01:05:09.887278Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:05:20.787312Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-35.pdf")}
+2025-02-20T01:05:20.787409Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:05:21.987190Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/uploads/pdfs/pedido-40.pdf")}
+2025-02-20T01:05:21.987207Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:05:25.087136Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/log.txt")}
+2025-02-20T01:05:25.087152Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:06:38.387497Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:06:38.387575Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:07:28.189069Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:07:28.189101Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:08:38.090142Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:08:38.090181Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:11:02.190674Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:11:02.190721Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:11:19.992170Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:11:19.992188Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:12:02.892054Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/clientes.service.ts")}
+2025-02-20T01:12:02.892096Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:12:10.391712Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/clientes.service.ts")}
+2025-02-20T01:12:10.391802Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:12:39.693246Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/clientes.service.ts")}
+2025-02-20T01:12:39.693288Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:12:47.593210Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/clientes.service.ts")}
+2025-02-20T01:12:47.593229Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:13:18.493269Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:13:18.493315Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:13:29.293403Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:13:29.293434Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:14:02.193454Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:14:02.193500Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:14:08.693839Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:14:08.693865Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:14:14.294011Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.service.spec.ts")}
+2025-02-20T01:14:14.294029Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:17:10.397063Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:17:10.397108Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:17:29.596869Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:17:29.596886Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:17:37.196601Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:17:37.196615Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:17:45.797066Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:17:45.797082Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:17:54.197453Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:17:54.197479Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:18:02.396706Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:18:02.396726Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:18:12.397868Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/backend/src/clientes/__tests__/clientes.controller.spec.ts")}
+2025-02-20T01:18:12.397884Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/backend"), path: AnchoredSystemPathBuf("packages/backend") }}))
+2025-02-20T01:23:15.602962Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".context/progress.yaml")}
+2025-02-20T01:23:15.603064Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T01:25:48.711170Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".context/handoff.yaml")}
+2025-02-20T01:25:48.711186Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T01:25:58.510349Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".context/progress.yaml")}
+2025-02-20T01:25:58.510430Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-20T01:26:09.112126Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".context/decisions.yaml")}
+2025-02-20T01:26:09.112167Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))

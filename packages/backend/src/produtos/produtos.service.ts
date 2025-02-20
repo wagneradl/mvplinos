@@ -18,10 +18,7 @@ export class ProdutosService {
         });
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new BadRequestException('Erro ao criar produto');
-      }
-      throw error;
+      throw new BadRequestException('Erro ao criar produto');
     }
   }
 
@@ -62,53 +59,60 @@ export class ProdutosService {
   }
 
   async findOne(id: number) {
-    const produto = await this.prisma.produto.findFirst({
-      where: { id, deleted_at: null },
-    });
+    try {
+      const produto = await this.prisma.produto.findFirst({
+        where: { id, deleted_at: null },
+      });
 
-    if (!produto) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+      if (!produto) {
+        throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+      }
+
+      return produto;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao buscar produto');
     }
-
-    return produto;
   }
 
   async update(id: number, updateProdutoDto: UpdateProdutoDto) {
-    const produto = await this.findOne(id);
-    if (!produto) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado`);
-    }
-
     try {
+      const produto = await this.findOne(id);
+      if (!produto) {
+        throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+      }
+
       return await this.prisma.produto.update({
         where: { id },
         data: updateProdutoDto,
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new BadRequestException('Erro ao atualizar produto');
+      if (error instanceof NotFoundException) {
+        throw error;
       }
       throw new BadRequestException('Não foi possível atualizar o produto');
     }
   }
 
   async remove(id: number) {
-    const produto = await this.prisma.produto.findFirst({
-      where: { id, deleted_at: null },
-    });
-
-    if (!produto) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado`);
-    }
-
     try {
+      const produto = await this.prisma.produto.findFirst({
+        where: { id, deleted_at: null },
+      });
+
+      if (!produto) {
+        throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+      }
+
       return await this.prisma.produto.update({
         where: { id },
         data: { deleted_at: new Date() },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new BadRequestException('Erro ao remover produto');
+      if (error instanceof NotFoundException) {
+        throw error;
       }
       throw new BadRequestException('Não foi possível remover o produto');
     }

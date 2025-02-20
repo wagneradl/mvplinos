@@ -1,0 +1,2492 @@
+yarn run v1.22.22
+$ turbo run test
+• Packages in scope: @linos/backend, @linos/frontend, @linos/shared
+• Running test in 3 packages
+• Remote caching disabled
+@linos/shared:build: cache hit, replaying logs 63541199bcde572e
+@linos/shared:build: [2K[1G[2m$ tsc[22m
+@linos/frontend:test: cache miss, executing 13bd43880e67dead
+@linos/backend:test: cache miss, executing 76ec55609558dfcd
+@linos/backend:test: $ jest --coverage
+@linos/frontend:test: $ jest --coverage
+@linos/frontend:test: (node:70449) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@linos/frontend:test: (Use `node --trace-deprecation ...` to show where the warning was created)
+@linos/frontend:test: PASS src/__tests__/theme/index.test.ts
+@linos/frontend:test: (node:70448) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@linos/frontend:test: (Use `node --trace-deprecation ...` to show where the warning was created)
+@linos/frontend:test: PASS src/__tests__/pages/_app.test.tsx
+@linos/frontend:test: (node:70450) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@linos/frontend:test: (Use `node --trace-deprecation ...` to show where the warning was created)
+@linos/frontend:test: PASS src/__tests__/pages/index.test.tsx
+@linos/backend:test: FAIL src/clientes/__tests__/clientes.service.spec.ts (5.146 s)
+@linos/backend:test:   ● ClientesService › create › should throw ConflictException when CNPJ already exists
+@linos/backend:test: 
+@linos/backend:test:     expect(received).rejects.toThrow(expected)
+@linos/backend:test: 
+@linos/backend:test:     Expected constructor: ConflictException
+@linos/backend:test:     Received constructor: BadRequestException
+@linos/backend:test: 
+@linos/backend:test:     Received message: "Não foi possível criar o cliente"
+@linos/backend:test: 
+@linos/backend:test:           52 |         throw error;
+@linos/backend:test:           53 |       }
+@linos/backend:test:         > 54 |       throw new BadRequestException('Não foi possível criar o cliente');
+@linos/backend:test:              |             ^
+@linos/backend:test:           55 |     }
+@linos/backend:test:           56 |   }
+@linos/backend:test:           57 |
+@linos/backend:test: 
+@linos/backend:test:       at ClientesService.create (clientes/clientes.service.ts:54:13)
+@linos/backend:test:       at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:84:28)
+@linos/backend:test:       at Object.toThrow (../../../node_modules/expect/build/index.js:218:22)
+@linos/backend:test:       at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:84:55)
+@linos/backend:test: 
+@linos/backend:test:   ● ClientesService › findOne › should return a cliente with pedidos
+@linos/backend:test: 
+@linos/backend:test:     expect(jest.fn()).toHaveBeenCalledWith(...expected)
+@linos/backend:test: 
+@linos/backend:test:     - Expected
+@linos/backend:test:     + Received
+@linos/backend:test: 
+@linos/backend:test:     @@ -1,8 +1,18 @@
+@linos/backend:test:       Object {
+@linos/backend:test:         "include": Object {
+@linos/backend:test:     -     "pedidos": true,
+@linos/backend:test:     +     "pedidos": Object {
+@linos/backend:test:     +       "select": Object {
+@linos/backend:test:     +         "data_pedido": true,
+@linos/backend:test:     +         "id": true,
+@linos/backend:test:     +         "status": true,
+@linos/backend:test:     +         "valor_total": true,
+@linos/backend:test:     +       },
+@linos/backend:test:     +       "where": Object {
+@linos/backend:test:     +         "deleted_at": null,
+@linos/backend:test:     +       },
+@linos/backend:test:     +     },
+@linos/backend:test:         },
+@linos/backend:test:         "where": Object {
+@linos/backend:test:           "deleted_at": null,
+@linos/backend:test:           "id": 1,
+@linos/backend:test:         },,
+@linos/backend:test: 
+@linos/backend:test:     Number of calls: 1
+@linos/backend:test: 
+@linos/backend:test:       142 |         pedidos: mockPedidos,
+@linos/backend:test:       143 |       });
+@linos/backend:test:     > 144 |       expect(mockPrismaService.cliente.findFirst).toHaveBeenCalledWith({
+@linos/backend:test:           |                                                   ^
+@linos/backend:test:       145 |         where: { id: 1, deleted_at: null },
+@linos/backend:test:       146 |         include: { pedidos: true },
+@linos/backend:test:       147 |       });
+@linos/backend:test: 
+@linos/backend:test:       at Object.<anonymous> (clientes/__tests__/clientes.service.spec.ts:144:51)
+@linos/backend:test: 
+@linos/backend:test: PASS src/clientes/__tests__/clientes.controller.spec.ts (5.429 s)
+@linos/backend:test: PASS src/produtos/__tests__/produtos.service.spec.ts (6.006 s)
+@linos/backend:test:   ● Console
+@linos/backend:test: 
+@linos/backend:test:     console.error
+@linos/backend:test:       Error in findAll: Error: Find failed
+@linos/backend:test:           at Object.<anonymous> (/Users/wagner/Projetos/Linos/MVP7/packages/backend/src/produtos/__tests__/produtos.service.spec.ts:110:64)
+@linos/backend:test:           at Promise.then.completed (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/utils.js:298:28)
+@linos/backend:test:           at new Promise (<anonymous>)
+@linos/backend:test:           at callAsyncCircusFn (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/utils.js:231:10)
+@linos/backend:test:           at _callCircusTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:316:40)
+@linos/backend:test:           at processTicksAndRejections (node:internal/process/task_queues:105:5)
+@linos/backend:test:           at _runTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:252:3)
+@linos/backend:test:           at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:126:9)
+@linos/backend:test:           at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:121:9)
+@linos/backend:test:           at _runTestsForDescribeBlock (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:121:9)
+@linos/backend:test:           at run (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/run.js:71:3)
+@linos/backend:test:           at runAndTransformResultsToJestFormat (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+@linos/backend:test:           at jestAdapter (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+@linos/backend:test:           at runTestInternal (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/runTest.js:367:16)
+@linos/backend:test:           at runTest (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/runTest.js:444:34)
+@linos/backend:test:           at Object.worker (/Users/wagner/Projetos/Linos/MVP7/node_modules/jest-runner/build/testWorker.js:106:12)
+@linos/backend:test: 
+@linos/backend:test:       54 |       };
+@linos/backend:test:       55 |     } catch (error) {
+@linos/backend:test:     > 56 |       console.error('Error in findAll:', error);
+@linos/backend:test:          |               ^
+@linos/backend:test:       57 |       throw new BadRequestException('Erro ao buscar produtos');
+@linos/backend:test:       58 |     }
+@linos/backend:test:       59 |   }
+@linos/backend:test: 
+@linos/backend:test:       at ProdutosService.error [as findAll] (produtos/produtos.service.ts:56:15)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.service.spec.ts:112:7)
+@linos/backend:test: 
+@linos/backend:test: PASS src/produtos/__tests__/produtos.controller.spec.ts (6.021 s)
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 1)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 2)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 3)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 4)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Produto` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 5)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Cliente` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 6)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.Pedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 7)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+@linos/backend:test:     Attempted to log "prisma:error 
+@linos/backend:test:     Invalid `this[modelKey].deleteMany()` invocation in
+@linos/backend:test:     /Users/wagner/Projetos/Linos/MVP7/packages/backend/src/prisma/prisma.service.test.ts:36:33
+@linos/backend:test: 
+@linos/backend:test:       33 models.map(async (modelKey) => {
+@linos/backend:test:       34   if (typeof modelKey === 'string') {
+@linos/backend:test:       35     //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     → 36     return this[modelKey].deleteMany(
+@linos/backend:test:     The table `main.ItensPedido` does not exist in the current database.".
+@linos/backend:test: 
+@linos/backend:test:       at console.log (../../../node_modules/@jest/console/build/BufferedConsole.js:156:10)
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test:       at EventEmitter.<anonymous> (../../../node_modules/@prisma/client/runtime/library.js:130:3902)
+@linos/backend:test:       at $n.handleAndLogRequestError (../../../node_modules/@prisma/client/runtime/library.js:121:6693)
+@linos/backend:test:       at $n.request (../../../node_modules/@prisma/client/runtime/library.js:121:6307)
+@linos/backend:test:       at l (../../../node_modules/@prisma/client/runtime/library.js:130:9633)
+@linos/backend:test:           at async Promise.all (index 8)
+@linos/backend:test: 
+@linos/backend:test: FAIL src/produtos/__tests__/produtos.integration.spec.ts (6.289 s)
+@linos/backend:test:   ● Console
+@linos/backend:test: 
+@linos/backend:test:     console.log
+@linos/backend:test:       prisma:info Starting a sqlite pool with 21 connections.
+@linos/backend:test: 
+@linos/backend:test:       at Object.mc (../../../node_modules/@prisma/client/runtime/library.js:21:432)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos (POST) › should create produto
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos (POST) › should validate required fields
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos (GET) › should return paginated produtos
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos (GET) › should return empty array when no produtos
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos (GET) › should return array of produtos
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (GET) › should return 404 for non-existent produto
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (GET) › should return produto if exists
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (PATCH) › should update produto
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (DELETE) › should soft delete produto
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (DELETE) › should not list soft deleted produtos
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (DELETE) › should not find soft deleted produto by id
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test:   ● Produtos Integration Tests › /produtos/:id (DELETE) › should return 404 for non-existent produto
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:24:22)
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test:   ● Test suite failed to run
+@linos/backend:test: 
+@linos/backend:test:     TypeError: this[modelKey].deleteMany is not a function
+@linos/backend:test: 
+@linos/backend:test:       34 |         if (typeof modelKey === 'string') {
+@linos/backend:test:       35 |           //@ts-ignore - Dynamic access to Prisma models
+@linos/backend:test:     > 36 |           return this[modelKey].deleteMany();
+@linos/backend:test:          |                                 ^
+@linos/backend:test:       37 |         }
+@linos/backend:test:       38 |       })
+@linos/backend:test:       39 |     );
+@linos/backend:test: 
+@linos/backend:test:       at deleteMany (prisma/prisma.service.test.ts:36:33)
+@linos/backend:test:           at Array.map (<anonymous>)
+@linos/backend:test:       at Proxy.map (prisma/prisma.service.test.ts:33:14)
+@linos/backend:test:       at Function.cleanDatabase [as cleanupDatabase] (test/test.helper.ts:25:25)
+@linos/backend:test:       at Object.<anonymous> (produtos/__tests__/produtos.integration.spec.ts:28:22)
+@linos/backend:test: 
+@linos/backend:test: $ /Users/wagner/Projetos/Linos/MVP7/node_modules/.bin/prisma migrate deploy
+@linos/frontend:test: (node:70447) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@linos/frontend:test: (Use `node --trace-deprecation ...` to show where the warning was created)
+@linos/frontend:test: PASS __tests__/components/ProdutoCard.test.tsx (6.892 s)
+@linos/backend:test: Environment variables loaded from .env
+@linos/backend:test: Prisma schema loaded from ../../prisma/schema.prisma
+@linos/backend:test: Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+@linos/backend:test: 
+@linos/backend:test: 1 migration found in prisma/migrations
+@linos/backend:test: 
+@linos/backend:test: 
+@linos/backend:test: No pending migrations to apply.
+@linos/frontend:test: ------------------------|---------|----------|---------|---------|-------------------
+@linos/frontend:test: File                    | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+@linos/frontend:test: ------------------------|---------|----------|---------|---------|-------------------
+@linos/frontend:test: All files               |   78.37 |      100 |   66.66 |   77.14 |                   
+@linos/frontend:test:  app                    |       0 |      100 |       0 |       0 |                   
+@linos/frontend:test:   layout.tsx            |       0 |      100 |       0 |       0 | 6-13              
+@linos/frontend:test:   metadata.ts           |       0 |      100 |     100 |       0 | 3                 
+@linos/frontend:test:  app/pedidos/[id]/print |       0 |      100 |       0 |       0 |                   
+@linos/frontend:test:   page.tsx              |       0 |      100 |       0 |       0 | 11-56             
+@linos/frontend:test:  components             |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:   ProdutoCard.tsx       |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:  pages                  |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:   _app.tsx              |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:   index.tsx             |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:  theme                  |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test:   index.ts              |     100 |      100 |     100 |     100 |                   
+@linos/frontend:test: ------------------------|---------|----------|---------|---------|-------------------
+@linos/frontend:test: Jest: "global" coverage threshold for statements (80%) not met: 78.37%
+@linos/frontend:test: Jest: "global" coverage threshold for lines (80%) not met: 77.14%
+@linos/frontend:test: Jest: "global" coverage threshold for functions (80%) not met: 66.66%
+@linos/frontend:test: 
+@linos/frontend:test: Test Suites: 4 passed, 4 total
+@linos/frontend:test: Tests:       17 passed, 17 total
+@linos/frontend:test: Snapshots:   0 total
+@linos/frontend:test: Time:        7.963 s
+@linos/frontend:test: Ran all test suites.
+@linos/frontend:test: error Command failed with exit code 1.
+@linos/frontend:test: info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+@linos/frontend:test: ERROR: command finished with error: command (/Users/wagner/Projetos/Linos/MVP7/packages/frontend) /var/folders/5k/wxj68scx3n16kzjn1v21clnw0000gn/T/yarn--1740008513183-0.9612408222193609/yarn run test exited (1)
+@linos/frontend#test: command (/Users/wagner/Projetos/Linos/MVP7/packages/frontend) /var/folders/5k/wxj68scx3n16kzjn1v21clnw0000gn/T/yarn--1740008513183-0.9612408222193609/yarn run test exited (1)
+
+ Tasks:    1 successful, 3 total
+Cached:    1 cached, 3 total
+  Time:    9.27s 
+Failed:    @linos/frontend#test
+
+ ERROR  run failed: command  exited (1)
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
