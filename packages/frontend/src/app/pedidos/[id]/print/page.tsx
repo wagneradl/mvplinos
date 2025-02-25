@@ -1,9 +1,29 @@
 import React from 'react';
-import { Typography, Box, Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material';
+import {
+  Typography,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 
 interface PedidoTemplateProps {
   params: {
     id: string;
+  };
+}
+
+interface ItemPedido {
+  id: number;
+  quantidade: number;
+  preco_unitario: number;
+  valor_total_item: number;
+  produto: {
+    nome: string;
+    tipo_medida: string;
   };
 }
 
@@ -52,18 +72,14 @@ export default async function PedidoTemplate({ params }: PedidoTemplateProps) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pedido.itensPedido.map((item: any) => (
+              {pedido.itensPedido.map((item: ItemPedido) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.produto.nome}</TableCell>
                   <TableCell align="right">
                     {item.quantidade} {item.produto.tipo_medida}
                   </TableCell>
-                  <TableCell align="right">
-                    R$ {item.preco_unitario.toFixed(2)}
-                  </TableCell>
-                  <TableCell align="right">
-                    R$ {item.valor_total_item.toFixed(2)}
-                  </TableCell>
+                  <TableCell align="right">R$ {item.preco_unitario.toFixed(2)}</TableCell>
+                  <TableCell align="right">R$ {item.valor_total_item.toFixed(2)}</TableCell>
                 </TableRow>
               ))}
               <TableRow>

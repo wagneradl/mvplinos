@@ -10,7 +10,7 @@ async function generatePdf() {
 
     // Buscar o pedido com ID 1 e gerar o PDF
     const pedido = await pedidosService.findOne(1);
-    await pedidosService.update(1, { status: PedidoStatus.ATUALIZADO });
+    await pedidosService.update(1, { status: PedidoStatus.ATIVO });
 
     console.log('PDF gerado com sucesso para o pedido:', pedido);
     await app.close();

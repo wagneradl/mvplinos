@@ -12,28 +12,71 @@ export class ProdutosService {
 
   async create(createProdutoDto: CreateProdutoDto) {
     try {
-      // Verificar se já existe produto com o mesmo nome
+      console.log('Recebido:', createProdutoDto);
+      
+      if (!createProdutoDto.nome) {
+        throw new BadRequestException('Nome é obrigatório');
+      }
+
+      if (typeof createProdutoDto.preco_unitario !== 'number') {
+        throw new BadRequestException('Preço unitário deve ser um número');
+      }
+
+      // Normalizar o nome para comparação case-insensitive
+      const nomeTratado = createProdutoDto.nome.trim();
+      console.log('Nome tratado:', nomeTratado);
+      
+      // Verificar se já existe produto com o mesmo nome (case-insensitive)
       const existingProduto = await this.prisma.produto.findFirst({
         where: {
-          nome: createProdutoDto.nome,
-          deleted_at: null,
+          AND: [
+            {
+              nome: {
+                contains: nomeTratado,
+              }
+            },
+            {
+              deleted_at: null
+            }
+          ]
         },
       });
 
-      if (existingProduto) {
+      console.log('Produto existente:', existingProduto);
+
+      if (existingProduto && existingProduto.nome.toLowerCase() === nomeTratado.toLowerCase()) {
         throw new BadRequestException('Já existe um produto com este nome');
       }
 
-      return await this.prisma.$transaction(async (prisma) => {
-        return await prisma.produto.create({
-          data: createProdutoDto,
-        });
+      // Criar produto mantendo os espaços originais após trim
+      const produto = await this.prisma.produto.create({
+        data: {
+          nome: nomeTratado,
+          preco_unitario: createProdutoDto.preco_unitario,
+          tipo_medida: createProdutoDto.tipo_medida,
+          status: createProdutoDto.status || 'ativo',
+        },
       });
+
+      console.log('Produto criado:', produto);
+      return produto;
+
     } catch (error) {
+      console.error('Erro detalhado:', error);
+      
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException('Erro ao criar produto');
+
+      if (error instanceof Error && 'code' in error && error['code'] === 'P2002') {
+        throw new BadRequestException('Já existe um produto com este nome');
+      }
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      throw new BadRequestException(
+        'Erro ao criar produto. Verifique os dados informados: ' + errorMessage
+      );
     }
   }
 
@@ -54,7 +97,7 @@ export class ProdutosService {
       // Adicionar busca por nome se fornecida
       if (search) {
         where.nome = {
-          contains: search.toLowerCase(),
+          contains: search.toLowerCase()
         };
       }
 
@@ -67,16 +110,14 @@ export class ProdutosService {
       const [items, total] = await Promise.all([
         this.prisma.produto.findMany({
           where,
-          skip,
-          take: Number(limit),
           orderBy: orderByClause,
+          skip,
+          take: limit,
         }),
         this.prisma.produto.count({ where }),
       ]);
 
-      const pageCount = Math.ceil(total / limit);
-      const hasPreviousPage = page > 1;
-      const hasNextPage = page < pageCount;
+      const totalPages = Math.ceil(total / limit);
 
       return {
         data: items,
@@ -84,25 +125,27 @@ export class ProdutosService {
           page,
           limit,
           itemCount: total,
-          pageCount,
-          hasPreviousPage,
-          hasNextPage,
+          pageCount: totalPages,
+          hasPreviousPage: page > 1,
+          hasNextPage: page < totalPages,
         },
       };
     } catch (error) {
-      console.error('Error in findAll:', error);
-      throw new BadRequestException('Erro ao buscar produtos');
+      throw new BadRequestException('Erro ao listar produtos');
     }
   }
 
   async findOne(id: number) {
     try {
       const produto = await this.prisma.produto.findFirst({
-        where: { id, deleted_at: null },
+        where: {
+          id,
+          deleted_at: null,
+        },
       });
 
       if (!produto) {
-        throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+        throw new NotFoundException('Produto não encontrado');
       }
 
       return produto;
@@ -116,33 +159,63 @@ export class ProdutosService {
 
   async update(id: number, updateProdutoDto: UpdateProdutoDto) {
     try {
+      console.log('Atualizando produto:', { id, dados: updateProdutoDto });
+      
       // Verificar se o produto existe e não está deletado
       await this.findOne(id);
 
       // Se o nome está sendo atualizado, verificar duplicação
       if (updateProdutoDto.nome) {
+        const nomeTratado = updateProdutoDto.nome.trim();
+        console.log('Nome tratado:', nomeTratado);
+        
         const existingProduto = await this.prisma.produto.findFirst({
           where: {
-            nome: updateProdutoDto.nome,
+            nome: {
+              contains: nomeTratado,
+              not: null
+            },
             id: { not: id },
             deleted_at: null,
           },
         });
 
-        if (existingProduto) {
+        console.log('Produto existente:', existingProduto);
+
+        if (existingProduto && existingProduto.nome.toLowerCase() === nomeTratado.toLowerCase()) {
           throw new BadRequestException('Já existe um produto com este nome');
         }
+
+        // Atualizar com o nome tratado
+        updateProdutoDto.nome = nomeTratado;
       }
 
-      return await this.prisma.produto.update({
+      const produto = await this.prisma.produto.update({
         where: { id },
         data: updateProdutoDto,
       });
+
+      console.log('Produto atualizado:', produto);
+      return produto;
+
     } catch (error) {
+      console.error('Erro detalhado:', error);
+      
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException('Não foi possível atualizar o produto');
+
+      // Verificar se é um erro do Prisma
+      if (error instanceof Error && 'code' in error && error['code'] === 'P2002') {
+        throw new BadRequestException('Já existe um produto com este nome');
+      }
+
+      // Extrair mensagem de erro de forma segura
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      throw new BadRequestException(
+        'Não foi possível atualizar o produto. Verifique os dados informados: ' + errorMessage
+      );
     }
   }
 

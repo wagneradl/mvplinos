@@ -1,13 +1,12 @@
-import React from 'react';
+'use client';
+
 import { Inter } from 'next/font/google';
+import { Box, Container } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
 import { Providers } from '@/components/Providers';
+import { Navigation } from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
-
-export const metadata = {
-  title: "Lino's Padaria - Sistema de Gestão de Pedidos",
-  description: 'Sistema de gestão de pedidos da padaria do Lino',
-};
 
 export default function RootLayout({
   children,
@@ -17,7 +16,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <CssBaseline />
+          <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+            <Navigation />
+            <Box component="main" sx={{ flexGrow: 1, py: 4, overflow: 'auto' }}>
+              <Container maxWidth="lg" sx={{ mt: 8 }}>
+                {children}
+              </Container>
+            </Box>
+          </Box>
+        </Providers>
       </body>
     </html>
   );

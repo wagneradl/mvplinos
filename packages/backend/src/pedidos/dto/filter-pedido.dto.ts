@@ -1,16 +1,17 @@
-import { IsOptional, Matches } from 'class-validator';
+import { IsOptional, IsEnum } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+import { PedidoStatus } from './update-pedido.dto';
 
 export class FilterPedidoDto {
   @ApiPropertyOptional({ description: 'Data inicial do período (YYYY-MM-DD)' })
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Data deve estar no formato YYYY-MM-DD' })
+  @Transform(({ value }) => value ? String(value).substring(0, 10) : value)
   startDate?: string;
 
   @ApiPropertyOptional({ description: 'Data final do período (YYYY-MM-DD)' })
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Data deve estar no formato YYYY-MM-DD' })
+  @Transform(({ value }) => value ? String(value).substring(0, 10) : value)
   endDate?: string;
 
   @ApiPropertyOptional({ description: 'ID do cliente' })
@@ -27,4 +28,9 @@ export class FilterPedidoDto {
   @IsOptional()
   @Type(() => Number)
   limit?: number;
+
+  @ApiPropertyOptional({ description: 'Status do pedido', enum: PedidoStatus })
+  @IsOptional()
+  @Transform(({ value }) => value || undefined) // Permite string vazia
+  status?: PedidoStatus;
 }

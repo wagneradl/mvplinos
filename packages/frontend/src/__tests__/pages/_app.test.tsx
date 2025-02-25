@@ -14,7 +14,9 @@ jest.mock('../../theme', () => ({
 
 // Mock Material-UI components
 jest.mock('@mui/material/styles', () => ({
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
 }));
 
 jest.mock('@mui/material/CssBaseline', () => ({
@@ -25,9 +27,7 @@ jest.mock('@mui/material/CssBaseline', () => ({
 describe('App', () => {
   it('renders without crashing', () => {
     const mockComponent = () => <div>Test Component</div>;
-    const { getByText, getByTestId } = render(
-      <App Component={mockComponent} pageProps={{}} />
-    );
+    const { getByText, getByTestId } = render(<App Component={mockComponent} pageProps={{}} />);
 
     expect(getByTestId('theme-provider')).toBeInTheDocument();
     expect(getByTestId('css-baseline')).toBeInTheDocument();
@@ -35,12 +35,13 @@ describe('App', () => {
   });
 
   it('passes pageProps to the Component', () => {
-    const mockComponent = (props: any) => <div>Props: {JSON.stringify(props)}</div>;
-    const mockPageProps = { testProp: 'test value' };
-    
-    const { getByText } = render(
-      <App Component={mockComponent} pageProps={mockPageProps} />
-    );
+    interface TestProps {
+      testProp: string;
+    }
+    const mockComponent = (props: TestProps) => <div>Props: {JSON.stringify(props)}</div>;
+    const mockPageProps: TestProps = { testProp: 'test value' };
+
+    const { getByText } = render(<App Component={mockComponent} pageProps={mockPageProps} />);
 
     expect(getByText('Props: {"testProp":"test value"}')).toBeInTheDocument();
   });

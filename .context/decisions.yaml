@@ -1,4 +1,26 @@
 decisoes_tecnicas:
+  backend_recente:
+    - decisao: "Abordagem unificada para filtros de data"
+      motivo: "Resolver de forma consistente problemas de timezone em filtros por data tanto em pedidos quanto em relatórios"
+      status: "implementado"
+      
+    - decisao: "Uso de OR condicional para datas"
+      motivo: "Garantir que pedidos feitos no último dia do intervalo sejam sempre incluídos"
+      status: "implementado"
+      
+    - decisao: "Exclusão de pedidos cancelados dos relatórios"
+      motivo: "Fornecer métricas de vendas mais precisas e representativas"
+      status: "implementado"
+
+  frontend_recente:
+    - decisao: "Acesso consistente a propriedades em hooks"
+      motivo: "Resolver problemas de exibição de clientes no dropdown de relatórios"
+      status: "implementado"
+      
+    - decisao: "Limite aumentado para listagem de clientes"
+      motivo: "Garantir que todos os clientes estejam disponíveis para seleção em relatórios"
+      status: "implementado"
+  
   arquitetura:
     - decisao: "Uso do NestJS para backend"
       motivo: "Framework maduro com suporte a TypeScript e boa integração com Prisma"
@@ -10,6 +32,22 @@ decisoes_tecnicas:
     
     - decisao: "Prisma como ORM"
       motivo: "Type safety e boa integração com TypeScript"
+      status: "implementado"
+      
+    - decisao: "Next.js 13 para frontend"
+      motivo: "Performance, SSR e melhor SEO"
+      status: "implementado"
+      
+    - decisao: "Material-UI como biblioteca UI"
+      motivo: "Componentes maduros e customizáveis"
+      status: "implementado"
+      
+    - decisao: "React Query para estado"
+      motivo: "Cache, invalidação e sincronização automática"
+      status: "implementado"
+      
+    - decisao: "Zod para validação"
+      motivo: "Type safety e integração com React Hook Form"
       status: "implementado"
 
   backend:
@@ -24,6 +62,43 @@ decisoes_tecnicas:
     - decisao: "Status de pedido como enum"
       motivo: "Maior type safety e controle de estados"
       status: "implementado"
+      
+    - decisao: "ESLint e Prettier"
+      motivo: "Qualidade e consistência de código"
+      status: "implementado"
+      
+    - decisao: "Validação de produtos duplicados"
+      motivo: "Garantir integridade dos dados"
+      status: "implementado"
+      
+    - decisao: "Tratamento de campos textuais"
+      motivo: "Garantir consistência nos dados"
+      status: "implementado"
+
+  frontend:
+    - decisao: "Uso do Zod para validação"
+      motivo: "Type safety e integração com React Hook Form"
+      status: "implementado"
+      
+    - decisao: "Next.js 13 para frontend"
+      motivo: "Performance, SSR e melhor SEO"
+      status: "implementado"
+      
+    - decisao: "Material-UI como biblioteca UI"
+      motivo: "Componentes maduros e customizáveis"
+      status: "implementado"
+      
+    - decisao: "React Query para estado"
+      motivo: "Cache, invalidação e sincronização automática"
+      status: "implementado"
+      
+    - decisao: "React Query para estado"
+      motivo: "Cache, invalidação e sincronização automática"
+      status: "implementado"
+      
+    - decisao: "Zod para validação"
+      motivo: "Type safety e integração com React Hook Form"
+      status: "implementado"
 
   testes:
     - decisao: "Testes de integração com SuperTest"
@@ -33,35 +108,60 @@ decisoes_tecnicas:
     - decisao: "Banco de teste separado"
       motivo: "Isolamento de dados de teste"
       status: "implementado"
+      
+    - decisao: "Jest para testes unitários"
+      motivo: "Ecossistema maduro e boa integração"
+      status: "implementado"
+      
+    - decisao: "Testes E2E"
+      motivo: "Garantir funcionamento completo do sistema"
+      status: "pendente"
 
 decisoes_pendentes:
-  backend:
-    - "Definir estratégia de cache para produtos frequentes"
-    - "Implementar política de retry para operações críticas"
-    - "Definir estratégia de logging"
+  proxima_fase:
+    - "Implementar autenticação e autorização com diferentes níveis de acesso"
+    - "Definição de estratégia para backup automático e repblicação"
+    - "Implementar dashboard visual para indicadores de vendas"
+    - "Integração com APIs externas para validação de CNPJ"
+    - "Sistema de notificações em tempo real para status de pedidos"
+    - "Migração para banco de dados mais robusto (MySQL/PostgreSQL)"
     
-  frontend:
-    - "Definir biblioteca de componentes UI"
-    - "Estratégia de gerenciamento de estado"
-    - "Política de cache local"
-    
-  infraestrutura:
-    - "Estratégia de backup"
-    - "Política de retenção de logs"
-    - "Estratégia de monitoramento"
+  otimizacoes:
+    - "Estratégia de caching distribuído para melhorar performance"
+    - "Implementação de filas para operações assíncronas"
+    - "Versão offline com sincronização posterior"
+    - "Implementação de dark mode com seletores de tema"
+    - "Melhoria na responsividade para dispositivos móveis"
+    - "Otimização de queries para grandes volumes de dados"
 
 pontos_atencao:
-  seguranca:
-    - "Implementar validação de CNPJ"
-    - "Sanitização de inputs"
-    - "Proteção contra SQL injection"
+  seguranca_dados:
+    - "Implementar autenticação e autorização robusta para acesso ao sistema"
+    - "Validar CNPJ via API externa para garantir informações corretas"
+    - "Implementar proteção contra ataques de injeção SQL"
+    - "Adicionar rate limiting para APIs públicas"
+    - "Implementar proteção CSRF para formulários"
+    - "Sanitizar inputs para evitar XSS e outros ataques"
     
-  performance:
-    - "Otimizar queries de listagem"
-    - "Implementar cache onde necessário"
-    - "Monitorar tempo de resposta"
+  escalabilidade:
+    - "Monitorar performance do sistema com aumento de volume de dados"
+    - "Otimizar queries especialmente em relatórios e filtros com grandes intervalos"
+    - "Implementar caching estratégico para recursos frequentemente acessados"
+    - "Avaliar soluções de banco de dados mais robustas para grande escala"
+    - "Implementar técnicas de paginação mais eficientes para conjuntos maiores"
     
-  usabilidade:
-    - "Feedback claro para usuários"
-    - "Mensagens de erro amigáveis"
-    - "Confirmações em operações críticas"
+  experiencia_usuario:
+    - "Melhorar responsividade em dispositivos móveis"
+    - "Implementar preview integrado de PDF"
+    - "Aprimorar feedback visual durante interações"
+    - "Adicionar filtros mais avançados para relatórios"
+    - "Oferecer dashboards visuais para análise de vendas"
+    - "Implementar notificações em tempo real sobre mudanças de status"
+    
+  qualidade_codigo:
+    - "Manter cobertura de testes acima de 85%"
+    - "Implementar testes automatizados para novas funcionalidades"
+    - "Documentar APIs e validações de forma detalhada"
+    - "Realizar revisão periódica de dependências"
+    - "Seguir padrões consistentes de código"
+    - "Implementar CI/CD para validação automática"

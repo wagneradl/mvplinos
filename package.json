@@ -14,10 +14,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "backup": "node scripts/backup/backup.js",
     "backup:verify": "node scripts/backup/verify.js",
-    "backup:list": "node scripts/backup/restore.js",
+    "backup:list": "node scripts/backup/list.js",
     "backup:restore": "node scripts/backup/restore.js",
     "backup:schedule": "node -e \"setInterval(() => require('./scripts/backup/backup.js').performBackup(), 24 * 60 * 60 * 1000)\"",
-    "prebackup": "yarn prisma generate"
+    "prebackup": "yarn prisma generate",
+    "deploy": "bash scripts/deploy/deploy.sh",
+    "deploy:clean": "rm -rf ./packages/*/dist && yarn deploy",
+    "deploy:verify": "curl -s http://localhost:3001/health && curl -s http://localhost:3000"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

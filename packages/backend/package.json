@@ -20,7 +20,13 @@
     "seed": "ts-node prisma/seed.ts",
     "pretest:integration": "DATABASE_URL=file:./test.db yarn prisma migrate deploy",
     "pretest:e2e": "DATABASE_URL=file:./test.db yarn prisma migrate deploy",
-    "setup-test-env": "ts-node scripts/setup-test-env.ts"
+    "setup-test-env": "ts-node scripts/setup-test-env.ts",
+    "postinstall": "prisma generate",
+    "prepare:prod": "yarn prisma generate && yarn prisma migrate deploy && yarn build",
+    "start:prod:cluster": "pm2 start ecosystem.config.js --env production",
+    "start:prod:cluster:dev": "pm2 start ecosystem.config.js --env development",
+    "start:prod:cluster:staging": "pm2 start ecosystem.config.js --env staging",
+    "start:prod:cluster:prod": "pm2 start ecosystem.config.js --env production"
   },
   "dependencies": {
     "@linos/shared": "*",
@@ -49,15 +55,14 @@
     "@types/supertest": "^2.0.12",
     "jest": "^29.5.0",
     "jest-mock-extended": "^4.0.0-beta1",
-    "pdf-parse": "^1.1.1",
     "prisma": "^5.0.0",
-    "rimraf": "^5.0.1",
+    "pm2": "^5.2.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "uuid": "^11.1.0"
+    "typescript": "^5.1.3"
   }
 }

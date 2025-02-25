@@ -4,9 +4,12 @@ import { PdfService } from '../pdf/pdf.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto, PedidoStatus } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
+import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 @Injectable()
 export class PedidosService {
@@ -14,6 +17,17 @@ export class PedidosService {
     private readonly prisma: PrismaService,
     private readonly pdfService: PdfService,
   ) {}
+
+  // Função auxiliar para depurar problemas de data
+  private debugDates(date: Date): void {
+    console.log('Debug data:');
+    console.log('- toString():', date.toString());
+    console.log('- toISOString():', date.toISOString());
+    console.log('- toLocaleDateString():', date.toLocaleDateString());
+    console.log('- getTimezoneOffset():', date.getTimezoneOffset());
+    console.log('- getFullYear()/getMonth()/getDate():', 
+      date.getFullYear(), date.getMonth() + 1, date.getDate());
+  }
 
   async create(createPedidoDto: CreatePedidoDto) {
     const { cliente_id, itens } = createPedidoDto;
@@ -90,13 +104,17 @@ export class PedidosService {
           throw new BadRequestException('Cliente está inativo');
         }
 
+        // Data atual para o pedido
+        const dataPedido = new Date();
+        console.log('Criando pedido com data:', dataPedido.toISOString());
+        
         // Criar o pedido com os itens
         const pedido = await tx.pedido.create({
           data: {
             cliente_id,
-            data_pedido: new Date(),
+            data_pedido: dataPedido,
             valor_total: valorTotal,
-            status: PedidoStatus.PENDENTE,
+            status: PedidoStatus.ATIVO,
             pdf_path: '', // Será atualizado após gerar o PDF
             itensPedido: {
               create: produtosInfo,
@@ -142,30 +160,82 @@ export class PedidosService {
 
   async findAll(filter: FilterPedidoDto) {
     try {
-      const { page = 1, limit = 10, startDate, endDate, clienteId } = filter;
+      // Definir valores padrão e aplicar transformações
+      const page = filter.page || 1;
+      const limit = filter.limit || 10;
       const skip = (page - 1) * limit;
 
-      const where: Prisma.PedidoWhereInput = {
-        deleted_at: null,
-      };
+      console.log('Processando filtros:', filter);
 
-      if (startDate && endDate) {
-        const dataInicial = new Date(startDate);
-        dataInicial.setHours(0, 0, 0, 0);
-        
-        const dataFinal = new Date(endDate);
-        dataFinal.setHours(23, 59, 59, 999);
+      // Abordagem simplificada - usar Prisma diretamente com where conditions
+      // para evitar problemas com SQL raw
+      const where: Prisma.PedidoWhereInput = {};
 
-        where.data_pedido = {
-          gte: dataInicial,
-          lte: dataFinal,
-        };
+      // Filtro de cliente
+      if (filter.clienteId) {
+        where.cliente_id = filter.clienteId;
+        console.log(`Filtrando por cliente_id: ${filter.clienteId}`);
+      }
+      
+      // Filtro de status
+      if (filter.status) {
+        where.status = filter.status;
+        console.log(`Filtrando por status: ${filter.status}`);
+      }
+      
+      // Filtro de datas - abordagem de intervalo manual
+      if (filter.startDate && filter.endDate) {
+        try {
+          const startDateStr = filter.startDate.substring(0, 10);
+          const endDateStr = filter.endDate.substring(0, 10);
+          
+          console.log(`Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`);
+          
+          // Precisamos gerar uma lista com todas as datas no intervalo
+          // para contemplar problemas de timezone
+          const dates = [];
+          const startParts = startDateStr.split('-').map(p => parseInt(p));
+          const endParts = endDateStr.split('-').map(p => parseInt(p));
+          
+          const start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+          const end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+          this.debugDates(start);
+          this.debugDates(end);
+          
+          // Criar array com todas as datas no intervalo (como strings)
+          const current = new Date(start);
+          while (current <= end) {
+            const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+            dates.push(dateStr);
+            current.setDate(current.getDate() + 1);
+          }
+          
+          console.log('Datas no intervalo:', dates);
+          
+          // Criar uma cláusula OR para cada data
+          if (dates.length > 0) {
+            where.OR = dates.map(dateStr => ({
+              data_pedido: {
+                // Ajustamos os hários para cubrir o dia inteiro
+                gte: new Date(`${dateStr}T00:00:00.000`),
+                lt: new Date(`${dateStr}T23:59:59.999`)
+              }
+            }));
+            
+            console.log(`Criadas ${where.OR.length} condições OR para as datas`);
+          }
+        } catch (error) {
+          console.error('Erro ao processar filtro de datas:', error);
+          // Não aplicamos o filtro de data se houver erro
+          if (error instanceof Error) {
+            console.log('Erro detalhado:', error.message);
+          }
+        }
       }
 
-      if (clienteId) {
-        where.cliente_id = clienteId;
-      }
+      console.log('Consulta com where conditions:', where);
 
+      // Usar o Prisma para fazer a consulta
       const [data, total] = await Promise.all([
         this.prisma.pedido.findMany({
           skip,
@@ -186,24 +256,42 @@ export class PedidosService {
         this.prisma.pedido.count({ where }),
       ]);
 
+      const totalPages = Math.ceil(total / limit);
+
+      console.log(`Encontrados ${data.length} pedidos de um total de ${total}`);
+      
+      // Log para debug
+      if (data.length > 0) {
+        console.log('Primeiro pedido encontrado:', {
+          id: data[0].id,
+          status: data[0].status,
+          data: data[0].data_pedido.toISOString()
+        });
+      }
+
       return {
         data,
         meta: {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit),
+          totalPages,
         },
       };
     } catch (error) {
-      throw new BadRequestException('Erro ao buscar pedidos');
+      console.error('Erro ao buscar pedidos:', error);
+      if (error instanceof Error) {
+        throw new BadRequestException('Erro ao buscar pedidos: ' + error.message);
+      } else {
+        throw new BadRequestException('Erro ao buscar pedidos');
+      }
     }
   }
 
   async findOne(id: number) {
     try {
       const pedido = await this.prisma.pedido.findFirst({
-        where: { id, deleted_at: null },
+        where: { id },
         include: {
           cliente: true,
           itensPedido: {
@@ -249,9 +337,9 @@ export class PedidosService {
         throw new BadRequestException('Não é possível atualizar um pedido cancelado');
       }
 
-      // Validar se está tentando cancelar um pedido atualizado
-      if (updatePedidoDto.status === PedidoStatus.CANCELADO && pedido.status === PedidoStatus.ATUALIZADO) {
-        throw new BadRequestException('Não é possível cancelar um pedido atualizado');
+      // Validar se está tentando cancelar um pedido ativo
+      if (updatePedidoDto.status === PedidoStatus.CANCELADO && pedido.status === PedidoStatus.ATIVO) {
+        // Permitido cancelar pedidos ativos, não precisa fazer nada aqui
       }
 
       // Atualizar o pedido
@@ -306,11 +394,12 @@ export class PedidosService {
   async remove(id: number) {
     try {
       const pedido = await this.findOne(id);
-
+      
+      // Modificado para apenas mudar o status para CANCELADO,
+      // sem usar deleted_at para permitir que o pedido continue aparecendo nas listagens
       return await this.prisma.pedido.update({
         where: { id },
         data: { 
-          deleted_at: new Date(),
           status: PedidoStatus.CANCELADO
         },
         include: {
@@ -435,7 +524,7 @@ export class PedidosService {
         where: { id: pedidoId },
         data: {
           valor_total,
-          status: PedidoStatus.ATUALIZADO
+          status: PedidoStatus.ATIVO
         },
         include: {
           cliente: true,
@@ -459,7 +548,7 @@ export class PedidosService {
 
   async getPdfPath(id: number): Promise<string> {
     const pedido = await this.prisma.pedido.findFirst({
-      where: { id, deleted_at: null }
+      where: { id }
     });
 
     if (!pedido) {
@@ -476,5 +565,128 @@ export class PedidosService {
     }
 
     return fullPath;
+  }
+
+  async generateReport(reportDto: ReportPedidoDto) {
+    const { data_inicio, data_fim, cliente_id } = reportDto;
+
+    if (!data_inicio || !data_fim) {
+      throw new BadRequestException('As datas inicial e final são obrigatórias');
+    }
+
+    console.log(`Gerando relatório para o período de ${data_inicio} até ${data_fim}`);
+    console.log(`Cliente ID: ${cliente_id || 'Todos os clientes'}`);
+    
+    try {
+      // Abordagem de intervalo manual - igual ao usado em findAll
+      const startDateStr = data_inicio.substring(0, 10);
+      const endDateStr = data_fim.substring(0, 10);
+      
+      console.log(`Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`);
+      
+      // Precisamos gerar uma lista com todas as datas no intervalo
+      // para contemplar problemas de timezone
+      const dates = [];
+      const startParts = startDateStr.split('-').map(p => parseInt(p));
+      const endParts = endDateStr.split('-').map(p => parseInt(p));
+      
+      const start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      const end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+      this.debugDates(start);
+      this.debugDates(end);
+      
+      // Criar array com todas as datas no intervalo (como strings)
+      const current = new Date(start);
+      while (current <= end) {
+        const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+        dates.push(dateStr);
+        current.setDate(current.getDate() + 1);
+      }
+      
+      console.log('Datas no intervalo para relatório:', dates);
+      
+      // Condição where básica (status = ATIVO)
+      const where: Prisma.PedidoWhereInput = {
+        status: PedidoStatus.ATIVO
+      };
+      
+      // Adicionar filtro de cliente se fornecido
+      if (cliente_id) {
+        where.cliente_id = cliente_id;
+      }
+      
+      // Criar uma cláusula OR para cada data no intervalo
+      if (dates.length > 0) {
+        where.OR = dates.map(dateStr => ({
+          data_pedido: {
+            // Ajustamos os horários para cubrir o dia inteiro
+            gte: new Date(`${dateStr}T00:00:00.000`),
+            lt: new Date(`${dateStr}T23:59:59.999`)
+          }
+        }));
+        
+        console.log(`Criadas ${where.OR.length} condições OR para as datas no relatório`);
+      }
+
+      console.log('Consulta de relatório com where conditions:', where);
+
+      const pedidos = await this.prisma.pedido.findMany({
+        where,
+        include: {
+          itensPedido: true,
+        },
+        orderBy: {
+          data_pedido: 'asc',
+        },
+      });
+
+      console.log(`Encontrados ${pedidos.length} pedidos ativos no período para relatório`);
+      
+      // Log para debug do primeiro pedido encontrado
+      if (pedidos.length > 0) {
+        console.log('Primeiro pedido do relatório:', {
+          id: pedidos[0].id,
+          status: pedidos[0].status,
+          data: pedidos[0].data_pedido.toISOString()
+        });
+      }
+
+      const dailyData = pedidos.reduce((acc, pedido) => {
+        const date = format(pedido.data_pedido, 'yyyy-MM-dd');
+        
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            total_orders: 0,
+            total_value: 0,
+          };
+        }
+
+        acc[date].total_orders++;
+        acc[date].total_value += pedido.valor_total;
+
+        return acc;
+      }, {} as Record<string, any>);
+
+      const data = Object.values(dailyData);
+      const summary = {
+        total_orders: pedidos.length,
+        total_value: pedidos.reduce((sum, pedido) => sum + pedido.valor_total, 0),
+        average_value: pedidos.length > 0 
+          ? pedidos.reduce((sum, pedido) => sum + pedido.valor_total, 0) / pedidos.length 
+          : 0,
+      };
+
+      return {
+        data,
+        summary,
+      };
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      if (error instanceof Error) {
+        throw new BadRequestException(`Erro ao gerar relatório: ${error.message}`);
+      }
+      throw new BadRequestException('Erro ao gerar relatório');
+    }
   }
 }

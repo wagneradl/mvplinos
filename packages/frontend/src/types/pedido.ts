@@ -28,7 +28,7 @@ export interface Pedido {
   cliente?: Cliente;
   data_pedido: string;
   valor_total: number;
-  status: 'PENDENTE' | 'ATUALIZADO' | 'CANCELADO';
+  status: 'ATIVO' | 'CANCELADO';
   pdf_path?: string;
   created_at: string;
   updated_at: string;

@@ -17,6 +17,7 @@ export class ClientesService {
 
   async create(createClienteDto: CreateClienteDto) {
     try {
+      console.log('Recebido DTO do cliente:', createClienteDto);
       return await this.prisma.$transaction(async (prisma) => {
         // Verifica se já existe um cliente com o mesmo CNPJ
         const existingCliente = await prisma.cliente.findFirst({
@@ -49,7 +50,13 @@ export class ClientesService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException('Não foi possível criar o cliente');
+      // Registrar detalhes do erro para facilitar depuração
+      console.error('Erro detalhado ao criar cliente:', error);
+      if (error instanceof Error) {
+        throw new BadRequestException(`Não foi possível criar o cliente: ${error.message}`);
+      } else {
+        throw new BadRequestException('Não foi possível criar o cliente');
+      }
     }
   }
 
@@ -158,6 +165,18 @@ export class ClientesService {
       const pageCount = Math.ceil(total / limit);
       const hasPreviousPage = page > 1;
       const hasNextPage = page < pageCount;
+
+      console.log('findAll - dados retornados:', {
+        data: items,
+        meta: {
+          page,
+          limit,
+          itemCount: total,
+          pageCount,
+          hasPreviousPage,
+          hasNextPage,
+        },
+      });
 
       return {
         data: items,

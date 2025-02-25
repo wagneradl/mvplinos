@@ -1,164 +1,88 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow,
-  IconButton,
-  Tooltip,
-  Pagination,
-  Stack,
-  CircularProgress
-} from '@mui/material';
-import { 
-  Visibility as VisibilityIcon,
-  FileDownload as FileDownloadIcon,
-  ContentCopy as ContentCopyIcon,
-  Delete as DeleteIcon
-} from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useState, useEffect } from 'react';
+import { Box, Button, CircularProgress } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import Link from 'next/link';
+import { PageContainer } from '@/components/PageContainer';
+import { PedidosFilter } from '@/components/PedidosFilter';
+import { PedidosTable } from '@/components/PedidosTable';
+import { useClientes } from '@/hooks/useClientes';
 import { usePedidos } from '@/hooks/usePedidos';
 
 export default function PedidosPage() {
-  const router = useRouter();
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filters, setFilters] = useState<{
+    data_inicio?: string;
+    data_fim?: string;
+    cliente_id?: number;
+    status?: string;
+  }>({});
+
+  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
   const { 
     pedidos, 
-    totalPages, 
-    isLoading,
-    downloadPdf,
-    repetirPedido,
-    deletarPedido
-  } = usePedidos(page);
+    isLoading: isLoadingPedidos,
+    totalCount,
+    page,
+    limit,
+    totalPages,
+    refetch
+  } = usePedidos({
+    page: currentPage,
+    limit: itemsPerPage,
+    filters
+  });
+  
+  // Forçar refetch quando a página ou itens por página mudam
+  useEffect(() => {
+    refetch();
+  }, [currentPage, itemsPerPage, refetch]);
+  
+  console.log('PedidosPage - Pedidos carregados:', pedidos, {
+    page: currentPage,
+    itemsPerPage,
+    totalCount
+  });
 
-  function formatarData(data: string) {
-    return format(new Date(data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  }
-
-  function formatarValor(valor: number) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-
-  if (isLoading) {
+  if (isLoadingClientes) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <PageContainer title="Pedidos">
+        <Box display="flex" justifyContent="center" p={4}>
           <CircularProgress />
         </Box>
-      </Container>
+      </PageContainer>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Pedidos
-      </Typography>
-
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Nº do Pedido</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>Data</TableCell>
-                <TableCell>Valor Total</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pedidos.map((pedido) => (
-                <TableRow
-                  key={pedido.id}
-                  hover
-                  onClick={() => router.push(`/pedidos/${pedido.id}`)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell>{pedido.id}</TableCell>
-                  <TableCell>{pedido.cliente?.nome_fantasia || pedido.cliente?.razao_social}</TableCell>
-                  <TableCell>{formatarData(pedido.data_pedido)}</TableCell>
-                  <TableCell>{formatarValor(pedido.valor_total)}</TableCell>
-                  <TableCell>{pedido.status}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Visualizar">
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/pedidos/${pedido.id}`);
-                        }}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                    
-                    <Tooltip title="Baixar PDF">
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadPdf(pedido.id);
-                        }}
-                      >
-                        <FileDownloadIcon />
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="Repetir pedido">
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          repetirPedido(pedido.id);
-                        }}
-                      >
-                        <ContentCopyIcon />
-                      </IconButton>
-                    </Tooltip>
-
-                    {pedido.status !== 'CANCELADO' && (
-                      <Tooltip title="Cancelar pedido">
-                        <IconButton 
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm('Tem certeza que deseja cancelar este pedido?')) {
-                              deletarPedido(pedido.id);
-                            }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-
-      <Stack spacing={2} alignItems="center" sx={{ mt: 2 }}>
-        <Pagination 
-          count={totalPages} 
-          page={page} 
-          onChange={(_, value) => setPage(value)}
-          color="primary"
-        />
-      </Stack>
-    </Container>
+    <PageContainer
+      title="Pedidos"
+      actions={
+        <Button
+          component={Link}
+          href="/pedidos/novo"
+          variant="contained"
+          startIcon={<AddIcon />}
+        >
+          Novo Pedido
+        </Button>
+      }
+    >
+      <PedidosFilter
+        clientes={clientes}
+        onFilterChange={setFilters}
+      />
+      <PedidosTable
+        pedidos={pedidos}
+        isLoading={isLoadingPedidos}
+        totalCount={totalCount}
+        page={currentPage}
+        limit={itemsPerPage}
+        onPageChange={(newPage) => setCurrentPage(newPage)}
+        onLimitChange={(newLimit) => setItemsPerPage(newLimit)}
+      />
+    </PageContainer>
   );
 }

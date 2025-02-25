@@ -16,14 +16,14 @@ export class PageOptionsDto {
 
   @ApiPropertyOptional({
     minimum: 1,
-    maximum: 50,
+    maximum: 100,
     default: 10,
     description: 'Itens por página',
   })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(50)
+  @Max(100)
   @IsOptional()
   limit?: number = 10;
 

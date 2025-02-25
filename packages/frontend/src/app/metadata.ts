@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Linos Padaria - Sistema de Pedidos',
-  description: 'Sistema de gestão de pedidos B2B da Linos Padaria',
+  title: "Lino's Padaria - Sistema de Gestão de Pedidos",
+  description: 'Sistema de gestão de pedidos da padaria do Lino',
   viewport: 'width=device-width, initial-scale=1',
 };

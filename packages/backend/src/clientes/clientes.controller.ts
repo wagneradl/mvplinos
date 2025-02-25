@@ -29,6 +29,7 @@ export class ClientesController {
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 409, description: 'CNPJ já cadastrado.' })
   create(@Body() createClienteDto: CreateClienteDto) {
+    console.log('Controller recebeu createClienteDto:', createClienteDto);
     return this.clientesService.create(createClienteDto);
   }
 

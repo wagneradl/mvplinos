@@ -15,6 +15,7 @@ import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
+import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Response } from 'express';
 import { ParseIntPipe, ParseFloatPipe } from '@nestjs/common';
 
@@ -27,6 +28,7 @@ export class PedidosController {
   @ApiOperation({ summary: 'Criar novo pedido' })
   @ApiResponse({ status: 201, description: 'Pedido criado com sucesso.' })
   create(@Body() createPedidoDto: CreatePedidoDto) {
+    console.log('Controller recebeu createPedidoDto:', createPedidoDto);
     return this.pedidosService.create(createPedidoDto);
   }
 
@@ -40,6 +42,13 @@ export class PedidosController {
     description: 'Lista de pedidos retornada com metadados de paginação.' 
   })
   findAll(@Query() filterDto: FilterPedidoDto) {
+    console.log('Controller recebeu request para listar pedidos com filtros:', filterDto);
+    
+    // Log detalhado para troubleshooting do filtro de datas
+    if (filterDto.startDate && filterDto.endDate) {
+      console.log(`Controller: Filtrando pedidos de ${filterDto.startDate} até ${filterDto.endDate}`);
+    }
+    
     return this.pedidosService.findAll(filterDto);
   }
 
@@ -128,5 +137,18 @@ export class PedidosController {
     @Body('quantidade', ParseFloatPipe) quantidade: number
   ) {
     return this.pedidosService.updateItemQuantidade(id, itemId, quantidade);
+  }
+
+  @Get('reports/summary')
+  @ApiOperation({ 
+    summary: 'Gerar relatório de pedidos',
+    description: 'Gera relatório de pedidos com agrupamento por período e filtros'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Relatório gerado com sucesso.' 
+  })
+  async generateReport(@Query() reportDto: ReportPedidoDto) {
+    return this.pedidosService.generateReport(reportDto);
   }
 }

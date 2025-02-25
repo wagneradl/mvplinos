@@ -1,125 +1,96 @@
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  Typography, 
-  IconButton, 
+import {
+  Card,
+  CardContent,
+  Typography,
+  CardActions,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
-  Button,
-  Box
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { IProduto } from '@linos/shared';
+import { Produto } from '@/types/produto';
 
 interface ProdutoCardProps {
-  produto: IProduto;
-  onEdit?: (produto: IProduto) => void;
-  onDelete?: (id: number) => void;
+  produto: Produto;
+  onEdit: (produto: Produto) => void;
+  onDelete: (id: number) => void;
 }
 
-export const ProdutoCard: React.FC<ProdutoCardProps> = ({ produto, onEdit, onDelete }) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+export function ProdutoCard({ produto, onEdit, onDelete }: ProdutoCardProps) {
+  const [openDialog, setOpenDialog] = useState(false);
 
-  const handleEdit = () => {
-    onEdit?.(produto);
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   const handleDelete = () => {
-    setDeleteDialogOpen(true);
+    onDelete(produto.id);
+    handleCloseDialog();
   };
 
-  const handleConfirmDelete = () => {
-    onDelete?.(produto.id);
-    setDeleteDialogOpen(false);
+  const handleEdit = () => {
+    onEdit(produto);
   };
 
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-  };
-
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).replace('R$', 'R$').trim();
+  const formatarPreco = (preco: number) => {
+    return preco
+      .toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace('R$', 'R$ ');
   };
 
   return (
     <>
       <Card>
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-            <Box>
-              <Typography variant="h5" component="h2" data-testid="produto-nome">
-                {produto.nome}
-              </Typography>
-              <Typography color="textSecondary" data-testid="produto-preco">
-                {formatPrice(produto.preco_unitario)} / {produto.tipo_medida}
-              </Typography>
-              <Typography 
-                color="textSecondary" 
-                data-testid="produto-status"
-                className={`status-${produto.status.toLowerCase()}`}
-              >
-                {produto.status.charAt(0).toUpperCase() + produto.status.slice(1)}
-              </Typography>
-            </Box>
-            <Box>
-              <IconButton 
-                onClick={handleEdit} 
-                data-testid="edit-button"
-                size="small"
-                color="primary"
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton 
-                onClick={handleDelete} 
-                data-testid="delete-button"
-                size="small"
-                color="error"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Box>
+          <Typography variant="h6" component="div">
+            {produto.nome}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {produto.descricao}
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {formatarPreco(produto.preco_unitario)}
+          </Typography>
         </CardContent>
+        <CardActions>
+          <Button size="small" onClick={handleEdit}>
+            Editar
+          </Button>
+          <Button size="small" color="error" onClick={handleOpenDialog}>
+            Excluir
+          </Button>
+        </CardActions>
       </Card>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Confirmar Exclusão
-        </DialogTitle>
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
-          Tem certeza que deseja excluir o produto "{produto.nome}"?
+          <DialogContentText>
+            Tem certeza que deseja excluir o produto &quot;{produto.nome}&quot;? Esta ação não pode
+            ser desfeita.
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleCancelDelete} 
-            data-testid="cancel-delete"
-            color="primary"
-          >
+          <Button onClick={handleCloseDialog} data-testid="cancel-delete" color="primary">
             Cancelar
           </Button>
-          <Button 
-            onClick={handleConfirmDelete} 
-            data-testid="confirm-delete"
-            color="error"
-            autoFocus
-          >
+          <Button onClick={handleDelete} color="error" autoFocus data-testid="confirm-delete">
             Excluir
           </Button>
         </DialogActions>
       </Dialog>
     </>
   );
-};
+}
