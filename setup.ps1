@@ -29,15 +29,15 @@ if (-not (Test-CommandExists node)) {
     # Remover o instalador após a instalação
     Remove-Item $nodeInstaller -Force
 
-    # Adicionar Node.js ao PATH
-    $env:Path += ";C:\Program Files\nodejs\"
+    # Atualizar variáveis de ambiente para reconhecer o Node.js imediatamente
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
     # Verificar instalação
-    if (Test-CommandExists node) {
-        Write-Host "Node.js instalado com sucesso!"
-    } else {
+    if (-not (Test-CommandExists node)) {
         Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente."
         exit 1
+    } else {
+        Write-Host "Node.js instalado com sucesso!"
     }
 } else {
     $nodeVersion = node -v
