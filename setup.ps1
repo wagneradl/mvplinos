@@ -5,7 +5,7 @@ Write-Host "========================================================"
 Write-Host "      Instalação do Sistema Lino's Panificadora         "
 Write-Host "========================================================"
 
-# Função para verificar se um programa está instalado sem falhar
+# Função para verificar se um comando está disponível no sistema
 function Test-CommandExists {
     param ([string]$Command)
     try {
@@ -16,41 +16,58 @@ function Test-CommandExists {
     }
 }
 
-# Verificar se o Node.js está instalado e, se não estiver, instalar automaticamente
+# Verificar e instalar o Node.js, se necessário
 if (-not (Test-CommandExists "node")) {
     Write-Host "`nNode.js não encontrado! Instalando Node.js..."
     
-    # URL do instalador Node.js (versão 20 LTS)
     $nodeInstaller = "node-setup.msi"
     $nodeUrl = "https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi"
 
-    # Baixar instalador do Node.js
+    # Baixar instalador
     Invoke-WebRequest -Uri $nodeUrl -OutFile $nodeInstaller
 
-    # Executar o instalador silenciosamente
+    # Instalar silenciosamente
     Write-Host "`nInstalando Node.js..."
     Start-Process msiexec.exe -ArgumentList "/i $nodeInstaller /quiet /norestart" -Wait
-
-    # Remover o instalador após a instalação
     Remove-Item $nodeInstaller -Force
 
-    # Atualizar variáveis de ambiente (evita necessidade de reinício)
+    # Atualizar variáveis de ambiente
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
-    # Testar se a instalação foi bem-sucedida
+    # Verificar instalação
     if (-not (Test-CommandExists "node")) {
-        Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente e reinicie o script."
+        Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente."
         exit 1
     } else {
         Write-Host "Node.js instalado com sucesso!"
     }
 }
 
-# Confirmar versão do Node.js
+# Verificar versão do Node.js
 $nodeVersion = node -v
 Write-Host "`nVersão do Node.js encontrada: $nodeVersion"
-if ($nodeVersion -notmatch "^v20") {
-    Write-Host "AVISO: Recomendado Node.js v20.x LTS. Versão atual: $nodeVersion"
+
+# Criar pasta do npm global, se não existir (corrige erro ENOENT)
+$npmGlobalPath = "$env:APPDATA\npm"
+if (-not (Test-Path $npmGlobalPath)) {
+    Write-Host "Criando diretório necessário para npm: $npmGlobalPath"
+    New-Item -ItemType Directory -Path $npmGlobalPath -Force | Out-Null
+}
+
+# Verificar e instalar Yarn, se necessário
+if (-not (Test-CommandExists "yarn")) {
+    Write-Host "`nYarn não encontrado! Instalando Yarn..."
+    npm install -g yarn
+
+    # Atualizar variáveis de ambiente
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+    if (-not (Test-CommandExists "yarn")) {
+        Write-Host "Erro ao instalar Yarn. Tente instalar manualmente com 'npm install -g yarn'."
+        exit 1
+    } else {
+        Write-Host "Yarn instalado com sucesso!"
+    }
 }
 
 # Instalar dependências
@@ -76,12 +93,15 @@ if (Test-Path "Linos.png") {
     Copy-Item "Linos.png" "uploads/static/logo.png" -Force
 } else {
     Write-Host "`n[5/7] AVISO: Arquivo de logo (Linos.png) não encontrado."
-    Write-Host "Você precisará adicionar manualmente um arquivo logo.png em uploads/static/"
 }
 
-# Configurar permissões (não necessário no Windows, mas podemos ajustar)
+# Configurar permissões (se aplicável no Windows)
 Write-Host "`n[6/7] Configurando permissões..."
-icacls "uploads" /grant Everyone:F /T /C
+try {
+    icacls "uploads" /grant "$env:USERNAME:F" /T /C
+} catch {
+    Write-Host "Erro ao configurar permissões. Ignore se não for necessário."
+}
 
 # Configurar dados iniciais (opcional)
 Write-Host "`n[7/7] Deseja inserir dados iniciais no banco de dados? (s/n)"
