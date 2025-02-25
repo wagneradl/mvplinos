@@ -1064,3 +1064,5 @@
 2025-02-25T13:52:39.547730Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2025-02-25T13:52:52.450283Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README-WINDOWS.md")}
 2025-02-25T13:52:52.450337Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-25T14:25:33.534103Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("fix-windows.bat")}
+2025-02-25T14:25:33.534768Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
