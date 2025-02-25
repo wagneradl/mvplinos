@@ -60,8 +60,12 @@ export class ProdutosController {
   @ApiOperation({ summary: 'Buscar produto por ID' })
   @ApiResponse({ status: 200, description: 'Produto encontrado' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.produtosService.findOne(id);
+  @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean, description: 'Incluir produtos excluídos' })
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('includeDeleted') includeDeleted?: boolean
+  ) {
+    return this.produtosService.findOne(id, includeDeleted === true);
   }
 
   @Patch(':id')
@@ -69,9 +73,11 @@ export class ProdutosController {
   @ApiResponse({ status: 200, description: 'Produto atualizado' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean, description: 'Incluir produtos excluídos' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProdutoDto: UpdateProdutoDto,
+    @Query('includeDeleted') includeDeleted?: boolean
   ) {
     try {
       // Validações para campos que estão sendo atualizados
@@ -94,7 +100,7 @@ export class ProdutosController {
         throw new BadRequestException('Status inválido');
       }
 
-      const result = await this.produtosService.update(id, updateProdutoDto);
+      const result = await this.produtosService.update(id, updateProdutoDto, includeDeleted === true);
       return result;
     } catch (error: unknown) {
       if (error instanceof BadRequestException) {

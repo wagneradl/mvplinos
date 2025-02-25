@@ -15,8 +15,12 @@ import {
   Tooltip,
   CircularProgress,
   Chip,
+  TextField,
+  MenuItem,
+  Grid,
+  InputAdornment,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
 import { useClientes } from '@/hooks/useClientes';
 import Link from 'next/link';
@@ -35,7 +39,15 @@ function formatTelefone(telefone: string) {
 export default function ClientesPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const { clientes, meta, isLoading, deletarCliente } = useClientes(page + 1, rowsPerPage);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  
+  const { clientes, meta, isLoading, deletarCliente, reativarCliente } = useClientes(
+    page + 1, 
+    rowsPerPage,
+    statusFilter,
+    searchTerm
+  );
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -47,8 +59,24 @@ export default function ClientesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+    if (window.confirm('Tem certeza que deseja inativar este cliente? Ele não será excluído, apenas ficará inativo.')) {
       deletarCliente(id);
+    }
+  };
+  
+  const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStatusFilter(event.target.value);
+    setPage(0); // Resetar para a primeira página ao mudar o filtro
+  };
+  
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+    setPage(0); // Resetar para a primeira página ao mudar a busca
+  };
+  
+  const handleReactivate = async (id: number) => {
+    if (window.confirm('Tem certeza que deseja reativar este cliente?')) {
+      reativarCliente(id);
     }
   };
 
@@ -66,6 +94,43 @@ export default function ClientesPage() {
         </Button>
       }
     >
+      {/* Filtros */}
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              label="Buscar cliente"
+              variant="outlined"
+              fullWidth
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="CNPJ, Razão Social ou Nome Fantasia"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              select
+              label="Status"
+              variant="outlined"
+              fullWidth
+              value={statusFilter}
+              onChange={handleStatusChange}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="ativo">Ativos</MenuItem>
+              <MenuItem value="inativo">Inativos</MenuItem>
+            </TextField>
+          </Grid>
+        </Grid>
+      </Box>
+      
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
           <CircularProgress />
@@ -104,6 +169,7 @@ export default function ClientesPage() {
                       />
                     </TableCell>
                     <TableCell align="right">
+                      {/* Botão de editar sempre aparece */}
                       <Tooltip title="Editar">
                         <IconButton
                           component={Link}
@@ -113,15 +179,29 @@ export default function ClientesPage() {
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Excluir">
-                        <IconButton
-                          onClick={() => handleDelete(cliente.id)}
-                          size="small"
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      
+                      {/* Botão de inativar/reativar dependendo do status */}
+                      {cliente.status === 'ativo' ? (
+                        <Tooltip title="Inativar">
+                          <IconButton
+                            onClick={() => handleDelete(cliente.id)}
+                            size="small"
+                            color="error"
+                          >
+                            <BlockIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Reativar">
+                          <IconButton
+                            onClick={() => handleReactivate(cliente.id)}
+                            size="small"
+                            color="success"
+                          >
+                            <CheckCircleIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -130,7 +210,7 @@ export default function ClientesPage() {
           </TableContainer>
           <TablePagination
             component="div"
-            count={meta?.total || -1}
+            count={meta?.itemCount || 0}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

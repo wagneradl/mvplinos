@@ -4,14 +4,16 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  FormControlLabel,
   Grid,
-  Switch,
   TextField,
   Alert,
   Collapse,
   CircularProgress,
-  Typography
+  MenuItem,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,19 +54,99 @@ interface ClienteFormProps {
   isLoading?: boolean;
 }
 
+// Função para formatar CNPJ enquanto o usuário digita
+function formatarCNPJ(value: string): string {
+  // Remove tudo que não é dígito
+  const cnpjSoNumeros = value.replace(/\D/g, '');
+  
+  if (cnpjSoNumeros.length === 0) return '';
+  
+  // Aplicar máscara
+  let cnpjFormatado = '';
+  
+  if (cnpjSoNumeros.length > 0) {
+    cnpjFormatado = cnpjSoNumeros.substring(0, 2);
+  }
+  if (cnpjSoNumeros.length > 2) {
+    cnpjFormatado += '.' + cnpjSoNumeros.substring(2, 5);
+  }
+  if (cnpjSoNumeros.length > 5) {
+    cnpjFormatado += '.' + cnpjSoNumeros.substring(5, 8);
+  }
+  if (cnpjSoNumeros.length > 8) {
+    cnpjFormatado += '/' + cnpjSoNumeros.substring(8, 12);
+  }
+  if (cnpjSoNumeros.length > 12) {
+    cnpjFormatado += '-' + cnpjSoNumeros.substring(12, 14);
+  }
+  
+  return cnpjFormatado;
+}
+
+// Função para formatar telefone enquanto o usuário digita
+function formatarTelefone(value: string): string {
+  // Remove tudo que não é dígito
+  const telefoneSoNumeros = value.replace(/\D/g, '');
+  
+  if (telefoneSoNumeros.length === 0) return '';
+  
+  // Aplicar máscara
+  let telefoneFormatado = '';
+  
+  if (telefoneSoNumeros.length > 0) {
+    telefoneFormatado = '(' + telefoneSoNumeros.substring(0, 2);
+  }
+  if (telefoneSoNumeros.length > 2) {
+    telefoneFormatado += ') ' + telefoneSoNumeros.substring(2, 7);
+  }
+  if (telefoneSoNumeros.length > 7) {
+    telefoneFormatado += '-' + telefoneSoNumeros.substring(7, 11);
+  }
+  
+  return telefoneFormatado;
+}
+
 export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFormProps) {
-  const [isAtivo, setIsAtivo] = useState(cliente?.status === 'ativo' || true);
+  const [isAtivo, setIsAtivo] = useState<boolean>(cliente?.status !== 'inativo');
   const [errorAlert, setErrorAlert] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cnpjDuplicadoAlerta, setCnpjDuplicadoAlerta] = useState(false);
-  const { showSuccess, showError, showWarning } = useSnackbar();
+  const [isSoftDeleted, setIsSoftDeleted] = useState<boolean>(false);
+  const { showError, showWarning } = useSnackbar();
+  
+  // Verificar se o cliente foi soft-deleted e sincronizar o estado do switch
+  useEffect(() => {
+    if (cliente) {
+      // Se o cliente tem deleted_at, ele foi soft-deleted
+      setIsSoftDeleted(!!cliente.deleted_at);
+      
+      // Sincronizar o estado do switch com o status do cliente
+      setIsAtivo(cliente.status === 'ativo');
+      
+      console.log('ClienteForm: cliente atualizado', {
+        id: cliente.id,
+        status: cliente.status,
+        deleted_at: cliente.deleted_at,
+        isAtivo: cliente.status === 'ativo'
+      });
+    }
+  }, [cliente]);
+  
+  // Adicionar um efeito para forçar a atualização do estado quando o formulário é renderizado
+  useEffect(() => {
+    // Este efeito garante que o estado do switch seja sempre sincronizado
+    // mesmo quando o cliente é reativado em outra parte da aplicação
+    if (cliente) {
+      setIsAtivo(cliente.status === 'ativo');
+    }
+  }, [cliente?.status]);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
-    trigger
+    setValue
   } = useForm<ClienteFormData>({
     resolver: zodResolver(clienteSchema),
     mode: 'onChange', // Validação ao mudar qualquer campo
@@ -77,6 +159,22 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
       status: cliente?.status || 'ativo',
     },
   });
+  
+  // Efeito para sincronizar o status do formulário com o status do cliente
+  useEffect(() => {
+    if (cliente) {
+      console.log('Sincronizando status do formulário:', {
+        clienteStatus: cliente.status,
+        formStatus: watch('status')
+      });
+      
+      // Forçar a atualização do campo status no formulário
+      setValue('status', cliente.status);
+      
+      // Atualizar também o estado local
+      setIsAtivo(cliente.status === 'ativo');
+    }
+  }, [cliente, setValue, watch]);
 
   // Observar o campo CNPJ para validação de duplicidade
   const cnpj = watch('cnpj');
@@ -110,7 +208,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     return () => clearTimeout(timeoutId);
   }, [cnpj, cliente?.id, showWarning]);
 
-  const onFormSubmit = handleSubmit(async (data: ClienteFormData) => {
+  const onFormSubmit = async (data: ClienteFormData) => {
     try {
       setIsSubmitting(true);
       setErrorAlert(null);
@@ -144,8 +242,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
       
       await onSubmit(clienteData);
       
-      // Feedback de sucesso
-      showSuccess(cliente ? 'Cliente atualizado com sucesso!' : 'Cliente criado com sucesso!');
+      // Não mostramos notificação de sucesso aqui, pois já é mostrada no hook useClientes
     } catch (error) {
       console.error('Erro ao processar formulário:', error);
       
@@ -160,58 +257,6 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     } finally {
       setIsSubmitting(false);
     }
-  });
-
-  // Função para formatar CNPJ enquanto o usuário digita
-  function formatarCNPJ(value: string): string {
-    // Remove tudo que não é dígito
-    const cnpjSoNumeros = value.replace(/\D/g, '');
-    
-    if (cnpjSoNumeros.length === 0) return '';
-    
-    // Aplicar máscara
-    let cnpjFormatado = '';
-    
-    if (cnpjSoNumeros.length > 0) {
-      cnpjFormatado = cnpjSoNumeros.substring(0, 2);
-    }
-    if (cnpjSoNumeros.length > 2) {
-      cnpjFormatado += '.' + cnpjSoNumeros.substring(2, 5);
-    }
-    if (cnpjSoNumeros.length > 5) {
-      cnpjFormatado += '.' + cnpjSoNumeros.substring(5, 8);
-    }
-    if (cnpjSoNumeros.length > 8) {
-      cnpjFormatado += '/' + cnpjSoNumeros.substring(8, 12);
-    }
-    if (cnpjSoNumeros.length > 12) {
-      cnpjFormatado += '-' + cnpjSoNumeros.substring(12, 14);
-    }
-    
-    return cnpjFormatado;
-  }
-
-  // Função para formatar telefone enquanto o usuário digita
-  function formatarTelefone(value: string): string {
-    // Remove tudo que não é dígito
-    const telefoneSoNumeros = value.replace(/\D/g, '');
-    
-    if (telefoneSoNumeros.length === 0) return '';
-    
-    // Aplicar máscara
-    let telefoneFormatado = '';
-    
-    if (telefoneSoNumeros.length > 0) {
-      telefoneFormatado = '(' + telefoneSoNumeros.substring(0, 2);
-    }
-    if (telefoneSoNumeros.length > 2) {
-      telefoneFormatado += ') ' + telefoneSoNumeros.substring(2, 7);
-    }
-    if (telefoneSoNumeros.length > 7) {
-      telefoneFormatado += '-' + telefoneSoNumeros.substring(7, 11);
-    }
-    
-    return telefoneFormatado;
   };
 
   return (
@@ -233,7 +278,17 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
           severity="warning" 
           sx={{ mb: 2 }}
         >
-          Este CNPJ já está cadastrado no sistema. Por favor, verifique se não está tentando cadastrar um cliente duplicado.
+          Este CNPJ já está cadastrado no sistema. Verifique a lista de clientes inativos, pois o cliente pode ter sido excluído anteriormente.
+        </Alert>
+      </Collapse>
+      
+      {/* Alerta para cliente soft-deleted */}
+      <Collapse in={isSoftDeleted}>
+        <Alert 
+          severity="info" 
+          sx={{ mb: 2 }}
+        >
+          Este cliente foi excluído anteriormente. Para reativá-lo, selecione o status "Ativo" e salve as alterações.
         </Alert>
       </Collapse>
       
@@ -333,17 +388,29 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
         </Grid>
 
         <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isAtivo}
-                onChange={(e) => setIsAtivo(e.target.checked)}
-                color="primary"
-                disabled={isSubmitting}
-              />
-            }
-            label="Cliente Ativo"
-          />
+          <FormControl fullWidth>
+            <InputLabel id="status-label">Status do Cliente</InputLabel>
+            <Select
+              labelId="status-label"
+              id="status-select"
+              value={isAtivo ? 'ativo' : 'inativo'}
+              label="Status do Cliente"
+              onChange={(e) => {
+                const newValue = e.target.value as string;
+                setIsAtivo(newValue === 'ativo');
+                setValue('status', newValue);
+              }}
+              disabled={isSubmitting}
+            >
+              <MenuItem value="ativo">Ativo</MenuItem>
+              <MenuItem value="inativo">Inativo</MenuItem>
+            </Select>
+          </FormControl>
+          {isSoftDeleted && (
+            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+              Este cliente foi excluído anteriormente. Para reativá-lo, selecione "Ativo" e salve as alterações.
+            </Typography>
+          )}
         </Grid>
 
         <Grid item xs={12}>

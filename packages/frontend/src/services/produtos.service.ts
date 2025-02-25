@@ -22,13 +22,24 @@ export interface CreateProdutoDto {
 }
 
 export const ProdutosService = {
-  async listarProdutos(page = 1, limit = 10): Promise<PaginatedResponse<Produto>> {
+  async listarProdutos(page = 1, limit = 10, status?: string, search?: string): Promise<PaginatedResponse<Produto>> {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
 
+      // Adicionar filtro de status se fornecido
+      if (status) {
+        params.append('status', status);
+      }
+
+      // Adicionar termo de busca se fornecido
+      if (search) {
+        params.append('search', search);
+      }
+
+      console.log(`Fazendo requisição para /produtos?${params}`);
       const response = await api.get<PaginatedResponse<Produto>>(`/produtos?${params}`);
       return response.data;
     } catch (error) {
@@ -37,9 +48,10 @@ export const ProdutosService = {
     }
   },
 
-  async obterProduto(id: number): Promise<Produto> {
+  async obterProduto(id: number, includeDeleted = false): Promise<Produto> {
     try {
-      const response = await api.get(`/produtos/${id}`);
+      const params = includeDeleted ? '?includeDeleted=true' : '';
+      const response = await api.get(`/produtos/${id}${params}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao obter produto ${id}:`, error);
@@ -83,7 +95,7 @@ export const ProdutosService = {
     }
   },
 
-  async atualizarProduto(id: number, produto: Partial<Produto>): Promise<Produto> {
+  async atualizarProduto(id: number, produto: Partial<Produto>, includeDeleted = false): Promise<Produto> {
     try {
       // Validações para campos fornecidos
       if (produto.nome !== undefined && !produto.nome.trim()) {
@@ -105,7 +117,8 @@ export const ProdutosService = {
         preco_unitario: produto.preco_unitario !== undefined ? Number(produto.preco_unitario) : undefined
       };
 
-      const response = await api.patch(`/produtos/${id}`, produtoPayload);
+      const params = includeDeleted ? '?includeDeleted=true' : '';
+      const response = await api.patch(`/produtos/${id}${params}`, produtoPayload);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar produto ${id}:`, error);
@@ -115,9 +128,26 @@ export const ProdutosService = {
 
   async deletarProduto(id: number): Promise<void> {
     try {
-      await api.delete(`/produtos/${id}`);
+      // Em vez de DELETE, usamos PATCH para alterar o status para inativo (soft delete)
+      await api.patch(`/produtos/${id}`, { 
+        status: 'inativo'
+      });
     } catch (error) {
-      console.error(`Erro ao deletar produto ${id}:`, error);
+      console.error(`Erro ao inativar produto ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async reativarProduto(id: number): Promise<Produto> {
+    try {
+      // Reativar produto alterando o status para ativo
+      // Incluir o parâmetro includeDeleted=true para permitir atualizar produtos soft-deleted
+      const response = await api.patch(`/produtos/${id}?includeDeleted=true`, { 
+        status: 'ativo'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao reativar produto ${id}:`, error);
       throw error;
     }
   },

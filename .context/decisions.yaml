@@ -1,5 +1,21 @@
 decisoes_tecnicas:
   backend_recente:
+    - decisao: "Servir imagens estaticamente no backend"
+      motivo: "Garantir acesso a logos e outros recursos estáticos nos PDFs gerados"
+      status: "implementado"
+
+    - decisao: "Uso de fallback para logos via URL"
+      motivo: "Assegurar que os PDFs sempre tenham a logo mesmo se o arquivo local não for encontrado"
+      status: "implementado"
+      
+    - decisao: "Otimização de UI/UX com remoção de títulos redundantes"
+      motivo: "Melhorar a experiência do usuário evitando informações repetidas nas páginas"
+      status: "implementado"
+      
+    - decisao: "Alteração do nome para Lino's Panificadora"
+      motivo: "Refletir com mais precisão o modelo de negócio e oferecer uma identidade mais profissional"
+      status: "implementado"
+      
     - decisao: "Abordagem unificada para filtros de data"
       motivo: "Resolver de forma consistente problemas de timezone em filtros por data tanto em pedidos quanto em relatórios"
       status: "implementado"

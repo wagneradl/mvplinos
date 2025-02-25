@@ -12,6 +12,7 @@ async function seed() {
         nome_fantasia: 'Empresa Teste',
         email: 'teste@empresa.com',
         telefone: '(11) 99999-9999',
+        status: 'ATIVO',
       },
     });
 
@@ -21,6 +22,7 @@ async function seed() {
         nome: 'Pão Francês',
         preco_unitario: 0.50,
         tipo_medida: 'unidade',
+        status: 'ATIVO',
       },
     });
 
@@ -29,6 +31,7 @@ async function seed() {
         nome: 'Bolo de Chocolate',
         preco_unitario: 35.00,
         tipo_medida: 'unidade',
+        status: 'ATIVO',
       },
     });
 
@@ -55,7 +58,10 @@ async function seed() {
     const pedido = await prisma.pedido.create({
       data: {
         cliente_id: cliente.id,
+        data_pedido: new Date(),
+        status: 'ATIVO',
         valor_total: valorTotal,
+        caminho_pdf: '',
         itensPedido: {
           create: itensPedido,
         },

@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Grid,
@@ -15,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/utils/format';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 interface RelatorioData {
   data: {
@@ -32,15 +34,29 @@ interface RelatorioData {
 interface RelatorioVendasProps {
   data: RelatorioData;
   isLoading: boolean;
+  onExportPdf?: () => void;
 }
 
-export function RelatorioVendas({ data, isLoading }: RelatorioVendasProps) {
+export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVendasProps) {
   if (isLoading) {
     return null;
   }
 
   return (
     <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        {onExportPdf && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PictureAsPdfIcon />}
+            onClick={onExportPdf}
+          >
+            Exportar PDF
+          </Button>
+        )}
+      </Box>
+      
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
           <Card>

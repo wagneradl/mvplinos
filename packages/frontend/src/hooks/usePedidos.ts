@@ -174,17 +174,41 @@ export function useRelatorio(filtros: {
   enabled?: boolean;
 }) {
   const { enqueueSnackbar } = useSnackbar();
+  
   const result = useQuery<ReportData, Error>({
     queryKey: ['relatorio', filtros],
-    queryFn: () => PedidosService.gerarRelatorio(filtros),
-    enabled: filtros.enabled,
-    onError: (error) => {
-      enqueueSnackbar('Erro ao gerar relatório: ' + error.message, { variant: 'error' });
+    queryFn: async () => {
+      try {
+        return await PedidosService.gerarRelatorio(filtros);
+      } catch (error) {
+        if (error instanceof Error) {
+          enqueueSnackbar('Erro ao gerar relatório: ' + error.message, { variant: 'error' });
+        } else {
+          enqueueSnackbar('Erro ao gerar relatório', { variant: 'error' });
+        }
+        throw error;
+      }
     },
+    enabled: filtros.enabled,
   });
+
+  const downloadPdf = async () => {
+    try {
+      await PedidosService.downloadRelatorioPdf({
+        data_inicio: filtros.data_inicio,
+        data_fim: filtros.data_fim,
+        cliente_id: filtros.cliente_id,
+      });
+      enqueueSnackbar('Relatório PDF gerado com sucesso!', { variant: 'success' });
+    } catch (error) {
+      console.error('Erro ao baixar PDF do relatório:', error);
+      // Não exibimos notificação de erro aqui, pois o erro já é tratado pelo interceptor da API
+    }
+  };
 
   return {
     ...result,
     data: result.data,
+    downloadPdf,
   };
 }

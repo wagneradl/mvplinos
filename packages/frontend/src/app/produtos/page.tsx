@@ -14,8 +14,13 @@ import {
   TablePagination,
   Tooltip,
   CircularProgress,
+  Chip,
+  TextField,
+  MenuItem,
+  Grid,
+  InputAdornment,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
 import { useProdutos } from '@/hooks/useProdutos';
 import Link from 'next/link';
@@ -25,8 +30,15 @@ import { useQueryClient } from '@tanstack/react-query';
 export default function ProdutosPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const queryClient = useQueryClient();
-  const { produtos, meta, isLoading, deletarProduto } = useProdutos(page + 1, rowsPerPage);
+  const { produtos, meta, isLoading, deletarProduto, reativarProduto } = useProdutos(
+    page + 1, 
+    rowsPerPage,
+    statusFilter,
+    searchTerm
+  );
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -38,11 +50,29 @@ export default function ProdutosPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este produto?')) {
+    if (window.confirm('Tem certeza que deseja inativar este produto? Ele não será excluído, apenas ficará inativo.')) {
       await deletarProduto(id);
-      // Força uma nova busca após deletar
+      // Força uma nova busca após inativar
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
     }
+  };
+  
+  const handleReactivate = async (id: number) => {
+    if (window.confirm('Tem certeza que deseja reativar este produto?')) {
+      await reativarProduto(id);
+      // Força uma nova busca após reativar
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+    }
+  };
+  
+  const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStatusFilter(event.target.value);
+    setPage(0); // Resetar para a primeira página ao mudar o filtro
+  };
+  
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+    setPage(0); // Resetar para a primeira página ao mudar a busca
   };
 
   return (
@@ -59,6 +89,43 @@ export default function ProdutosPage() {
         </Button>
       }
     >
+      {/* Filtros */}
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              label="Buscar produto"
+              variant="outlined"
+              fullWidth
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="Nome do produto"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              select
+              label="Status"
+              variant="outlined"
+              fullWidth
+              value={statusFilter}
+              onChange={handleStatusChange}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="ativo">Ativos</MenuItem>
+              <MenuItem value="inativo">Inativos</MenuItem>
+            </TextField>
+          </Grid>
+        </Grid>
+      </Box>
+      
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
           <CircularProgress />
@@ -85,21 +152,14 @@ export default function ProdutosPage() {
                       {formatCurrency(produto.preco_unitario)}
                     </TableCell>
                     <TableCell>
-                      <Box
-                        sx={{
-                          backgroundColor:
-                            produto.status === 'ativo' ? 'success.main' : 'error.main',
-                          color: 'white',
-                          py: 0.5,
-                          px: 1,
-                          borderRadius: 1,
-                          display: 'inline-block',
-                        }}
-                      >
-                        {produto.status}
-                      </Box>
+                      <Chip
+                        label={produto.status}
+                        color={produto.status === 'ativo' ? 'success' : 'error'}
+                        size="small"
+                      />
                     </TableCell>
                     <TableCell align="right">
+                      {/* Botão de editar sempre aparece */}
                       <Tooltip title="Editar">
                         <IconButton
                           component={Link}
@@ -109,15 +169,29 @@ export default function ProdutosPage() {
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Excluir">
-                        <IconButton
-                          onClick={() => handleDelete(produto.id)}
-                          size="small"
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      
+                      {/* Botão de inativar/reativar dependendo do status */}
+                      {produto.status === 'ativo' ? (
+                        <Tooltip title="Inativar">
+                          <IconButton
+                            onClick={() => handleDelete(produto.id)}
+                            size="small"
+                            color="error"
+                          >
+                            <BlockIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Reativar">
+                          <IconButton
+                            onClick={() => handleReactivate(produto.id)}
+                            size="small"
+                            color="success"
+                          >
+                            <CheckCircleIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

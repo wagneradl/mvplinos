@@ -52,7 +52,8 @@ interface PedidoCopiado {
 
 export default function NovoPedidoPage() {
   const router = useRouter();
-  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
+  // Apenas clientes ativos para seleção no pedido
+  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100, 'ativo');
   const { produtos = [], isLoading: isLoadingProdutos } = useProdutos();
   const { criarPedido } = usePedidos({ disableNotifications: true });
   const [isSubmitting, setIsSubmitting] = useState(false);

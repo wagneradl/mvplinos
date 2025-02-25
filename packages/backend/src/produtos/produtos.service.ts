@@ -135,14 +135,16 @@ export class ProdutosService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, includeDeleted = false) {
     try {
-      const produto = await this.prisma.produto.findFirst({
-        where: {
-          id,
-          deleted_at: null,
-        },
-      });
+      const where: Prisma.ProdutoWhereInput = { id };
+      
+      // Se não incluir deletados, adiciona filtro de deleted_at null
+      if (!includeDeleted) {
+        where.deleted_at = null;
+      }
+      
+      const produto = await this.prisma.produto.findFirst({ where });
 
       if (!produto) {
         throw new NotFoundException('Produto não encontrado');
@@ -157,23 +159,33 @@ export class ProdutosService {
     }
   }
 
-  async update(id: number, updateProdutoDto: UpdateProdutoDto) {
+  async update(id: number, updateProdutoDto: UpdateProdutoDto, includeDeleted = false) {
     try {
-      console.log('Atualizando produto:', { id, dados: updateProdutoDto });
+      console.log('Atualizando produto:', { id, dados: updateProdutoDto, includeDeleted });
       
-      // Verificar se o produto existe e não está deletado
-      await this.findOne(id);
+      // Verificar se o produto existe (incluindo ou não deletados conforme parâmetro)
+      const produtoExistente = await this.findOne(id, includeDeleted);
+      
+      // Se o produto foi soft-deleted e estamos atualizando seu status para ativo,
+      // limpar o campo deleted_at
+      if (produtoExistente.deleted_at && updateProdutoDto.status === 'ativo') {
+        console.log('Reativando produto anteriormente deletado');
+        updateProdutoDto = {
+          ...updateProdutoDto,
+          deleted_at: null
+        };
+      }
 
       // Se o nome está sendo atualizado, verificar duplicação
       if (updateProdutoDto.nome) {
         const nomeTratado = updateProdutoDto.nome.trim();
         console.log('Nome tratado:', nomeTratado);
         
+        // Corrigido o where para não usar not: null que estava causando erro
         const existingProduto = await this.prisma.produto.findFirst({
           where: {
             nome: {
               contains: nomeTratado,
-              not: null
             },
             id: { not: id },
             deleted_at: null,
@@ -225,7 +237,7 @@ export class ProdutosService {
       await this.findOne(id);
 
       // Verificar se o produto está sendo usado em algum pedido
-      const pedidoComProduto = await this.prisma.itemPedido.findFirst({
+      const pedidoComProduto = await this.prisma.itensPedido.findFirst({
         where: {
           produto_id: id,
           pedido: {

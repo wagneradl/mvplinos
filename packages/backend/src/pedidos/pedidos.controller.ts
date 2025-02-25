@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
   Res,
-  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PedidosService } from './pedidos.service';
@@ -18,6 +18,7 @@ import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Response } from 'express';
 import { ParseIntPipe, ParseFloatPipe } from '@nestjs/common';
+import { existsSync } from 'fs';
 
 @ApiTags('pedidos')
 @Controller('pedidos')
@@ -30,6 +31,69 @@ export class PedidosController {
   create(@Body() createPedidoDto: CreatePedidoDto) {
     console.log('Controller recebeu createPedidoDto:', createPedidoDto);
     return this.pedidosService.create(createPedidoDto);
+  }
+
+  @Get('reports/summary')
+  @ApiOperation({ 
+    summary: 'Gerar relatório de pedidos',
+    description: 'Gera relatório de pedidos com agrupamento por período e filtros'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Relatório gerado com sucesso.' 
+  })
+  async generateReport(@Query() reportDto: ReportPedidoDto) {
+    return this.pedidosService.generateReport(reportDto);
+  }
+
+  @Get('reports/pdf')
+  @ApiOperation({
+    summary: 'Gerar PDF de relatório de pedidos',
+    description: 'Gera um arquivo PDF com o relatório de pedidos para o período especificado'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF do relatório gerado com sucesso',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Parâmetros inválidos ou erro ao gerar o relatório'
+  })
+  async generateReportPdf(@Query() reportDto: ReportPedidoDto, @Res() res: Response) {
+    try {
+      console.log('Recebendo requisição para gerar PDF com parâmetros:', reportDto);
+      
+      const pdfPath = await this.pedidosService.generateReportPdf(reportDto);
+      console.log('PDF gerado com sucesso em:', pdfPath);
+      
+      // Verificar se o arquivo existe
+      if (!existsSync(pdfPath)) {
+        console.error(`Arquivo PDF não encontrado: ${pdfPath}`);
+        throw new BadRequestException(`Arquivo PDF não encontrado: ${pdfPath}`);
+      }
+      
+      // Usar método mais direto para enviar o arquivo
+      return res.download(pdfPath, `relatorio-${Date.now()}.pdf`, (err) => {
+        if (err) {
+          console.error('Erro ao enviar arquivo:', err);
+          res.status(500).send('Erro ao enviar arquivo');
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF do relatório:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao gerar PDF do relatório');
+    }
   }
 
   @Get()
@@ -107,10 +171,7 @@ export class PedidosController {
     status: 404,
     description: 'Pedido não encontrado ou PDF não disponível'
   })
-  async downloadPdf(
-    @Param('id', ParseIntPipe) id: number,
-    @Res() res: Response
-  ) {
+  async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     const pdfPath = await this.pedidosService.getPdfPath(id);
     return res.sendFile(pdfPath);
   }
@@ -137,18 +198,5 @@ export class PedidosController {
     @Body('quantidade', ParseFloatPipe) quantidade: number
   ) {
     return this.pedidosService.updateItemQuantidade(id, itemId, quantidade);
-  }
-
-  @Get('reports/summary')
-  @ApiOperation({ 
-    summary: 'Gerar relatório de pedidos',
-    description: 'Gera relatório de pedidos com agrupamento por período e filtros'
-  })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Relatório gerado com sucesso.' 
-  })
-  async generateReport(@Query() reportDto: ReportPedidoDto) {
-    return this.pedidosService.generateReport(reportDto);
   }
 }

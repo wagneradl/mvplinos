@@ -21,11 +21,14 @@ export default function EditarProdutoPage({ params }: EditarProdutoPageProps) {
 
   const { data: produto, isLoading } = useQuery({
     queryKey: ['produto', id],
-    queryFn: () => ProdutosService.obterProduto(id),
+    queryFn: () => ProdutosService.obterProduto(id, true),
+    staleTime: 0, // Desabilitar cache para garantir dados atualizados
+    refetchOnMount: true, // Forçar refetch ao montar o componente
+    refetchOnWindowFocus: true, // Recarregar quando a janela ganhar foco
   });
 
   const handleSubmit = async (data: any) => {
-    await atualizarProduto({ id, produto: data });
+    await atualizarProduto({ id, produto: data, includeDeleted: true });
     router.push('/produtos');
   };
 

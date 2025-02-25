@@ -13,6 +13,11 @@ async function bootstrap() {
     prefix: '/uploads',
   });
   
+  // Configurar diretório de assets para ser servido estaticamente
+  app.useStaticAssets(join(__dirname, 'assets', 'images'), {
+    prefix: '/images',
+  });
+  
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     transformOptions: { enableImplicitConversion: true }

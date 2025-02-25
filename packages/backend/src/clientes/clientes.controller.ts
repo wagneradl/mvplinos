@@ -38,8 +38,15 @@ export class ClientesController {
   @ApiResponse({ status: 200, description: 'Lista de clientes retornada com sucesso.' })
   @ApiQuery({ name: 'page', type: Number, required: false })
   @ApiQuery({ name: 'limit', type: Number, required: false })
-  async findAll(@Query(new ValidationPipe({ transform: true })) pageOptions: PageOptionsDto) {
-    return this.clientesService.findAll(pageOptions);
+  @ApiQuery({ name: 'status', type: String, required: false })
+  @ApiQuery({ name: 'search', type: String, required: false })
+  @ApiQuery({ name: 'includeDeleted', type: Boolean, required: false })
+  async findAll(
+    @Query(new ValidationPipe({ transform: true })) pageOptions: PageOptionsDto,
+    @Query('includeDeleted') includeDeleted?: boolean
+  ) {
+    // Passar o parâmetro includeDeleted para o serviço
+    return this.clientesService.findAll(pageOptions, includeDeleted);
   }
 
   @Get('cnpj/:cnpj')
@@ -54,8 +61,12 @@ export class ClientesController {
   @ApiOperation({ summary: 'Buscar cliente por ID' })
   @ApiResponse({ status: 200, description: 'Cliente encontrado.' })
   @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.clientesService.findOne(id);
+  @ApiQuery({ name: 'includeDeleted', type: Boolean, required: false })
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('includeDeleted') includeDeleted?: boolean
+  ) {
+    return this.clientesService.findOne(id, includeDeleted);
   }
 
   @Patch(':id')
@@ -64,8 +75,13 @@ export class ClientesController {
   @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 409, description: 'CNPJ já cadastrado.' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateClienteDto: UpdateClienteDto) {
-    return this.clientesService.update(id, updateClienteDto);
+  @ApiQuery({ name: 'includeDeleted', type: Boolean, required: false })
+  update(
+    @Param('id', ParseIntPipe) id: number, 
+    @Body() updateClienteDto: UpdateClienteDto,
+    @Query('includeDeleted') includeDeleted?: boolean
+  ) {
+    return this.clientesService.update(id, updateClienteDto, includeDeleted);
   }
 
   @Delete(':id')

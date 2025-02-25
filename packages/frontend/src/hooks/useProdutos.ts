@@ -3,17 +3,17 @@ import { ProdutosService, CreateProdutoDto } from '@/services/produtos.service';
 import { Produto } from '@/types/produto';
 import { useSnackbar } from './useSnackbar';
 
-export function useProdutos(page = 1, limit = 10) {
+export function useProdutos(page = 1, limit = 10, status?: string, search?: string) {
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useSnackbar();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['produtos', page, limit],
-    queryFn: () => ProdutosService.listarProdutos(page, limit),
+    queryKey: ['produtos', page, limit, status, search],
+    queryFn: () => ProdutosService.listarProdutos(page, limit, status, search),
     staleTime: 0, // Sempre busca dados novos
   });
 
-  const { mutate: criarProduto, isLoading: isCreating } = useMutation({
+  const { mutate: criarProduto, isPending: isCreating } = useMutation({
     mutationFn: (produto: CreateProdutoDto) => {
       console.log('Mutation - Dados enviados:', produto);
       return ProdutosService.criarProduto(produto);
@@ -30,9 +30,9 @@ export function useProdutos(page = 1, limit = 10) {
     },
   });
 
-  const { mutate: atualizarProduto, isLoading: isUpdating } = useMutation({
-    mutationFn: ({ id, produto }: { id: number; produto: Partial<Produto> }) =>
-      ProdutosService.atualizarProduto(id, produto),
+  const { mutate: atualizarProduto, isPending: isUpdating } = useMutation({
+    mutationFn: ({ id, produto, includeDeleted }: { id: number; produto: Partial<Produto>; includeDeleted?: boolean }) =>
+      ProdutosService.atualizarProduto(id, produto, includeDeleted),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
       showSuccess('Produto atualizado com sucesso!');
@@ -43,14 +43,26 @@ export function useProdutos(page = 1, limit = 10) {
     },
   });
 
-  const { mutate: deletarProduto, isLoading: isDeleting } = useMutation({
+  const { mutate: deletarProduto, isPending: isDeleting } = useMutation({
     mutationFn: ProdutosService.deletarProduto,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
-      showSuccess('Produto excluído com sucesso!');
+      showSuccess('Produto inativado com sucesso!');
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Erro ao excluir produto';
+      showError(message);
+    },
+  });
+
+  const { mutate: reativarProduto, isPending: isReactivating } = useMutation({
+    mutationFn: ProdutosService.reativarProduto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+      showSuccess('Produto reativado com sucesso!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Erro ao reativar produto';
       showError(message);
     },
   });
@@ -62,8 +74,10 @@ export function useProdutos(page = 1, limit = 10) {
     isCreating,
     isUpdating,
     isDeleting,
+    isReactivating,
     criarProduto,
     atualizarProduto,
     deletarProduto,
+    reativarProduto,
   };
 }

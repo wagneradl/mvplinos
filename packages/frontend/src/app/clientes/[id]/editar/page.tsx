@@ -21,7 +21,10 @@ export default function EditarClientePage({ params }: EditarClientePageProps) {
 
   const { data: cliente, isLoading } = useQuery({
     queryKey: ['cliente', id],
-    queryFn: () => ClientesService.obterCliente(id),
+    queryFn: () => ClientesService.obterCliente(id, true),
+    staleTime: 0, // Desabilitar cache para garantir dados atualizados
+    refetchOnMount: true, // Forçar refetch ao montar o componente
+    refetchOnWindowFocus: true, // Recarregar quando a janela ganhar foco
   });
 
   const handleSubmit = async (data: any) => {

@@ -15,15 +15,15 @@ interface PaginatedResponse<T> {
   };
 }
 
-export function useClientes(page = 1, limit = 10) {
+export function useClientes(page = 1, limit = 10, status?: string, search?: string) {
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useSnackbar();
 
   const { data, isLoading } = useQuery<PaginatedResponse<Cliente>, Error>({
-    queryKey: ['clientes', page, limit],
+    queryKey: ['clientes', page, limit, status, search],
     queryFn: async () => {
-      console.log('Buscando clientes com page:', page, 'limit:', limit);
-      const response = await ClientesService.listarClientes(page, limit);
+      console.log('Buscando clientes com page:', page, 'limit:', limit, 'status:', status, 'search:', search);
+      const response = await ClientesService.listarClientes(page, limit, status, search);
       console.log('Resposta da API de clientes:', response);
       return response;
     },
@@ -42,8 +42,8 @@ export function useClientes(page = 1, limit = 10) {
   });
 
   const { mutate: atualizarCliente } = useMutation({
-    mutationFn: ({ id, cliente }: { id: number; cliente: Partial<Cliente> }) =>
-      ClientesService.atualizarCliente(id, cliente),
+    mutationFn: ({ id, cliente, includeDeleted = true }: { id: number; cliente: Partial<Cliente>; includeDeleted?: boolean }) =>
+      ClientesService.atualizarCliente(id, cliente, includeDeleted),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente atualizado com sucesso!');
@@ -57,10 +57,21 @@ export function useClientes(page = 1, limit = 10) {
     mutationFn: ClientesService.deletarCliente,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      showSuccess('Cliente excluído com sucesso!');
+      showSuccess('Cliente inativado com sucesso!');
     },
     onError: () => {
-      showError('Erro ao excluir cliente');
+      showError('Erro ao inativar cliente');
+    },
+  });
+  
+  const { mutate: reativarCliente } = useMutation({
+    mutationFn: ClientesService.reativarCliente,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      showSuccess('Cliente reativado com sucesso!');
+    },
+    onError: () => {
+      showError('Erro ao reativar cliente');
     },
   });
 
@@ -72,6 +83,7 @@ export function useClientes(page = 1, limit = 10) {
     criarCliente,
     atualizarCliente,
     deletarCliente,
+    reativarCliente,
   };
   
   console.log('useClientes retornando:', returnValue);

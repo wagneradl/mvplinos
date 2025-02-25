@@ -5,16 +5,16 @@ import {
   Box,
   Button,
   FormControl,
-  FormControlLabel,
   FormHelperText,
   Grid,
   InputAdornment,
   MenuItem,
-  Switch,
   TextField,
   Alert,
   Collapse,
   CircularProgress,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -77,7 +77,8 @@ const tiposMedida = [
 ];
 
 export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = false }: ProdutoFormProps) {
-  const [isAtivo, setIsAtivo] = useState(produto ? produto.status === 'ativo' : true);
+  // Usar diretamente o status do produto em vez de um state separado
+  const [statusProduto, setStatusProduto] = useState<'ativo' | 'inativo'>(produto?.status || 'ativo');
   const [errorAlert, setErrorAlert] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nomeDuplicadoAlerta, setNomeDuplicadoAlerta] = useState(false);
@@ -96,10 +97,18 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
     defaultValues: {
       nome: produto?.nome || '',
       preco_unitario: produto?.preco_unitario?.toString().replace('.', ',') || '',
-      tipo_medida: produto?.tipo_medida || 'un',
-      status: produto?.status || 'ativo',
+      tipo_medida: (produto?.tipo_medida as 'un' | 'kg' | 'lt') || 'un',
+      status: (produto?.status as 'ativo' | 'inativo') || 'ativo',
     },
   });
+  
+  // Atualizar o estado quando o produto mudar (por exemplo, após reativação/inativação)
+  useEffect(() => {
+    if (produto?.status) {
+      setStatusProduto(produto.status);
+      setValue('status', produto.status);
+    }
+  }, [produto, setValue]);
 
   // Observar o campo nome para validação de duplicidade
   const nome = watch('nome');
@@ -153,16 +162,18 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
       
       console.log('Dados do formulário validados:', data);
       
+      // Convert string price to number for API
       const produtoData: CreateProdutoDto = {
-        ...data,
-        status: isAtivo ? 'ativo' : 'inativo',
+        nome: data.nome,
+        tipo_medida: data.tipo_medida,
+        status: statusProduto,
+        preco_unitario: parseFloat(data.preco_unitario.toString()),
       };
       
       console.log('Dados convertidos:', produtoData);
       await submitHandler(produtoData);
       
-      // Feedback de sucesso
-      showSuccess(produto ? 'Produto atualizado com sucesso!' : 'Produto criado com sucesso!');
+      // O feedback de sucesso já é mostrado pelo hook useProdutos
     } catch (error) {
       console.error('Erro completo:', error);
       
@@ -301,19 +312,24 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
         </Grid>
 
         <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                id="produto-status"
-                name="status"
-                checked={isAtivo}
-                onChange={(e) => setIsAtivo(e.target.checked)}
-                color="primary"
-                disabled={isSubmitting}
-              />
-            }
-            label="Produto Ativo"
-          />
+          <FormControl fullWidth>
+            <InputLabel id="status-label">Status do Produto</InputLabel>
+            <Select
+              labelId="status-label"
+              id="status-select"
+              value={statusProduto}
+              label="Status do Produto"
+              onChange={(e) => {
+                const newValue = e.target.value as 'ativo' | 'inativo';
+                setStatusProduto(newValue);
+                setValue('status', newValue);
+              }}
+              disabled={isSubmitting}
+            >
+              <MenuItem value="ativo">Ativo</MenuItem>
+              <MenuItem value="inativo">Inativo</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
 
         <Grid item xs={12}>

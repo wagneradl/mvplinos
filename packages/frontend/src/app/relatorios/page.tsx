@@ -25,7 +25,11 @@ export default function RelatoriosPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
-  const { data: relatorio, isLoading: isLoadingRelatorio } = useRelatorio({
+  const { 
+    data: relatorio, 
+    isLoading: isLoadingRelatorio,
+    downloadPdf
+  } = useRelatorio({
     data_inicio: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
     data_fim: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
     cliente_id: clienteId ? Number(clienteId) : undefined,
@@ -120,6 +124,7 @@ export default function RelatoriosPage() {
         <RelatorioVendas
           data={relatorio || { data: [], summary: { total_orders: 0, total_value: 0, average_value: 0 } }}
           isLoading={isLoadingRelatorio}
+          onExportPdf={downloadPdf}
         />
       )}
     </PageContainer>

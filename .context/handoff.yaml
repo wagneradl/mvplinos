@@ -21,6 +21,42 @@ estado_atual:
     - Documentação atualizada
 
   problemas_corrigidos:
+    - descricao: "Problemas com exibição de logos no sistema e PDFs"
+      detalhes: >
+        Corrigido o problema de exibição de logos no sistema e nos PDFs gerados. A solução consistiu em:
+        1. Movendo o arquivo de logo para a pasta public do frontend (local adequado para assets estáticos no frontend)
+        2. Criando uma pasta estática no backend (/uploads/static/) para armazenar a logo que será usada nos PDFs
+        3. Ajustando o caminho da logo no service do PDF para buscar no local correto
+        4. Implementando tratamento de erros adequado para garantir que o serviço continue funcionando mesmo se a logo não for encontrada
+      arquivos_modificados:
+        - "packages/frontend/src/components/Navigation.tsx"
+        - "packages/backend/src/pdf/pdf.service.ts"
+        - "packages/backend/src/main.ts"
+        
+    - descricao: "Alteração do nome para Lino's Panificadora"
+      detalhes: >
+        Implementada alteração do nome de "Lino's Padaria" para "Lino's Panificadora" em todos os pontos do sistema:
+        1. Atualização dos metadados da aplicação para refletir o novo nome
+        2. Modificação dos textos na interface de usuário, incluindo menu lateral e títulos
+        3. Atualização dos templates de PDF para exibir o novo nome nos documentos gerados
+        4. Renomeação do workspace para manter consistência
+      arquivos_modificados:
+        - "packages/frontend/src/app/metadata.ts"
+        - "packages/frontend/src/components/Navigation.tsx"
+        - "packages/frontend/src/app/page.tsx"
+        - "packages/backend/src/pdf/pdf.service.ts"
+        - "linos-panificadora.code-workspace"
+        
+    - descricao: "Simplificação dos dados do cliente nos PDFs"
+      detalhes: >
+        Modificado o template de PDF de pedidos para simplificar a exibição dos dados do cliente.
+        Ao invés de mostrar "Razão Social" e "Nome Fantasia" separadamente, agora exibe apenas
+        "Cliente" com o valor do campo Razão Social. Isso torna o documento mais limpo e
+        direto, facilitando a leitura e redução de informações redundantes.
+      arquivos_modificados:
+        - "packages/backend/src/pdf/pdf.service.ts"
+        
+    
     - descricao: "Erro 400 (Bad Request) na criação de produtos"
       detalhes: >
         O problema com erro 400 ao tentar criar produtos foi corrigido. O erro estava
@@ -182,6 +218,40 @@ proximos_passos:
     - "Otimizar queries para grandes volumes de dados"
 
 problemas_corrigidos:
+  - descricao: "Correção do desalinhamento visual nos dados do cliente no PDF de pedidos"
+    detalhes: >
+      Corrigido o problema de desalinhamento visual na seção de dados do cliente nos PDFs de pedidos.
+      A solução consistiu em:
+      1. Substituir a estrutura de grid e divs por uma tabela HTML mais consistente
+      2. Padronizar o espaçamento e margens para corresponder ao restante do documento
+      3. Aplicar estilos consistentes para elementos visuais semelhantes
+      4. Adicionar uma classe CSS específica (.data-table) para garantir consistência
+    arquivos_modificados:
+      - "packages/backend/src/pdf/pdf.service.ts"
+      
+  - descricao: "Implementação da restauração de produtos excluídos (soft-deleted)"
+    detalhes: >
+      Implementada a funcionalidade de restauração de produtos que foram excluídos (soft-deleted).
+      Agora é possível visualizar e editar produtos que foram anteriormente removidos, permitindo
+      reativá-los quando necessário. Isso foi implementado através de:
+      
+      1. Atualização do DTO de produtos para incluir o campo deleted_at
+      2. Modificação do ProdutosController para aceitar o parâmetro includeDeleted
+      3. Atualização do ProdutosService para filtrar ou incluir produtos excluídos
+      4. Modificação do frontend para permitir a visualização e edição de produtos excluídos
+      5. Atualização do componente ProdutoForm para usar um Select para o status em vez de Switch
+      
+      Quando um produto excluído é editado e seu status é alterado para "ativo", o campo deleted_at
+      é automaticamente limpo, restaurando completamente o produto.
+    arquivos_modificados:
+      - "packages/backend/src/produtos/dto/update-produto.dto.ts"
+      - "packages/backend/src/produtos/produtos.controller.ts"
+      - "packages/backend/src/produtos/produtos.service.ts"
+      - "packages/frontend/src/services/produtos.service.ts"
+      - "packages/frontend/src/hooks/useProdutos.ts"
+      - "packages/frontend/src/components/ProdutoForm.tsx"
+      - "packages/frontend/src/app/produtos/[id]/editar/page.tsx"
+      
   - descricao: "Clientes não aparecendo na página de relatórios"
     detalhes: >
       Corrigido o problema de clientes não aparecendo na lista suspensa da página de relatórios.
@@ -264,10 +334,15 @@ contexto_tecnico:
       - "Logs do Prisma para queries"
       - "Sistema de logs personalizado para diagnóstico"
 
-data_handoff: "2025-02-24T19:00:00-03:00"
+data_handoff: "2025-02-25T15:30:00-03:00"
 autor: "Claude"
 status: "finalizado"
 observacoes: >
+  Corrigido o problema de desalinhamento visual nos dados do cliente no PDF de pedidos,
+  substituindo a estrutura baseada em grid por uma tabela HTML com estilos consistentes.
+  Isso garante que os dados do cliente estejam perfeitamente alinhados com o restante
+  do documento, proporcionando uma apresentação profissional e uniforme.
+  
   Além das melhorias de feedback e validações, foram implementadas as seguintes correções:
   
   1. Pedidos cancelados permanecem na lista, apenas com status diferenciado 
@@ -280,6 +355,8 @@ observacoes: >
   7. Corrigido o problema de clientes não aparecendo na lista suspensa da página de relatórios
   8. Corrigido o problema onde pedidos feitos no dia 24 só apareciam em relatórios quando a data final era 25
   9. Implementado filtro para excluir pedidos cancelados dos relatórios
+  10. Implementada a exportação de relatórios em PDF para fins de cobrança
+  11. Implementada a funcionalidade de restauração de produtos excluídos (soft-deleted)
   
   A funcionalidade de "Copiar Pedido" agora carrega os dados na tela de novo pedido,
   permitindo que o usuário edite os dados antes de confirmar a criação, o que

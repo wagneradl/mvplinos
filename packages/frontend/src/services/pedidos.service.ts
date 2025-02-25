@@ -149,4 +149,50 @@ export const PedidosService = {
     const response = await api.get<ReportData>(`/pedidos/reports/summary?${params}`);
     return response.data;
   },
+
+  async downloadRelatorioPdf(filtros: {
+    data_inicio?: string;
+    data_fim?: string;
+    cliente_id?: number;
+  }): Promise<void> {
+    try {
+      // Criar parâmetros de forma mais segura
+      const params = new URLSearchParams();
+      
+      if (filtros.data_inicio) {
+        params.append('data_inicio', filtros.data_inicio);
+      }
+      
+      if (filtros.data_fim) {
+        params.append('data_fim', filtros.data_fim);
+      }
+      
+      if (filtros.cliente_id) {
+        params.append('cliente_id', filtros.cliente_id.toString());
+      }
+      
+      console.log('Parâmetros para download do PDF:', params.toString());
+      
+      const response = await api.get(`/pedidos/reports/pdf?${params.toString()}`, {
+        responseType: 'blob',
+      });
+
+      // Criar nome do arquivo com data atual
+      const dataAtual = new Date().toISOString().split('T')[0];
+      const fileName = `relatorio-vendas-${dataAtual}.pdf`;
+      
+      // Criar URL do blob e iniciar download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao baixar PDF do relatório:', error);
+      throw error;
+    }
+  },
 };

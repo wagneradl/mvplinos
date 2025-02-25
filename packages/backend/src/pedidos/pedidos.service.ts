@@ -115,7 +115,7 @@ export class PedidosService {
             data_pedido: dataPedido,
             valor_total: valorTotal,
             status: PedidoStatus.ATIVO,
-            pdf_path: '', // Será atualizado após gerar o PDF
+            caminho_pdf: '', // Será atualizado após gerar o PDF
             itensPedido: {
               create: produtosInfo,
             }
@@ -136,7 +136,7 @@ export class PedidosService {
         // Atualizar o pedido com o caminho do PDF
         return await tx.pedido.update({
           where: { id: pedido.id },
-          data: { pdf_path: pdfPath },
+          data: { caminho_pdf: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
@@ -367,7 +367,7 @@ export class PedidosService {
         // Atualizar o pedido com o caminho do PDF
         return await this.prisma.pedido.update({
           where: { id },
-          data: { pdf_path: pdfPath },
+          data: { caminho_pdf: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
@@ -480,7 +480,7 @@ export class PedidosService {
         throw new BadRequestException('Não é possível atualizar um pedido cancelado');
       }
 
-      const item = await this.prisma.itemPedido.findFirst({
+      const item = await this.prisma.itensPedido.findFirst({
         where: { id: itemId, pedido_id: pedidoId },
         include: {
           produto: true
@@ -499,7 +499,7 @@ export class PedidosService {
       // Atualizar item e recalcular valores
       const valor_total_item = Number((quantidade * item.preco_unitario).toFixed(2));
 
-      const itemAtualizado = await this.prisma.itemPedido.update({
+      const itemAtualizado = await this.prisma.itensPedido.update({
         where: { id: itemId },
         data: {
           quantidade,
@@ -555,16 +555,49 @@ export class PedidosService {
       throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
     }
 
-    if (!pedido.pdf_path) {
+    if (!pedido.caminho_pdf) {
       throw new NotFoundException(`PDF do pedido com ID ${id} não encontrado`);
     }
 
-    const fullPath = join(process.cwd(), pedido.pdf_path);
+    const fullPath = join(process.cwd(), pedido.caminho_pdf);
     if (!existsSync(fullPath)) {
       throw new NotFoundException(`Arquivo PDF do pedido com ID ${id} não encontrado no sistema`);
     }
 
     return fullPath;
+  }
+
+  async generateReportPdf(reportDto: ReportPedidoDto): Promise<string> {
+    try {
+      // Primeiro, gerar os dados do relatório
+      const reportData = await this.generateReport(reportDto);
+      
+      // Se tiver cliente_id, buscar os dados do cliente
+      let clienteData = null;
+      if (reportDto.cliente_id && reportData.cliente) {
+        clienteData = reportData.cliente;
+      }
+      
+      // Gerar o PDF do relatório
+      const relativePath = await this.pdfService.generateReportPdf(reportData, clienteData);
+      
+      // Converter para caminho absoluto
+      const fullPath = join(process.cwd(), relativePath);
+      console.log('Caminho completo do PDF:', fullPath);
+      
+      // Verificar se o arquivo existe
+      if (!existsSync(fullPath)) {
+        throw new Error(`Arquivo PDF não encontrado: ${fullPath}`);
+      }
+      
+      return fullPath;
+    } catch (error) {
+      console.error('Erro ao gerar PDF do relatório:', error);
+      if (error instanceof Error) {
+        throw new BadRequestException(`Erro ao gerar PDF do relatório: ${error.message}`);
+      }
+      throw new BadRequestException('Erro ao gerar PDF do relatório');
+    }
   }
 
   async generateReport(reportDto: ReportPedidoDto) {
@@ -634,6 +667,7 @@ export class PedidosService {
         where,
         include: {
           itensPedido: true,
+          cliente: true,
         },
         orderBy: {
           data_pedido: 'asc',
@@ -680,6 +714,11 @@ export class PedidosService {
       return {
         data,
         summary,
+        periodo: {
+          inicio: data_inicio,
+          fim: data_fim
+        },
+        cliente: cliente_id ? pedidos.find(p => p.cliente_id === cliente_id)?.cliente : null
       };
     } catch (error) {
       console.error('Erro ao gerar relatório:', error);

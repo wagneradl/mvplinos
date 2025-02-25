@@ -13,10 +13,7 @@ export function PageContainer({ title, actions, children }: PageContainerProps) 
   return (
     <>
       <Breadcrumbs />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          {title}
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
         {actions}
       </Box>
       <Paper sx={{ p: 3 }}>{children}</Paper>

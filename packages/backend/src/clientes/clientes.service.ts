@@ -93,20 +93,39 @@ export class ClientesService {
     }
   }
 
-  async update(id: number, updateClienteDto: UpdateClienteDto) {
+  async update(id: number, updateClienteDto: UpdateClienteDto, includeDeleted: boolean = false) {
     try {
-      const cliente = await this.prisma.cliente.findFirst({
-        where: { id, deleted_at: null },
-      });
+      // Construir condição de busca
+      const where: Prisma.ClienteWhereInput = { id };
+      
+      // Se não deve incluir clientes excluídos, adicionar filtro
+      if (!includeDeleted) {
+        where.deleted_at = null;
+      }
+      
+      console.log(`Atualizando cliente com ID ${id}, includeDeleted=${includeDeleted}`);
+      console.log('Dados para atualização:', updateClienteDto);
+      
+      const cliente = await this.prisma.cliente.findFirst({ where });
 
       if (!cliente) {
         throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
       }
 
       try {
+        // Preparar dados para atualização
+        const updateData: any = { ...updateClienteDto };
+        
+        // Se estamos reativando um cliente, limpar o deleted_at
+        if (updateClienteDto.status === 'ativo' && cliente.deleted_at) {
+          updateData.deleted_at = null;
+        }
+        
+        console.log('Dados finais para atualização:', updateData);
+        
         return await this.prisma.cliente.update({
           where: { id },
-          data: updateClienteDto,
+          data: updateData,
         });
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -147,12 +166,72 @@ export class ClientesService {
     }
   }
 
-  async findAll(pageOptions?: PageOptionsDto): Promise<Page<any>> {
+  async findAll(pageOptions?: PageOptionsDto, includeDeleted?: boolean): Promise<Page<any>> {
     try {
-      const { page = 1, limit = 10 } = pageOptions || {};
+      const { page = 1, limit = 10, status, search } = pageOptions || {};
       const skip = (page - 1) * limit;
 
-      const where = { deleted_at: null };
+      // Construir condições de filtro
+      const where: Prisma.ClienteWhereInput = {};
+      
+      // Verificar se devemos incluir clientes soft-deleted
+      if (includeDeleted) {
+        // Se includeDeleted=true, não filtramos por deleted_at
+        console.log('Incluindo clientes soft-deleted na busca');
+        
+        // Filtrar por status se fornecido
+        if (status) {
+          where.status = status;
+        }
+      } else {
+        // Lógica padrão para mostrar clientes ativos/inativos (sem soft-deleted)
+        if (status === 'ativo') {
+          // Clientes ativos: status = 'ativo' E não deletados
+          where.status = 'ativo';
+          where.deleted_at = null;
+        } else if (status === 'inativo') {
+          // Clientes inativos: status = 'inativo' OU soft-deleted
+          where.OR = [
+            { status: 'inativo', deleted_at: null },
+            { deleted_at: { not: null } }
+          ];
+        } else {
+          // Se nenhum status fornecido (filtro "Todos"), mostrar todos os clientes não deletados
+          // E também clientes com status inativo que foram soft-deleted
+          where.OR = [
+            { deleted_at: null }, // Todos os não deletados (ativos e inativos)
+            { status: 'inativo', deleted_at: { not: null } } // Inativos que foram soft-deleted
+          ];
+        }
+      }
+
+      // Filtrar por termo de busca se fornecido
+      if (search) {
+        // Precisamos preservar a condição OR existente para status inativo
+        const searchConditions = [
+          { razao_social: { contains: search } },
+          { nome_fantasia: { contains: search } },
+          { cnpj: { contains: search } }
+        ];
+        
+        if (where.OR) {
+          // Se já temos condições OR (para status inativo), precisamos combinar com a busca
+          const statusConditions = where.OR;
+          // Remover a condição OR existente
+          delete where.OR;
+          
+          // Criar uma nova condição AND que combina as condições de status com a busca
+          where.AND = [
+            { OR: statusConditions },
+            { OR: searchConditions }
+          ];
+        } else {
+          // Caso contrário, apenas adicionar as condições de busca
+          where.OR = searchConditions;
+        }
+      }
+
+      console.log('Filtros aplicados:', where);
 
       const total = await this.prisma.cliente.count({ where });
       const items = await this.prisma.cliente.findMany({
@@ -167,7 +246,7 @@ export class ClientesService {
       const hasNextPage = page < pageCount;
 
       console.log('findAll - dados retornados:', {
-        data: items,
+        data: items.length,
         meta: {
           page,
           limit,
@@ -195,10 +274,20 @@ export class ClientesService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, includeDeleted: boolean = false) {
     try {
+      // Construir condição de busca
+      const where: Prisma.ClienteWhereInput = { id };
+      
+      // Se não deve incluir clientes excluídos, adicionar filtro
+      if (!includeDeleted) {
+        where.deleted_at = null;
+      }
+      
+      console.log(`Buscando cliente com ID ${id}, includeDeleted=${includeDeleted}`);
+      
       const cliente = await this.prisma.cliente.findFirst({
-        where: { id, deleted_at: null },
+        where,
         include: {
           pedidos: {
             where: { deleted_at: null },

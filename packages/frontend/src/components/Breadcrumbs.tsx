@@ -14,6 +14,11 @@ const routeLabels: Record<string, string> = {
   editar: 'Editar',
 };
 
+// Função para verificar se uma string é um ID numérico
+function isNumericId(path: string): boolean {
+  return /^\d+$/.test(path);
+}
+
 export function Breadcrumbs() {
   const pathname = usePathname();
 
@@ -21,6 +26,24 @@ export function Breadcrumbs() {
     const paths = pathname?.split('/').filter(Boolean) || [];
     return paths.map((path, index) => {
       const href = `/${paths.slice(0, index + 1).join('/')}`;
+      
+      // Se for um ID numérico, não criar um link para ele
+      // Em vez disso, redirecionar para a página pai
+      if (isNumericId(path)) {
+        // Se o próximo caminho for "editar", estamos em uma página de edição
+        // Neste caso, não mostrar o ID como um breadcrumb separado
+        if (index + 1 < paths.length && paths[index + 1] === 'editar') {
+          return null;
+        }
+        
+        // Para outros casos, mostrar o ID mas sem link
+        return (
+          <Typography key={href} color="text.secondary">
+            ID: {path}
+          </Typography>
+        );
+      }
+      
       const label = routeLabels[path] || path;
       const isLast = index === paths.length - 1;
 
@@ -37,7 +60,7 @@ export function Breadcrumbs() {
           {label}
         </Link>
       );
-    });
+    }).filter(Boolean); // Remover itens nulos
   }, [pathname]);
 
   if (!breadcrumbs?.length) return null;
