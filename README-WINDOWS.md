@@ -69,10 +69,30 @@ Se você encontrar problemas com o método automatizado, siga estas etapas manua
 
 ## Solução de Problemas
 
-### Erros de Instalação
+### Erros Comuns do Prisma
 
-- **Erro no Prisma**: Execute os comandos no diretório correto dentro de `packages\backend`
-- **Erro de permissão**: Execute o PowerShell como administrador
+Se você encontrar o erro `Cannot find module '...\node_modules\node_modules\prisma\build\index.js'` com o caminho duplicado `node_modules`, existem algumas soluções:
+
+1. **Use o script de correção automatizado**:
+   ```
+   fix-prisma.bat
+   ```
+   Este script irá reinstalar as dependências e corrigir os problemas do Prisma.
+
+2. **Método alternativo**:
+   - Instale o Prisma CLI globalmente: `npm install -g prisma`
+   - Use `prisma` em vez de `npx prisma` para os comandos
+   - Dentro da pasta `packages\backend` execute: `prisma generate` e depois `prisma migrate deploy`
+
+3. **Última opção**:
+   - Remova completamente o diretório `node_modules`
+   - Limpe o cache do Yarn: `yarn cache clean`
+   - Reinstale tudo: `yarn install --force`
+
+### Outros Erros de Instalação
+
+- **Erro no PowerShell**: Tente usar o script `setup.bat` em vez do `setup.ps1`
+- **Erro de permissão**: Execute os scripts como administrador
 - **Erro de conexão**: Verifique sua conexão com a internet
 
 ### Erros de Execução
@@ -80,6 +100,7 @@ Se você encontrar problemas com o método automatizado, siga estas etapas manua
 - **Erro "Cannot find module"**: Execute `yarn install` novamente
 - **Erro de banco de dados**: Verifique se o banco de dados foi configurado corretamente
 - **Erro de porta em uso**: Verifique se as portas 3000 e 3001 estão disponíveis
+- **Backend não inicia**: Verifique se a pasta `uploads` e `uploads\static` existem na pasta `packages\backend`
 
 ## Backup e Restauração
 

@@ -83,25 +83,44 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-# Gerar cliente Prisma - CORRIGIDO para usar caminho correto
-Write-Host "`n[2/7] Gerando cliente Prisma..." -ForegroundColor Yellow
-cd packages/backend
-npx prisma generate
+# Instalar Prisma CLI globalmente para evitar problemas de caminho
+Write-Host "`n[2/7] Instalando Prisma CLI e gerando cliente..." -ForegroundColor Yellow
+npm install -g prisma
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Falha ao gerar cliente Prisma." -ForegroundColor Red
-    cd ../..
+    Write-Host "Falha ao instalar Prisma CLI globalmente." -ForegroundColor Red
     exit 1
+}
+
+# Gerar cliente Prisma usando o CLI global
+cd packages/backend
+prisma generate
+if ($LASTEXITCODE -ne 0) {
+    # Tente alternativa com npx e caminho explícito
+    Write-Host "Tentando método alternativo..." -ForegroundColor Yellow
+    $env:NODE_PATH = "$PWD\node_modules"
+    npx --no-install prisma generate
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Falha ao gerar cliente Prisma." -ForegroundColor Red
+        cd ../..
+        exit 1
+    }
 }
 cd ../..
 
 # Verificar/criar estrutura do banco de dados
 Write-Host "`n[3/7] Configurando banco de dados..." -ForegroundColor Yellow
 cd packages/backend
-npx prisma migrate deploy
+prisma migrate deploy
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Falha ao configurar banco de dados." -ForegroundColor Red
-    cd ../..
-    exit 1
+    # Tente alternativa com npx e caminho explícito
+    Write-Host "Tentando método alternativo para migração..." -ForegroundColor Yellow
+    $env:NODE_PATH = "$PWD\node_modules"
+    npx --no-install prisma migrate deploy
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Falha ao configurar banco de dados." -ForegroundColor Red
+        cd ../..
+        exit 1
+    }
 }
 cd ../..
 
