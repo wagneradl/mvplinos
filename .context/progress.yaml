@@ -10,78 +10,9 @@ status_atual:
     
     O sistema está pronto para uso em ambientes Unix-like, com todas as funcionalidades críticas implementadas e uma interface profissional e intuitiva. Para finalização completa do projeto, é necessário resolver o problema de instalação no ambiente Windows.
 
-tasks_completadas:
-  backend:
-    - "Implementação do CRUD de Produtos"
-    - "Implementação do CRUD de Clientes"
-    - "Implementação do CRUD de Pedidos"
-    - "Geração de PDF para pedidos"
-    - "Funcionalidade de repetir pedido"
-    - "Validações de negócio para pedidos"
-    - "Cálculo automático de valores"
-    - "Testes de integração para Pedidos"
-    - "Validações de produtos inativos/deletados"
-    - "Validações de clientes inativos"
-    - "Atualização de quantidades em itens do pedido"
-    - "Filtros avançados para listagens"
-    - "Implementação de relatórios básicos"
-    - "Validação de produtos duplicados"
-    - "Tratamento de erros aprimorado"
-    - "Correção da validação case-insensitive para produtos"
-    - "Correção de problemas com campos textuais no backend"
-    - "Aumento do limite máximo de itens para listagens"
-    - "Simplificação dos status de pedidos para ATIVO e CANCELADO"
-  frontend:
-    - "Tela de Produtos"
-    - "Tela de Clientes"
-    - "Layout base da aplicação"
-    - "Implementação de filtros avançados na listagem de pedidos"
-    - "Paginação nas listagens"
-    - "Interface de criação de pedidos"
-    - "Cálculo automático de valores no frontend"
-    - "Interface para repetição de pedidos"
-    - "Relatórios básicos com filtros"
-    - "Navegação entre páginas"
-    - "Layout responsivo"
-    - "Tema personalizado"
-    - "ESLint e Prettier configurados"
-    - "Validação de formulários com Zod"
-    - "Tratamento de erros melhorado"
-    - "Feedback visual para usuários"
-    - "Correção da formatação de campos (CNPJ, telefone)"
-    - "Correção da exibição de clientes no dropdown"
-    - "Correção de problemas com a listagem de pedidos após criação"
-    - "Correção da transformação de dados para espaços em campos textuais"
-    - "Implementação de sistema de logs aprimorado para diagnóstico"
-    - "Melhoria do feedback de erros para usuários"
-    - "Implementação de validações robustas para casos de borda"
-    - "Componente genérico de feedback de erro"
-    - "Interceptor de API melhorado para tratamento de erros"
-    - "Detecção e prevenção de duplicidade (CNPJ, nome de produto)"
-  infraestrutura:
-    - "Configuração do banco SQLite"
-    - "Configuração do Prisma ORM"
-    - "Setup do ambiente de testes"
-    - "Integração com PDF Service"
-    - "Scripts de deploy local"
-    - "Configuração de backup"
-    - "ESLint e Prettier"
-    - "Editor Config"
-    - "Logs de debug implementados"
-    - "Melhoria nos logs para diagnóstico"
+  atualizado_em: "2025-02-25T19:45:00-03:00"
+  atualizado_por: "Senior Software Engineer"
 
-tasks_em_andamento:
-  frontend:
-    - "Refinamento das validações por tipo de dados"
-    - "Melhorias na responsividade para telas pequenas"
-    - "Implementação de preview de PDF"
-  backend:
-    - "Validação avançada de CNPJ com verificação de dígitos"
-    - "Implementação de técnicas avançadas de caching"
-  infraestrutura:
-    - "Melhorias para monitoramento e diagnóstico"
-    - "Implementação de backup automático"
-    
 tasks_completadas:
   backend:
     - "Implementação do CRUD de Produtos"
@@ -155,41 +86,25 @@ tasks_completadas:
     - "Logs de debug implementados"
     - "Melhoria nos logs para diagnóstico"
     - "Correção da porta do servidor para garantir conexão adequada"
-  frontend:
-    - "Tela de Produtos"
-    - "Tela de Clientes"
-    - "Layout base da aplicação"
-    - "Implementação de filtros avançados na listagem de pedidos"
-    - "Paginação nas listagens"
-    - "Interface de criação de pedidos"
-    - "Cálculo automático de valores no frontend"
-    - "Interface para repetição de pedidos"
-    - "Relatórios básicos com filtros"
-    - "Navegação entre páginas"
-    - "Layout responsivo"
-    - "Tema personalizado"
-    - "ESLint e Prettier configurados"
-    - "Validação de formulários com Zod"
-    - "Tratamento de erros melhorado"
-    - "Feedback visual para usuários"
-    - "Correção da formatação de campos (CNPJ, telefone)"
-    - "Correção da exibição de clientes no dropdown"
-    - "Correção de problemas com a listagem de pedidos após criação"
-    - "Correção da transformação de dados para espaços em campos textuais"
-    - "Implementação de sistema de logs aprimorado para diagnóstico"
-    - "Melhoria do feedback de erros para usuários"
-    - "Implementação de validações robustas para casos de borda"
-    - "Componente genérico de feedback de erro"
-    - "Interceptor de API melhorado para tratamento de erros"
-    - "Detecção e prevenção de duplicidade (CNPJ, nome de produto)"
-    - "Correção de paginação para permitir mudança de itens por página"
 
 tasks_em_andamento:
   windows_compatibility:
     - "Desenvolvimento de solução para instalação no Windows"
-    - "Criação de scripts batch para contornar problemas do Prisma"
-    - "Documentação de instalação manual para Windows"
+    - "Criação de scripts batch simplificados para contornar problemas do Prisma"
+    - "Documentação de instalação manual detalhada para Windows"
     - "Testes de compatibilidade em ambiente Windows"
+    - "Análise de soluções alternativas (WSL, Docker) para implantação"
+  
+  documentacao:
+    - "Atualização do documento de implantação para Windows"
+    - "Guia de resolução de problemas específicos para Windows"
+    - "Manual de backups e recuperação de dados"
+
+tasks_pendentes:
+  - "Finalização dos scripts simplificados para instalação em Windows"
+  - "Testes completos em ambiente Windows real"
+  - "Guia detalhado para uso do WSL como alternativa de implantação"
+  - "Documento comparativo entre as opções de implantação (local, WSL, Docker)"
 
 issues_conhecidas:
   windows_incompatibility:
@@ -202,6 +117,7 @@ issues_conhecidas:
         Instalar o Prisma CLI globalmente e executar os comandos diretamente na pasta /packages/backend,
         ou usar npm em vez de yarn para pacotes individuais.
       status: "crítico, bloqueando instalação no ambiente Windows"
+      plano_acao: "Em progresso - testando script simplificado usando npm diretamente em packages/backend"
 
     - descricao: "Problemas com scripts batch no Windows"
       detalhes: >  
@@ -211,6 +127,7 @@ issues_conhecidas:
         Reescrever os scripts batch com sintaxe mais simples, sem caracteres especiais ou acentos, e garantir
         que estejam salvos com codificação ANSI ou UTF-8 sem BOM.
       status: "em andamento"
+      plano_acao: "Criando versão ultra-simplificada do script, com comandos básicos e sem condicionais complexos"
 
   melhorias_funcionais:
     - "Validação de horários de pedido (dias e horários permitidos)"
@@ -252,3 +169,19 @@ handoff:
     
     O sistema está pronto para uso e cumpre todos os requisitos do MVP. As próximas melhorias
     seriam para a fase pós-MVP, conforme documentado em issues_conhecidas.
+
+handoff_atual:
+  data: "2025-02-25T19:30:00-03:00"
+  engenheiro: "Senior Software Engineer"
+  status: "em andamento"
+  foco_atual: "Compatibilidade com Windows e finalização da documentação de implantação"
+  progresso: >
+    Análise completa dos problemas de compatibilidade com Windows e dos scripts existentes. 
+    Identificadas as causas principais dos erros e as abordagens mais promissoras para solução.
+    Iniciando o desenvolvimento de um script minimalista e a documentação detalhada para
+    alternativas de implantação.
+  proximas_acoes:
+    - "Criar script ultra-simplificado para instalação em Windows (apenas comandos básicos)"
+    - "Elaborar documentação completa para uso do WSL como alternativa"
+    - "Testar Docker como solução alternativa"
+    - "Desenvolver guia comparativo das abordagens de implantação"

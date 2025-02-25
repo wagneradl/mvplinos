@@ -208,6 +208,68 @@ estado_atual:
         - "packages/frontend/src/components/PedidosTable.tsx"
         - "packages/frontend/src/app/pedidos/novo/page.tsx"
 
+    - descricao: "Correção do desalinhamento visual nos dados do cliente no PDF de pedidos"
+      detalhes: >
+        Corrigido o problema de desalinhamento visual na seção de dados do cliente nos PDFs de pedidos.
+        A solução consistiu em:
+        1. Substituir a estrutura de grid e divs por uma tabela HTML mais consistente
+        2. Padronizar o espaçamento e margens para corresponder ao restante do documento
+        3. Aplicar estilos consistentes para elementos visuais semelhantes
+        4. Adicionar uma classe CSS específica (.data-table) para garantir consistência
+      arquivos_modificados:
+        - "packages/backend/src/pdf/pdf.service.ts"
+      
+    - descricao: "Implementação da restauração de produtos excluídos (soft-deleted)"
+      detalhes: >
+        Implementada a funcionalidade de restauração de produtos que foram excluídos (soft-deleted).
+        Agora é possível visualizar e editar produtos que foram anteriormente removidos, permitindo
+        reativá-los quando necessário. Isso foi implementado através de:
+        
+        1. Atualização do DTO de produtos para incluir o campo deleted_at
+        2. Modificação do ProdutosController para aceitar o parâmetro includeDeleted
+        3. Atualização do ProdutosService para filtrar ou incluir produtos excluídos
+        4. Modificação do frontend para permitir a visualização e edição de produtos excluídos
+        5. Atualização do componente ProdutoForm para usar um Select para o status em vez de Switch
+        
+        Quando um produto excluído é editado e seu status é alterado para "ativo", o campo deleted_at
+        é automaticamente limpo, restaurando completamente o produto.
+      arquivos_modificados:
+        - "packages/backend/src/produtos/dto/update-produto.dto.ts"
+        - "packages/backend/src/produtos/produtos.controller.ts"
+        - "packages/backend/src/produtos/produtos.service.ts"
+        - "packages/frontend/src/services/produtos.service.ts"
+        - "packages/frontend/src/hooks/useProdutos.ts"
+        - "packages/frontend/src/components/ProdutoForm.tsx"
+        - "packages/frontend/src/app/produtos/[id]/editar/page.tsx"
+      
+    - descricao: "Clientes não aparecendo na página de relatórios"
+      detalhes: >
+        Corrigido o problema de clientes não aparecendo na lista suspensa da página de relatórios.
+        O problema estava relacionado à forma como o hook useClientes era utilizado na página.
+        Em vez de acessar a propriedade `data`, agora o código acessa a propriedade `clientes`
+        que é a estrutura correta retornada pelo hook.
+      arquivos_modificados:
+        - "packages/frontend/src/app/relatorios/page.tsx"
+      
+    - descricao: "Problemas na filtragem por data na página de relatórios"
+      detalhes: >
+        Corrigido o problema em que os pedidos feitos no dia 24 só estavam sendo exibidos nos relatórios 
+        quando a data final era 25 (um dia após), mesmo comportamento que existia na página de pedidos.
+        Foi implementada a mesma solução usada na página de pedidos, que utiliza uma lista de todas as 
+        datas no intervalo e aplica condições OR para garantir que pedidos feitos no último dia do
+        intervalo também sejam incluídos no relatório. Esta abordagem é mais robusta e elimina problemas
+        de timezone que poderiam causar a exclusão de pedidos feitos em dias específicos.
+      arquivos_modificados:
+        - "packages/backend/src/pedidos/pedidos.service.ts"
+      
+    - descricao: "Relatórios incluindo pedidos cancelados"
+      detalhes: >
+        Corrigido o problema em que pedidos cancelados estavam sendo incluídos nos relatórios de vendas.
+        Agora o sistema filtra automaticamente apenas os pedidos com status ATIVO, ignorando pedidos CANCELADOS
+        para gerar métricas mais precisas de vendas efetivas.
+      arquivos_modificados:
+        - "packages/backend/src/pedidos/pedidos.service.ts"
+
 proximos_passos:
   prioridade_1:
     - "Resolver problema de instalação do Prisma no Windows"
@@ -250,69 +312,6 @@ proximos_passos:
     - "Implementar integração com API externa para validação de CNPJ"
     - "Desenvolver sistema de autenticação e autorização"
     - "Otimizar queries para grandes volumes de dados"
-
-problemas_corrigidos:
-  - descricao: "Correção do desalinhamento visual nos dados do cliente no PDF de pedidos"
-    detalhes: >
-      Corrigido o problema de desalinhamento visual na seção de dados do cliente nos PDFs de pedidos.
-      A solução consistiu em:
-      1. Substituir a estrutura de grid e divs por uma tabela HTML mais consistente
-      2. Padronizar o espaçamento e margens para corresponder ao restante do documento
-      3. Aplicar estilos consistentes para elementos visuais semelhantes
-      4. Adicionar uma classe CSS específica (.data-table) para garantir consistência
-    arquivos_modificados:
-      - "packages/backend/src/pdf/pdf.service.ts"
-      
-  - descricao: "Implementação da restauração de produtos excluídos (soft-deleted)"
-    detalhes: >
-      Implementada a funcionalidade de restauração de produtos que foram excluídos (soft-deleted).
-      Agora é possível visualizar e editar produtos que foram anteriormente removidos, permitindo
-      reativá-los quando necessário. Isso foi implementado através de:
-      
-      1. Atualização do DTO de produtos para incluir o campo deleted_at
-      2. Modificação do ProdutosController para aceitar o parâmetro includeDeleted
-      3. Atualização do ProdutosService para filtrar ou incluir produtos excluídos
-      4. Modificação do frontend para permitir a visualização e edição de produtos excluídos
-      5. Atualização do componente ProdutoForm para usar um Select para o status em vez de Switch
-      
-      Quando um produto excluído é editado e seu status é alterado para "ativo", o campo deleted_at
-      é automaticamente limpo, restaurando completamente o produto.
-    arquivos_modificados:
-      - "packages/backend/src/produtos/dto/update-produto.dto.ts"
-      - "packages/backend/src/produtos/produtos.controller.ts"
-      - "packages/backend/src/produtos/produtos.service.ts"
-      - "packages/frontend/src/services/produtos.service.ts"
-      - "packages/frontend/src/hooks/useProdutos.ts"
-      - "packages/frontend/src/components/ProdutoForm.tsx"
-      - "packages/frontend/src/app/produtos/[id]/editar/page.tsx"
-      
-  - descricao: "Clientes não aparecendo na página de relatórios"
-    detalhes: >
-      Corrigido o problema de clientes não aparecendo na lista suspensa da página de relatórios.
-      O problema estava relacionado à forma como o hook useClientes era utilizado na página.
-      Em vez de acessar a propriedade `data`, agora o código acessa a propriedade `clientes`
-      que é a estrutura correta retornada pelo hook.
-    arquivos_modificados:
-      - "packages/frontend/src/app/relatorios/page.tsx"
-      
-  - descricao: "Problemas na filtragem por data na página de relatórios"
-    detalhes: >
-      Corrigido o problema em que os pedidos feitos no dia 24 só estavam sendo exibidos nos relatórios 
-      quando a data final era 25 (um dia após), mesmo comportamento que existia na página de pedidos.
-      Foi implementada a mesma solução usada na página de pedidos, que utiliza uma lista de todas as 
-      datas no intervalo e aplica condições OR para garantir que pedidos feitos no último dia do
-      intervalo também sejam incluídos no relatório. Esta abordagem é mais robusta e elimina problemas
-      de timezone que poderiam causar a exclusão de pedidos feitos em dias específicos.
-    arquivos_modificados:
-      - "packages/backend/src/pedidos/pedidos.service.ts"
-      
-  - descricao: "Relatórios incluindo pedidos cancelados"
-    detalhes: >
-      Corrigido o problema em que pedidos cancelados estavam sendo incluídos nos relatórios de vendas.
-      Agora o sistema filtra automaticamente apenas os pedidos com status ATIVO, ignorando pedidos CANCELADOS
-      para gerar métricas mais precisas de vendas efetivas.
-    arquivos_modificados:
-      - "packages/backend/src/pedidos/pedidos.service.ts"
 
 pontos_atencao:
   compatibilidade_windows:
@@ -439,3 +438,9 @@ observacoes: >
   
   As funcionalidades do sistema estão 100% implementadas, e com a solução do problema
   de compatibilidade Windows, o sistema estará pronto para uso produtivo.
+
+engenheiro_atual:
+  nome: "Senior Software Engineer"
+  data_inicio: "2025-02-25T19:30:00-03:00"
+  objetivo_primario: "Resolver o problema de compatibilidade com Windows e finalizar preparação para implantação no ambiente do cliente"
+  abordagem: "Utilização de ferramentas MCP para análise e solução do problema de compatibilidade, com foco em criar uma solução simplificada e robusta para instalação no Windows"
