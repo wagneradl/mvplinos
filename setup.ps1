@@ -1,26 +1,31 @@
-# setup.ps1 - Script de instalação e configuração do Sistema Lino's Panificadora
+# Definir codificação UTF-8 para evitar problemas de caracteres
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "========================================================"
 Write-Host "      Instalação do Sistema Lino's Panificadora         "
 Write-Host "========================================================"
 
-# Função para verificar se um programa está instalado
+# Função para verificar se um programa está instalado sem falhar
 function Test-CommandExists {
     param ([string]$Command)
-    $oldPreference = $ErrorActionPreference
-    $ErrorActionPreference = 'SilentlyContinue'
-    $commandExists = Get-Command $Command -ErrorAction Stop
-    $ErrorActionPreference = $oldPreference
-    return $commandExists -ne $null
+    try {
+        $commandExists = Get-Command $Command -ErrorAction Stop
+        return $true
+    } catch {
+        return $false
+    }
 }
 
-# Verificar se o Node.js está instalado
-if (-not (Test-CommandExists node)) {
+# Verificar se o Node.js está instalado e, se não estiver, instalar automaticamente
+if (-not (Test-CommandExists "node")) {
     Write-Host "`nNode.js não encontrado! Instalando Node.js..."
     
-    # Baixar o instalador do Node.js
+    # URL do instalador Node.js (versão 20 LTS)
     $nodeInstaller = "node-setup.msi"
-    Invoke-WebRequest -Uri "https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi" -OutFile $nodeInstaller
+    $nodeUrl = "https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi"
+
+    # Baixar instalador do Node.js
+    Invoke-WebRequest -Uri $nodeUrl -OutFile $nodeInstaller
 
     # Executar o instalador silenciosamente
     Write-Host "`nInstalando Node.js..."
@@ -29,22 +34,23 @@ if (-not (Test-CommandExists node)) {
     # Remover o instalador após a instalação
     Remove-Item $nodeInstaller -Force
 
-    # Atualizar variáveis de ambiente para reconhecer o Node.js imediatamente
+    # Atualizar variáveis de ambiente (evita necessidade de reinício)
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
-    # Verificar instalação
-    if (-not (Test-CommandExists node)) {
-        Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente."
+    # Testar se a instalação foi bem-sucedida
+    if (-not (Test-CommandExists "node")) {
+        Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente e reinicie o script."
         exit 1
     } else {
         Write-Host "Node.js instalado com sucesso!"
     }
-} else {
-    $nodeVersion = node -v
-    Write-Host "`nVersão do Node.js encontrada: $nodeVersion"
-    if ($nodeVersion -notmatch "^v20") {
-        Write-Host "AVISO: Recomendado Node.js v20.x LTS. Versão atual: $nodeVersion"
-    }
+}
+
+# Confirmar versão do Node.js
+$nodeVersion = node -v
+Write-Host "`nVersão do Node.js encontrada: $nodeVersion"
+if ($nodeVersion -notmatch "^v20") {
+    Write-Host "AVISO: Recomendado Node.js v20.x LTS. Versão atual: $nodeVersion"
 }
 
 # Instalar dependências
