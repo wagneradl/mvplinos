@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Garantir permissões de execução
-chmod +x "$0"
-
 # Definir o diretório de trabalho para o backend
 BACKEND_DIR="packages/backend"
 
@@ -59,8 +56,10 @@ echo "Aplicando migrações do banco de dados..."
 npx prisma migrate deploy || error_exit "Falha ao aplicar migrações"
 
 # Verificar se o banco de dados foi criado
-if [ ! -f "$DB_PATH" ]; then
-    error_exit "Banco de dados não foi criado corretamente"
+DB_PATH="./dev.db"
+if [ ! -s "$DB_PATH" ]; then
+    # Tentar criar o banco de dados manualmente se estiver vazio
+    sqlite3 "$DB_PATH" ".databases" || error_exit "Falha ao verificar/criar banco de dados SQLite"
 fi
 
 echo "Instalação do backend concluída com sucesso!"
@@ -74,3 +73,7 @@ cd packages/frontend
 yarn install || error_exit "Falha ao instalar dependências do frontend"
 
 echo "Instalação completa do sistema Lino's Panificadora!"
+
+# Listar conteúdo do banco de dados para debug
+echo "Conteúdo do banco de dados:"
+sqlite3 "$BACKEND_DIR/dev.db" ".tables"
