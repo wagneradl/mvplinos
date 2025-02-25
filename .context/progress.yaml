@@ -1,17 +1,14 @@
 status_atual:
-  progresso_geral: "100%"
+  progresso_geral: "95%"
   backend: "100%"
   frontend: "100%"
-  infraestrutura: "100%"
+  infraestrutura: "90%"
   observacoes: >
-    Finalizada todas as tarefas de implementação e ajustes do sistema. Alteração do nome de "Lino's Padaria" para "Lino's Panificadora" concluída em todos os pontos do sistema, incluindo metadados, interface e documentação PDF, uniformizando a identidade da marca e melhorando a apresentação profissional. O sistema está completamente functional e esteticamente finalizado.
-    Sistema finalizado e com UI/UX significativamente aprimorado. Foram realizadas melhorias visuais
-    abrangentes, incluindo: atualização do tema com cores adequadas para padaria, implementação de
-    dashboard informativo na página inicial, redesign completo dos PDFs, melhoria da navegação com
-    menu organizado e submenus, substituição dos ícones de exclusão/restauração por ícones mais
-    apropriados (bloqueio/verificação), e incorporação da logo em todos os lugares relevantes.
-    O sistema está pronto para uso, com todas as funcionalidades críticas implementadas e uma
-    interface profissional e intuitiva.
+    Sistema completamente implementado e funcional em ambiente macOS/Linux. Todos os módulos, incluindo backend, frontend e funcionalidades críticas estão finalizados. Foi realizada a alteração do nome de "Lino's Padaria" para "Lino's Panificadora" em todos os pontos do sistema, incluindo metadados, interface e documentação PDF, uniformizando a identidade da marca.
+    
+    O principal desafio atual é a compatibilidade com o ambiente Windows, onde estamos enfrentando problemas específicos com o Prisma. O erro está relacionado a um problema na resolução de módulos do Prisma em ambientes Windows, onde o sistema tenta acessar um caminho incorreto com 'node_modules' duplicado (ex: 'node_modules\node_modules\prisma'). Foram criados scripts para tentar resolver o problema, mas ainda não conseguimos uma solução definitiva para a instalação no Windows.
+    
+    O sistema está pronto para uso em ambientes Unix-like, com todas as funcionalidades críticas implementadas e uma interface profissional e intuitiva. Para finalização completa do projeto, é necessário resolver o problema de instalação no ambiente Windows.
 
 tasks_completadas:
   backend:
@@ -187,7 +184,34 @@ tasks_completadas:
     - "Detecção e prevenção de duplicidade (CNPJ, nome de produto)"
     - "Correção de paginação para permitir mudança de itens por página"
 
+tasks_em_andamento:
+  windows_compatibility:
+    - "Desenvolvimento de solução para instalação no Windows"
+    - "Criação de scripts batch para contornar problemas do Prisma"
+    - "Documentação de instalação manual para Windows"
+    - "Testes de compatibilidade em ambiente Windows"
+
 issues_conhecidas:
+  windows_incompatibility:
+    - descricao: "Erro de instalação do Prisma no Windows"
+      detalhes: >  
+        O Prisma tenta acessar o caminho 'node_modules\node_modules\prisma\build\index.js' durante a instalação,
+        resultando em erro 'MODULE_NOT_FOUND'. Este é um problema conhecido com monorepos usando Yarn Workspaces
+        em ambiente Windows.
+      possivel_solucao: >  
+        Instalar o Prisma CLI globalmente e executar os comandos diretamente na pasta /packages/backend,
+        ou usar npm em vez de yarn para pacotes individuais.
+      status: "crítico, bloqueando instalação no ambiente Windows"
+
+    - descricao: "Problemas com scripts batch no Windows"
+      detalhes: >  
+        Os scripts batch criados para resolver o problema do Prisma estão tendo problemas de execução no Windows.
+        O erro comum é 'antes foi inesperado neste momento', indicando problemas de sintaxe ou caracteres especiais.
+      possivel_solucao: >  
+        Reescrever os scripts batch com sintaxe mais simples, sem caracteres especiais ou acentos, e garantir
+        que estejam salvos com codificação ANSI ou UTF-8 sem BOM.
+      status: "em andamento"
+
   melhorias_funcionais:
     - "Validação de horários de pedido (dias e horários permitidos)"
     - "Limites de quantidade por produto nos pedidos"

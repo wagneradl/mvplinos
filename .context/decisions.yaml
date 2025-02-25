@@ -1,4 +1,31 @@
 decisoes_tecnicas:
+  windows_compatibility:
+    - decisao: "Criar scripts de compatibilidade para Windows"
+      motivo: "Garantir que o sistema funcione corretamente em ambiente Windows do cliente"
+      status: "parcialmente implementado"
+      detalhes: >
+        Foram criados múltiplos scripts (setup.ps1, setup.bat, fix-prisma.bat, fix-windows-v2.bat) para tentar
+        resolver o problema de compatibilidade do Prisma com Windows, especialmente o problema de resolução
+        de módulos em monorepos com Yarn Workspaces. O problema principal é que o Prisma tenta encontrar seu
+        módulo em um caminho incorreto com 'node_modules' duplicado.
+    
+    - decisao: "Abordagem alternativa para instalação no Windows"
+      motivo: "Contornar problemas de resolução de módulos do Prisma no Windows"
+      status: "em andamento"
+      detalhes: >
+        A abordagem alternativa envolve instalar o Prisma CLI globalmente e usar uma instalação local
+        direta no pacote de backend, evitando o sistema de monorepo do Yarn para o Prisma. Esta 
+        solução está em desenvolvimento, mas ainda não foi completamente bem-sucedida devido a
+        dificuldades com a execução de scripts batch no Windows.
+    
+    - decisao: "Documentação detalhada para instalação manual"
+      motivo: "Fornecer instruções claras para contornar problemas no Windows"
+      status: "implementado"
+      detalhes: >
+        Foi criado um arquivo README-WINDOWS.md com instruções detalhadas para instalação manual
+        e solução de problemas comuns no ambiente Windows. Este guia inclui dicas para resolver
+        problemas específicos do Prisma.
+
   backend_recente:
     - decisao: "Servir imagens estaticamente no backend"
       motivo: "Garantir acesso a logos e outros recursos estáticos nos PDFs gerados"

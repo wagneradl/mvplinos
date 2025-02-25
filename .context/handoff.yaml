@@ -1,24 +1,31 @@
 estado_atual:
   descricao: >
-    O sistema está completamente finalizado para entrega do MVP, com todas as funcionalidades
-    críticas implementadas e testadas. Todos os problemas bloqueantes foram resolvidos, incluindo
-    os seguintes:  
+    O sistema está completamente implementado e funcional em ambientes macOS/Linux, com todas as
+    funcionalidades críticas do MVP implementadas e testadas. O principal desafio atual é garantir
+    a compatibilidade com o ambiente Windows do cliente, onde estamos enfrentando dificuldades com
+    a instalação do Prisma.
     
-    1. A exibição correta de clientes na lista suspensa da página de relatórios.
-    2. Os problemas com filtros de data na geração de relatórios, especificamente o problema
-       onde pedidos feitos no dia 24 não apareciam quando o filtro era de 23 a 24.
-    3. A exibição apenas de pedidos ativos nos relatórios para métricas mais precisas,
-       excluindo pedidos cancelados.
-       
-    Principais aspectos do estado atual:
+    Estado do sistema:
+    
+    - Backend: 100% implementado e funcional (testado em Unix-like)
+    - Frontend: 100% implementado e funcional (testado em Unix-like)
+    - Funcionalidades do MVP: 100% implementadas
+    - Compatibilidade Windows: Em progresso (bloqueador atual)
+    
+    Problema crítico atual:
+    O Prisma está tendo problemas com a resolução de módulos no Windows, tentando acessar um caminho
+    incorreto com node_modules duplicado (node_modules\node_modules\prisma). Foram criados vários
+    scripts para tentar resolver isso, mas ainda sem sucesso total.
+    
+    Principais aspectos do sistema (funcionalidades completas):
     
     - Backend com todos os endpoints necessários implementados e validados
     - Frontend com todas as telas e funcionalidades previstas no MVP
     - Sistema de relatórios funcionando corretamente 
-    - Filtros de data usando a mesma solução robusta em todas as telas
-    - Tratamento consistente de pedidos cancelados que continuam visíveis com status diferenciado
+    - Filtros de data usando solução robusta em todas as telas
+    - Tratamento consistente de pedidos cancelados com status diferenciado
     - Sistema de feedback aprimorado com notificações e validações claras
-    - Documentação atualizada
+    - Documentação técnica atualizada
 
   problemas_corrigidos:
     - descricao: "Problemas com exibição de logos no sistema e PDFs"
@@ -203,16 +210,43 @@ estado_atual:
 
 proximos_passos:
   prioridade_1:
+    - "Resolver problema de instalação do Prisma no Windows"
+      detalhes: >
+        A abordagem mais promissora parece ser criar um script simplificado que:
+        1. Abandone o monorepo para instalação do Prisma
+        2. Instale o Prisma diretamente em packages/backend
+        3. Use o npx para comandos Prisma dentro do contexto correto
+        
+        O script deve ser extremamente simples, sem caracteres especiais ou formatação complexa,
+        salvo com codificação ANSI para compatibilidade máxima com Windows.
+        
+    - "Criar instruções de instalação totalmente manual"
+      detalhes: >
+        Como último recurso, preparar um documento passo a passo para instalação manual sem
+        scripts, executando cada comando manualmente no CMD do Windows:
+        1. Navegar até /packages/backend
+        2. Executar "npm i -g prisma"
+        3. Executar "prisma generate"
+        4. Executar "prisma migrate deploy"
+        5. Voltar a /packages/frontend
+        6. Completar passos de instalação manualmente
+        
+    - "Verificar alternativas de implantação"
+      detalhes: >
+        Considerar formas alternativas de implantação:
+        1. Docker: Executar em container no Windows (isola problemas de ambiente)
+        2. WSL: Usar o Subsistema Windows para Linux para executar o ambiente Unix
+        3. VM Linux: Executar em máquina virtual Linux no Windows
+
+  prioridade_2:
     - "Implementar automação de testes para as novas funções de filtragem por data"
     - "Avaliar o sistema em condições de maior volume de dados"
     - "Implementar estratégia de backup automático e repblicação"
 
-  prioridade_2:
+  prioridade_3:
     - "Desenvolver dashboard visual para indicadores de vendas"
     - "Implementar sistema de notificações em tempo real"
     - "Melhorar responsividade em dispositivos móveis"
-
-  prioridade_3:
     - "Implementar integração com API externa para validação de CNPJ"
     - "Desenvolver sistema de autenticação e autorização"
     - "Otimizar queries para grandes volumes de dados"
@@ -281,6 +315,28 @@ problemas_corrigidos:
       - "packages/backend/src/pedidos/pedidos.service.ts"
 
 pontos_atencao:
+  compatibilidade_windows:
+    - "Problema estrutural com o monorepo e Prisma no Windows"
+      detalhes: >
+        A estrutura de monorepo usando Yarn Workspaces causa problemas específicos no Windows com
+        a instalação do Prisma. O problema principal é a duplicação do caminho node_modules, onde
+        o Prisma tenta encontrar seus arquivos em 'node_modules\node_modules\prisma\build\index.js'
+        em vez de 'node_modules\prisma\build\index.js'. Este é um problema conhecido com Prisma
+        em ambientes Windows com monorepos.
+        
+    - "Problemas de scripts batch no Windows"
+      detalhes: >
+        Os scripts batch criados para resolver o problema estão enfrentando problemas de interpretação
+        no Windows. O erro "antes foi inesperado neste momento" sugere problemas com a codificação do
+        arquivo, caracteres especiais ou sintaxe complexa demais para o cmd/PowerShell no Windows.
+        
+    - "Soluções alternativas para implantação"
+      detalhes: >
+        Em último caso, considerar alternativas como Docker, WSL ou VM Linux para isolar o ambiente
+        e evitar os problemas específicos do Windows. Especialmente o WSL (Windows Subsystem for Linux)
+        poderia ser uma boa solução intermediária, permitindo executar o sistema em um ambiente
+        Linux dentro do Windows.
+
   aspectos_criticos:
     - "Monitorar o desempenho do filtro por datas com maior volume de dados"
     - "Verificar se as soluções de filtragem por data continuam eficientes para intervalos maiores"
@@ -303,79 +359,83 @@ pontos_atencao:
     - "Considerar a implementação de logs de auditoria para ações críticas"
 
 contexto_tecnico:
-  frontend:
-    framework: "Next.js 13"
-    validacao: "Zod + React Hook Form"
-    estado: "React Query"
-    ui: "Material-UI"
-    logs: "Logger personalizado + console"
+  tecnologias:
+    frontend: "Next.js 13 com Material-UI e React Query"
+    backend: "NestJS com Prisma ORM"
+    banco_dados: "SQLite"
+    validacao: "Zod (frontend) e class-validator (backend)"
+    geracao_pdf: "Puppeteer"
+  
+  dependencias_criticas:
+    - dependencia: "Prisma ORM"
+      versao: "5.0.0"
+      observacoes: >
+        Principal problema de compatibilidade no Windows. A versão utilizada tem problemas conhecidos
+        com monorepos (Yarn Workspaces) em ambiente Windows, causando falha na instalação devido a
+        problemas de caminho com `node_modules` duplicado.
+      
+    - dependencia: "React Query"
+      versao: "latest"
+      observacoes: >
+        Usado para gerenciamento de estado e caching de requests no frontend. Nenhum problema conhecido,
+        mas atenção à invalidacao de cache após operações CRUD para manter a UI sincronizada.
 
-  backend:
-    framework: "NestJS"
-    orm: "Prisma"
-    banco: "SQLite"
-    validacao: "class-validator"
+  manual_windows:
+    titulo: "Instruções para instalação manual em Windows"
+    descricao: >
+      Se os scripts automatizados continuarem falhando, estas instruções manuais podem ajudar a contornar
+      o problema com o Prisma no Windows:
+      
+      1. Descomprima o código-fonte em um diretório local
+      2. Abra o Command Prompt (CMD) como administrador
+      3. Navegue até o diretório do projeto
+      4. Execute: `npm install -g prisma typescript ts-node`
+      5. Navegue até a pasta backend: `cd packages\backend`
+      6. Execute: `npm init -y`
+      7. Execute: `npm install prisma@5.0.0 @prisma/client@5.0.0`
+      8. Execute: `npx prisma generate`
+      9. Execute: `npx prisma migrate deploy`
+      10. Crie as pastas necessárias: 
+          - `mkdir uploads`
+          - `mkdir uploads\pdfs`
+          - `mkdir uploads\static`
+      11. Copie a logo (se existir): `copy src\assets\images\logo.png uploads\static\logo.png`
+      12. Navegue até a pasta raiz: `cd ..\..\ `
+      13. Instale as dependências do frontend: `cd packages\frontend && npm install`
+      14. Volte à pasta raiz: `cd ..\..\ `
+      15. Inicie o backend: `cd packages\backend && npm run dev`
+      16. Em outra janela CMD, inicie o frontend: `cd packages\frontend && npm run dev`
+      17. Acesse o sistema no navegador: http://localhost:3000
 
-  ferramentas:
-    - "ESLint"
-    - "Prettier"
-    - "Jest"
-    - "SuperTest"
+  alternativas_implantacao:
+    - solucao: "Docker"
+      descricao: >
+        Criar containers Docker para backend e frontend, eliminando problemas de ambiente.
+        Isso isola o ambiente de execução e evita problemas de sistema operacional.
+        
+    - solucao: "Windows Subsystem for Linux (WSL)"
+      descricao: >
+        Usar o WSL2 no Windows para executar o projeto em um ambiente Linux dentro do Windows.
+        É uma solução eficiente e integrada ao Windows que elimina os problemas de compatibilidade.
+        
+    - solucao: "Arquivo executavel standalone"
+      descricao: >
+        Em futuras versões, considerar empacotar o aplicativo como um executável standalone para Windows
+        usando ferramentas como pkg ou electron, eliminando a necessidade de instalação manual.
 
-  recursos:
-    documentacao:
-      - "README.md em cada package"
-      - "Documentação técnica em .context/"
-      - "Swagger/OpenAPI para APIs"
-
-    logs:
-      - "Console do navegador para erros frontend"
-      - "Logs do NestJS para backend"
-      - "Logs do Prisma para queries"
-      - "Sistema de logs personalizado para diagnóstico"
-
-data_handoff: "2025-02-25T15:30:00-03:00"
+data_handoff: "2025-02-25T18:30:00-03:00"
 autor: "Claude"
-status: "finalizado"
+status: "em andamento"
 observacoes: >
-  Corrigido o problema de desalinhamento visual nos dados do cliente no PDF de pedidos,
-  substituindo a estrutura baseada em grid por uma tabela HTML com estilos consistentes.
-  Isso garante que os dados do cliente estejam perfeitamente alinhados com o restante
-  do documento, proporcionando uma apresentação profissional e uniforme.
+  Sistema completo e funcional em ambientes Unix-like, com todas as funcionalidades previstas 
+  implementadas e testadas. O principal desafio pendente é a compatibilidade com Windows, onde 
+  o Prisma está tendo problemas com a estrutura de monorepo. Foram criados vários scripts para 
+  tentar resolver o problema, mas ainda sem sucesso completo.
   
-  Além das melhorias de feedback e validações, foram implementadas as seguintes correções:
+  Recomendo fortemente considerar alternativas como WSL ou Docker para a implantação em 
+  ambiente Windows, já que estas abordagens contornariam completamente o problema de 
+  compatibilidade do Prisma. A solução WSL é particularmente interessante por ser 
+  nativa do Windows e não exigir configurações complexas.
   
-  1. Pedidos cancelados permanecem na lista, apenas com status diferenciado 
-  2. Adicionada a capacidade de filtrar pedidos por status (ATIVO/CANCELADO)
-  3. Corrigido o problema de notificações duplicadas na criação de pedidos e no cancelamento de pedidos
-  4. Melhorada a funcionalidade de "Copiar Pedido" para permitir edição antes da criação
-  5. Completamente refeito o sistema de filtro por datas usando SQL nativo para garantir compatibilidade
-     absoluta independentemente de formatos ou timezones
-  6. Corrigido o sistema de paginação para permitir exibir 5, 10 ou 25 itens por página corretamente
-  7. Corrigido o problema de clientes não aparecendo na lista suspensa da página de relatórios
-  8. Corrigido o problema onde pedidos feitos no dia 24 só apareciam em relatórios quando a data final era 25
-  9. Implementado filtro para excluir pedidos cancelados dos relatórios
-  10. Implementada a exportação de relatórios em PDF para fins de cobrança
-  11. Implementada a funcionalidade de restauração de produtos excluídos (soft-deleted)
-  
-  A funcionalidade de "Copiar Pedido" agora carrega os dados na tela de novo pedido,
-  permitindo que o usuário edite os dados antes de confirmar a criação, o que
-  proporciona uma experiência mais flexível e intuitiva.
-  
-  Todos os pedidos, incluindo os cancelados, agora são exibidos na lista de pedidos e 
-  podem ser filtrados por status, o que permite aos usuários uma melhor organização e
-  visualização completa do histórico de pedidos. Isso facilita o acompanhamento e análise
-  de todos os pedidos, independentemente de seu status atual.
-  
-  As correções nos filtros de data tanto na tela de pedidos quanto na tela de relatórios agora utilizam
-  a mesma abordagem robusta, que gera uma lista de todas as datas no intervalo selecionado e cria consultas
-  OR para cada uma dessas datas, garantindo a inclusão de todos os pedidos independentemente de problemas
-  com timezone ou formato. Esta melhoria é crucial pois evita que pedidos feitos no próprio dia final
-  selecionado possam ser perdidos nos resultados.
-  
-  Os relatórios agora também filtram apenas os pedidos com status ATIVO, o que proporciona métricas
-  mais precisas sobre as vendas efetivas, excluindo os pedidos cancelados que poderiam distorcer
-  os números de vendas reais.
-  
-  O próximo passo é focar na otimização de queries do Prisma para listagens e implementação 
-  de testes para as novas validações e tratamentos de erro.
+  As funcionalidades do sistema estão 100% implementadas, e com a solução do problema
+  de compatibilidade Windows, o sistema estará pronto para uso produtivo.
