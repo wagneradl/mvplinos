@@ -1048,3 +1048,11 @@
 2025-02-25T10:40:40.263113Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2025-02-25T10:46:24.456963Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("setup.ps1")}
 2025-02-25T10:46:24.457022Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-25T11:10:43.178764Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("setup.ps1")}
+2025-02-25T11:10:43.179762Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-25T11:11:27.164513Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("start-windows.bat")}
+2025-02-25T11:11:27.164576Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-25T11:11:49.464480Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README-WINDOWS.md")}
+2025-02-25T11:11:49.464538Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-02-25T11:11:57.664619Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-windows.bat")}
+2025-02-25T11:11:57.664716Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
