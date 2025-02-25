@@ -4,16 +4,47 @@ Write-Host "========================================================"
 Write-Host "      Instalação do Sistema Lino's Panificadora         "
 Write-Host "========================================================"
 
-# Verificar Node.js
-$nodeVersion = node -v 2>$null
-if ($nodeVersion) {
-    Write-Host "Versão do Node.js: $nodeVersion"
+# Função para verificar se um programa está instalado
+function Test-CommandExists {
+    param ([string]$Command)
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    $commandExists = Get-Command $Command -ErrorAction Stop
+    $ErrorActionPreference = $oldPreference
+    return $commandExists -ne $null
+}
+
+# Verificar se o Node.js está instalado
+if (-not (Test-CommandExists node)) {
+    Write-Host "`nNode.js não encontrado! Instalando Node.js..."
+    
+    # Baixar o instalador do Node.js
+    $nodeInstaller = "node-setup.msi"
+    Invoke-WebRequest -Uri "https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi" -OutFile $nodeInstaller
+
+    # Executar o instalador silenciosamente
+    Write-Host "`nInstalando Node.js..."
+    Start-Process msiexec.exe -ArgumentList "/i $nodeInstaller /quiet /norestart" -Wait
+
+    # Remover o instalador após a instalação
+    Remove-Item $nodeInstaller -Force
+
+    # Adicionar Node.js ao PATH
+    $env:Path += ";C:\Program Files\nodejs\"
+
+    # Verificar instalação
+    if (Test-CommandExists node) {
+        Write-Host "Node.js instalado com sucesso!"
+    } else {
+        Write-Host "Erro ao instalar o Node.js. Tente instalar manualmente."
+        exit 1
+    }
+} else {
+    $nodeVersion = node -v
+    Write-Host "`nVersão do Node.js encontrada: $nodeVersion"
     if ($nodeVersion -notmatch "^v20") {
         Write-Host "AVISO: Recomendado Node.js v20.x LTS. Versão atual: $nodeVersion"
     }
-} else {
-    Write-Host "ERRO: Node.js não encontrado. Certifique-se de que está instalado."
-    exit 1
 }
 
 # Instalar dependências
