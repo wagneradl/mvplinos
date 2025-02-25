@@ -1,13 +1,50 @@
 #!/bin/bash
 
-# Definir o diretório de trabalho para o backend
-BACKEND_DIR="packages/backend"
-
 # Função para exibir mensagens de erro
 error_exit() {
     echo "Erro: $1" >&2
     exit 1
 }
+
+# Função para instalar dependências do sistema
+install_system_deps() {
+    echo "Instalando dependências do sistema..."
+    
+    # Tentar identificar o gerenciador de pacotes
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update
+        sudo apt-get install -y sqlite3 build-essential curl
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y sqlite sqlite-devel gcc-c++ make
+    elif command -v brew &> /dev/null; then
+        brew install sqlite
+    else
+        error_exit "Nenhum gerenciador de pacotes compatível encontrado. Instale sqlite3 manualmente."
+    fi
+}
+
+# Instalar Node.js e Yarn se não estiverem instalados
+install_node_yarn() {
+    # Verificar Node.js
+    if ! command -v node &> /dev/null; then
+        echo "Instalando Node.js..."
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -
+        sudo apt-get install -y nodejs
+    fi
+
+    # Verificar Yarn
+    if ! command -v yarn &> /dev/null; then
+        echo "Instalando Yarn..."
+        npm install -g yarn
+    fi
+}
+
+# Verificar e instalar dependências
+install_system_deps
+install_node_yarn
+
+# Definir o diretório de trabalho para o backend
+BACKEND_DIR="packages/backend"
 
 # Verificar se está no diretório correto
 if [ ! -d "$BACKEND_DIR" ]; then
@@ -47,6 +84,10 @@ fi
 echo "Instalando dependências do backend..."
 yarn install || error_exit "Falha ao instalar dependências"
 
+# Atualizar Prisma para a última versão
+echo "Atualizando Prisma..."
+yarn add prisma@latest @prisma/client@latest || error_exit "Falha ao atualizar Prisma"
+
 # Gerar cliente Prisma
 echo "Gerando cliente Prisma..."
 npx prisma generate || error_exit "Falha ao gerar cliente Prisma"
@@ -55,11 +96,11 @@ npx prisma generate || error_exit "Falha ao gerar cliente Prisma"
 echo "Aplicando migrações do banco de dados..."
 npx prisma migrate deploy || error_exit "Falha ao aplicar migrações"
 
-# Verificar se o banco de dados foi criado
+# Verificar banco de dados
 DB_PATH="./dev.db"
 if [ ! -s "$DB_PATH" ]; then
-    # Tentar criar o banco de dados manualmente se estiver vazio
-    sqlite3 "$DB_PATH" ".databases" || error_exit "Falha ao verificar/criar banco de dados SQLite"
+    echo "Criando banco de dados SQLite..."
+    sqlite3 "$DB_PATH" "SELECT 'Banco de dados criado com sucesso'" || error_exit "Falha ao criar banco de dados SQLite"
 fi
 
 echo "Instalação do backend concluída com sucesso!"
@@ -74,6 +115,17 @@ yarn install || error_exit "Falha ao instalar dependências do frontend"
 
 echo "Instalação completa do sistema Lino's Panificadora!"
 
-# Listar conteúdo do banco de dados para debug
-echo "Conteúdo do banco de dados:"
-sqlite3 "$BACKEND_DIR/dev.db" ".tables"
+# Gerar relatório de status
+echo "Gerando relatório de instalação..."
+{
+    echo "=== Relatório de Instalação ==="
+    echo "Data: $(date)"
+    echo "Node.js: $(node --version)"
+    echo "Yarn: $(yarn --version)"
+    echo "Prisma: $(npx prisma --version)"
+    echo "SQLite: $(sqlite3 --version)"
+    echo "=== Fim do Relatório ==="
+} > ../wsl-installation-report.txt
+
+# Mostrar relatório
+cat ../wsl-installation-report.txt
