@@ -19,8 +19,7 @@ services:
         value: /var/data/pdfs
       - key: UPLOADS_PATH
         value: /var/data
-      - key: JWT_SECRET
-        fromGroup: linos-secrets
+      - fromGroup: linos-secrets
     disk:
       name: data
       mountPath: /var/data
@@ -45,5 +44,4 @@ envVarGroups:
   - name: linos-secrets
     envVars:
       - key: JWT_SECRET
-        value: "change-me-to-a-secure-secret-in-production"
         generateValue: true
