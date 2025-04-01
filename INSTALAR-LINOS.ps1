@@ -67,17 +67,27 @@ function Check-Virtualization {
 # Função para verificar WSL
 function Check-WSL {
     try {
-        $wslVersion = wsl --status
-        
-        if ($wslVersion -match "WSL versão: 2") {
-            Write-Host "`n[OK] WSL2 já está instalado e configurado." -ForegroundColor Green
-            return $true
-        } else {
-            Write-Host "`n[AVISO] WSL está instalado, mas pode não estar na versão 2." -ForegroundColor Yellow
-            wsl --set-default-version 2
-            Write-Host "WSL2 definido como versão padrão." -ForegroundColor Green
-            return $true
+        # Primeiro tentamos com --status que funciona em versões mais recentes
+        try {
+            $wslVersion = wsl --status
+            if ($wslVersion -match "WSL versão: 2") {
+                Write-Host "`n[OK] WSL2 já está instalado e configurado." -ForegroundColor Green
+                return $true
+            }
+        } catch {
+            # Se falhar, tentamos verificar usando --list --verbose
+            $wslList = wsl --list --verbose 2>$null
+            if ($wslList -and $wslList -match "2") {
+                Write-Host "`n[OK] WSL2 já está instalado e configurado." -ForegroundColor Green
+                return $true
+            }
         }
+
+        # Se chegou aqui, o WSL está instalado mas pode não estar na versão 2
+        Write-Host "`n[AVISO] WSL está instalado, mas pode não estar na versão 2." -ForegroundColor Yellow
+        wsl --set-default-version 2
+        Write-Host "WSL2 definido como versão padrão." -ForegroundColor Green
+        return $true
     } catch {
         Write-Host "`n[INFO] WSL não está instalado ou configurado." -ForegroundColor Yellow
         return $false
@@ -87,9 +97,38 @@ function Check-WSL {
 # Função para verificar Ubuntu
 function Check-Ubuntu {
     try {
-        $wslList = wsl --list
+        # Tentamos diferentes formas de listar as distribuições
+        $wslList = $null
         
+        # Primeiro método: wsl --list
+        try {
+            $wslList = wsl --list
+        } catch {
+            # Se falhar, tentamos com wsl -l
+            try {
+                $wslList = wsl -l
+            } catch {
+                # Não conseguimos listar as distros
+                Write-Host "`n[INFO] Não foi possível verificar distribuições WSL." -ForegroundColor Yellow
+                return $false
+            }
+        }
+        
+        # Verificar se Ubuntu está na lista
         if ($wslList -match "Ubuntu") {
+            # Verificar se é possível acessar o Ubuntu
+            try {
+                $ubuntuTest = wsl -d Ubuntu -e echo "Ubuntu OK" 2>$null
+                if ($ubuntuTest -match "Ubuntu OK") {
+                    Write-Host "`n[OK] Distribuição Ubuntu encontrada e acessível no WSL." -ForegroundColor Green
+                    return $true
+                }
+            } catch {
+                # Ubuntu existe mas pode ter problemas
+                Write-Host "`n[AVISO] Ubuntu encontrado, mas pode não estar configurado corretamente." -ForegroundColor Yellow
+                return $true
+            }
+            
             Write-Host "`n[OK] Distribuição Ubuntu encontrada no WSL." -ForegroundColor Green
             return $true
         } else {

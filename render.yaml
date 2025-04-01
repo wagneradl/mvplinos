@@ -1,0 +1,49 @@
+services:
+  # Backend Service
+  - type: web
+    name: linos-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: yarn workspace @linos/backend install && yarn workspace @linos/backend prisma generate && yarn workspace @linos/backend build
+    startCommand: cd packages/backend && yarn cloud:full-setup && yarn start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        value: file:/var/data/linos-panificadora.db
+      - key: PDF_STORAGE_PATH
+        value: /var/data/pdfs
+      - key: UPLOADS_PATH
+        value: /var/data
+      - key: JWT_SECRET
+        fromGroup: linos-secrets
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+
+  # Frontend Service
+  - type: web
+    name: linos-frontend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: yarn workspace @linos/frontend install && yarn workspace @linos/frontend build
+    startCommand: cd packages/frontend && yarn start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://linos-backend.onrender.com
+
+envVarGroups:
+  - name: linos-secrets
+    envVars:
+      - key: JWT_SECRET
+        value: "change-me-to-a-secure-secret-in-production"
+        generateValue: true

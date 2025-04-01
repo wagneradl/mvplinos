@@ -42,6 +42,10 @@ sudo npm install -g yarn
 # Navegar para a pasta do Windows onde está o código
 cd /mnt/c/caminho/para/Linos/MVP7
 
+# Corrigir problemas do Prisma
+chmod +x ./scripts/fix-prisma.sh
+./scripts/fix-prisma.sh
+
 # Instalar dependências e iniciar
 yarn install
 yarn dev

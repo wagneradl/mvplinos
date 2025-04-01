@@ -27,10 +27,10 @@ Se você encontrar problemas com o método automatizado, siga estas etapas manua
 3. Abra um Prompt de Comando como Administrador
 4. Navegue até a pasta do projeto: `cd caminho\para\pasta`
 5. Instale as dependências: `yarn install`
-6. Configure o banco de dados:
+6. Configure o banco de dados e corrija problemas do Prisma:
    ```
+   .\scripts\fix-prisma.bat
    cd packages\backend
-   npx prisma generate
    npx prisma migrate deploy
    cd ..\..
    ```

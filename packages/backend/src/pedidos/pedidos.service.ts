@@ -115,7 +115,7 @@ export class PedidosService {
             data_pedido: dataPedido,
             valor_total: valorTotal,
             status: PedidoStatus.ATIVO,
-            caminho_pdf: '', // Será atualizado após gerar o PDF
+            pdf_path: '', // Será atualizado após gerar o PDF
             itensPedido: {
               create: produtosInfo,
             }
@@ -136,7 +136,7 @@ export class PedidosService {
         // Atualizar o pedido com o caminho do PDF
         return await tx.pedido.update({
           where: { id: pedido.id },
-          data: { caminho_pdf: pdfPath },
+          data: { pdf_path: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
@@ -367,7 +367,7 @@ export class PedidosService {
         // Atualizar o pedido com o caminho do PDF
         return await this.prisma.pedido.update({
           where: { id },
-          data: { caminho_pdf: pdfPath },
+          data: { pdf_path: pdfPath },
           include: {
             cliente: true,
             itensPedido: {
@@ -480,7 +480,7 @@ export class PedidosService {
         throw new BadRequestException('Não é possível atualizar um pedido cancelado');
       }
 
-      const item = await this.prisma.itensPedido.findFirst({
+      const item = await this.prisma.itemPedido.findFirst({
         where: { id: itemId, pedido_id: pedidoId },
         include: {
           produto: true
@@ -499,7 +499,7 @@ export class PedidosService {
       // Atualizar item e recalcular valores
       const valor_total_item = Number((quantidade * item.preco_unitario).toFixed(2));
 
-      const itemAtualizado = await this.prisma.itensPedido.update({
+      const itemAtualizado = await this.prisma.itemPedido.update({
         where: { id: itemId },
         data: {
           quantidade,
@@ -555,11 +555,11 @@ export class PedidosService {
       throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
     }
 
-    if (!pedido.caminho_pdf) {
+    if (!pedido.pdf_path) {
       throw new NotFoundException(`PDF do pedido com ID ${id} não encontrado`);
     }
 
-    const fullPath = join(process.cwd(), pedido.caminho_pdf);
+    const fullPath = join(process.cwd(), pedido.pdf_path);
     if (!existsSync(fullPath)) {
       throw new NotFoundException(`Arquivo PDF do pedido com ID ${id} não encontrado no sistema`);
     }

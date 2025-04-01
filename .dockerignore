@@ -1,0 +1,50 @@
+# Dependências
+node_modules
+.pnp
+.pnp.js
+
+# Arquivos de build
+dist
+build
+out
+.next
+.turbo
+
+# Arquivos de teste
+coverage
+coverage-integration
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor e sistema
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Debug
+.pnpm-debug.log*
+
+# Diretórios de cache
+.eslintcache
+.parcel-cache
+
+# Outros
+.git
+.github

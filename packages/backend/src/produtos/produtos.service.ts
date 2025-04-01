@@ -237,7 +237,7 @@ export class ProdutosService {
       await this.findOne(id);
 
       // Verificar se o produto está sendo usado em algum pedido
-      const pedidoComProduto = await this.prisma.itensPedido.findFirst({
+      const pedidoComProduto = await this.prisma.itemPedido.findFirst({
         where: {
           produto_id: id,
           pedido: {

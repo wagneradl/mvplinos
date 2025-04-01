@@ -26,7 +26,12 @@
     "start:prod:cluster": "pm2 start ecosystem.config.js --env production",
     "start:prod:cluster:dev": "pm2 start ecosystem.config.js --env development",
     "start:prod:cluster:staging": "pm2 start ecosystem.config.js --env staging",
-    "start:prod:cluster:prod": "pm2 start ecosystem.config.js --env production"
+    "start:prod:cluster:prod": "pm2 start ecosystem.config.js --env production",
+    "cloud:backup": "ts-node src/scripts/backup/cloud-backup.ts",
+    "cloud:setup": "prisma generate && prisma migrate deploy",
+    "cloud:init": "yarn prisma generate && yarn prisma migrate deploy && ts-node prisma/seed.ts",
+    "cloud:setup-static": "node ../../scripts/cloud/setup-static.js",
+    "cloud:full-setup": "node ../../scripts/cloud/full-setup.js"
   },
   "dependencies": {
     "@linos/shared": "*",

@@ -23,8 +23,35 @@ mkdir -p "${BACKEND_DIR}/uploads/static"
 # Função para verificar se um processo está rodando na porta
 check_port() {
     local port=$1
-    lsof -i :$port -t > /dev/null 2>&1
-    return $?
+    
+    # Primeiro tenta com lsof
+    if command -v lsof > /dev/null 2>&1; then
+        lsof -i :$port -t > /dev/null 2>&1
+        return $?
+    fi
+    
+    # Se lsof não estiver disponível, tenta com netstat
+    if command -v netstat > /dev/null 2>&1; then
+        netstat -tuln | grep ":$port " > /dev/null 2>&1
+        return $?
+    fi
+    
+    # Se netstat não estiver disponível, tenta com ss
+    if command -v ss > /dev/null 2>&1; then
+        ss -tuln | grep ":$port " > /dev/null 2>&1
+        return $?
+    fi
+    
+    # Se nenhuma ferramenta estiver disponível, vamos instalar o lsof
+    echo -e "${YELLOW}Nenhuma ferramenta para verificação de portas encontrada. Instalando lsof...${NC}"
+    if command -v apt-get > /dev/null 2>&1; then
+        sudo apt-get update -qq && sudo apt-get install -y lsof > /dev/null 2>&1
+        lsof -i :$port -t > /dev/null 2>&1
+        return $?
+    fi
+    
+    # Se não conseguir instalar, assume que a porta está livre
+    return 1
 }
 
 # Banner

@@ -1,6 +1,6 @@
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -14,7 +14,7 @@ model Produto {
   tipo_medida    String
   status         String
   deleted_at     DateTime?
-  itensPedido    ItensPedido[]
+  itensPedido    ItemPedido[]
 }
 
 model Cliente {
@@ -35,13 +35,13 @@ model Pedido {
   data_pedido DateTime
   status      String
   valor_total Float
-  caminho_pdf String
+  pdf_path String
   deleted_at  DateTime?
   cliente     Cliente      @relation(fields: [cliente_id], references: [id])
-  itensPedido ItensPedido[]
+  itensPedido ItemPedido[]
 }
 
-model ItensPedido {
+model ItemPedido {
   id               Int      @id @default(autoincrement())
   pedido_id        Int
   produto_id       Int

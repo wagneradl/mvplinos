@@ -9,14 +9,23 @@ import { ptBR } from 'date-fns/locale';
 @Injectable()
 export class PdfService implements OnModuleInit {
   private readonly logger = new Logger(PdfService.name);
-  private readonly pdfDir = join(process.cwd(), 'uploads', 'pdfs');
-  private readonly logoPath = join(process.cwd(), 'uploads', 'static', 'logo.png');
+  private readonly pdfDir: string;
+  private readonly logoPath: string;
   private readonly isTest = process.env.NODE_ENV === 'test';
+
+  constructor() {
+    // Usar variáveis de ambiente para os caminhos ou fallback para os valores padrão
+    const pdfStoragePath = process.env.PDF_STORAGE_PATH || join(process.cwd(), 'uploads', 'pdfs');
+    const uploadsPath = process.env.UPLOADS_PATH || join(process.cwd(), 'uploads');
+
+    this.pdfDir = pdfStoragePath;
+    this.logoPath = join(uploadsPath, 'static', 'logo.png');
+  }
 
   async onModuleInit() {
     // Garantir que os diretórios necessários existem
     await mkdir(this.pdfDir, { recursive: true });
-    await mkdir(join(process.cwd(), 'uploads', 'static'), { recursive: true });
+    await mkdir(join(this.pdfDir, '..', 'static'), { recursive: true });
     
     this.logger.log(`Diretórios inicializados: ${this.pdfDir}`);
     this.logger.log(`Logo path: ${this.logoPath}`);
@@ -48,7 +57,9 @@ export class PdfService implements OnModuleInit {
         const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
         writeFileSync(pdfPath, emptyPDF);
         
-        return `uploads/pdfs/pedido-${pedidoData.id}.pdf`;
+        // Retornar caminho relativo compatível com onde o serviço web espera
+        const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+        return relativePath;
       }
       
       browser = await puppeteer.launch({ 
@@ -291,8 +302,8 @@ export class PdfService implements OnModuleInit {
       
       this.logger.log(`PDF gerado com sucesso para pedido ${pedidoData.id}-${timestamp}`);
       
-      // Retorna o caminho relativo para salvar no banco
-      return `uploads/pdfs/pedido-${pedidoData.id}-${timestamp}.pdf`;
+      // Retornar caminho relativo
+      return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
     } catch (error) {
       this.logger.error(`Erro ao gerar PDF para pedido ${pedidoData?.id}:`, error);
       throw error;
@@ -318,7 +329,8 @@ export class PdfService implements OnModuleInit {
         const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
         writeFileSync(pdfPath, emptyPDF);
         
-        return `uploads/pdfs/relatorio-${timestamp}.pdf`;
+        // Retornar caminho relativo
+        return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
       }
       
       browser = await puppeteer.launch({ 
@@ -558,8 +570,8 @@ export class PdfService implements OnModuleInit {
       
       this.logger.log(`PDF do relatório gerado com sucesso: ${timestamp}`);
       
-      // Retorna o caminho relativo para salvar no banco
-      return `uploads/pdfs/relatorio-${timestamp}.pdf`;
+      // Retornar caminho relativo
+      return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
     } catch (error) {
       this.logger.error('Erro ao gerar PDF para relatório:', error);
       throw error;

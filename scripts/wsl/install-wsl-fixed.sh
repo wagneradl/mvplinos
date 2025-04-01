@@ -198,7 +198,14 @@ EOL
     # Verificar banco de dados
     DB_PATH="./prisma/dev.db"
     if [ ! -s "$DB_PATH" ]; then
+        # Verificar se o diretório prisma existe
+        if [ ! -d "./prisma" ]; then
+            mkdir -p "./prisma"
+            echo -e "${YELLOW}⚠️ Diretório prisma criado${NC}"
+        fi
+        
         echo -e "${YELLOW}⚠️ Banco de dados vazio. Fazendo seed...${NC}"
+        npx prisma migrate deploy || error_exit "Falha ao aplicar migrações do banco de dados"
         npx prisma db seed || error_exit "Falha ao realizar seed do banco de dados"
     else
         echo -e "${GREEN}✓ Banco de dados já existente${NC}"

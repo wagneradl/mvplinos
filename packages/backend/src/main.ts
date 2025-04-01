@@ -1,38 +1,50 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
   
-  // Configurar diretório de uploads para ser servido estaticamente
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
-  });
-  
-  // Configurar diretório de assets para ser servido estaticamente
-  app.useStaticAssets(join(__dirname, 'assets', 'images'), {
-    prefix: '/images',
-  });
-  
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    transformOptions: { enableImplicitConversion: true }
-  }));
+  // Habilitando CORS
   app.enableCors();
+  
+  // Configurando validação global
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  }));
 
+  // Configurando acesso a arquivos estáticos
+  // Determinar o caminho correto com base nas variáveis de ambiente
+  const uploadsPath = process.env.UPLOADS_PATH 
+    ? join(process.env.UPLOADS_PATH) 
+    : join(process.cwd(), 'uploads');
+
+  app.use('/uploads', express.static(uploadsPath));
+  
+  // Configurando Swagger para documentação da API
   const config = new DocumentBuilder()
-    .setTitle("Lino's Padaria API")
-    .setDescription('API do sistema de gestão de pedidos')
+    .setTitle('Lino\'s Panificadora API')
+    .setDescription('API para gestão da padaria Lino\'s')
     .setVersion('1.0')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT || 3001);
+  // Porta a ser usada pelo servidor
+  const port = process.env.PORT || 3001;
+  
+  await app.listen(port);
+  
+  console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Documentação Swagger disponível em: http://localhost:${port}/api`);
+  console.log(`Variáveis de ambiente: NODE_ENV=${process.env.NODE_ENV}`);
+  console.log(`Diretório de uploads: ${uploadsPath}`);
 }
+
 bootstrap();

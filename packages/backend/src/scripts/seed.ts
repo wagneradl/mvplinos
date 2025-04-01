@@ -61,7 +61,7 @@ async function seed() {
         data_pedido: new Date(),
         status: 'ATIVO',
         valor_total: valorTotal,
-        caminho_pdf: '',
+        pdf_path: '',
         itensPedido: {
           create: itensPedido,
         },
