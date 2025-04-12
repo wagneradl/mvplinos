@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 jest.mock('@prisma/client');
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 
 describe('create-admin script', () => {
   let mockPrismaClient: any;
