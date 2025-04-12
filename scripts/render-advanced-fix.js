@@ -59,15 +59,30 @@ function makeComponentSSRSafe(filePath) {
       return;
     }
 
-    // Pular o arquivo de layout do login para evitar conflito com metadata
-    if (filePath.includes('/login/layout.tsx')) {
-      console.log(`Pulando ${filePath} para evitar conflito com exportação metadata`);
+    // Log para debug de todos os arquivos sendo processados
+    console.log(`Processando arquivo: ${filePath}`);
+
+    // Múltiplas abordagens para detectar o arquivo de layout do login
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    if (
+      normalizedPath.endsWith('/src/app/login/layout.tsx') || 
+      normalizedPath.includes('/app/login/layout.tsx') ||
+      normalizedPath.includes('login/layout.tsx') ||
+      normalizedPath.match(/login[\\/]layout\.tsx$/)
+    ) {
+      console.log(`### IMPORTANTE: Pulando ${filePath} para evitar conflito com exportação metadata ###`);
       return;
     }
 
     const content = fs.readFileSync(filePath, 'utf8');
     const fileName = path.basename(filePath);
     const componentName = path.basename(filePath, path.extname(filePath));
+    
+    // Verificação adicional - se for layout e tiver metadata, pular
+    if (fileName === 'layout.tsx' && content.includes('export const metadata')) {
+      console.log(`### IMPORTANTE: Pulando ${filePath} por conter 'export const metadata' ###`);
+      return;
+    }
     
     // Verifica se o arquivo já foi modificado para SSR
     if (content.includes('use client') || content.includes('// SSR Safe')) {
