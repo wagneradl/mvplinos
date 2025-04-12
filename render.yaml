@@ -5,8 +5,8 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn workspace @linos/backend install && yarn workspace @linos/backend prisma generate && yarn workspace @linos/backend build
-    startCommand: cd packages/backend && yarn cloud:full-setup && yarn start:prod
+    buildCommand: yarn install && cd packages/backend && npx prisma generate && yarn build
+    startCommand: cd packages/backend && node dist/main
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -31,7 +31,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn workspace @linos/frontend install && yarn workspace @linos/frontend build
+    buildCommand: yarn install && cd packages/frontend && yarn build
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
