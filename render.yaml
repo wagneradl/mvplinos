@@ -31,7 +31,12 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-proper-fix.js
+    buildCommand: >
+      yarn install --ignore-scripts &&
+      cd packages/frontend &&
+      yarn add --dev @types/react@18.2.12 @types/react-dom@18.2.5 &&
+      cd ../.. &&
+      node scripts/render-frontend-proper-fix.js
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
