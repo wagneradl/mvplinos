@@ -13,19 +13,6 @@ function logSection(title) {
   console.log('='.repeat(80));
 }
 
-// Função para instalar pacotes de tipos necessários
-function installTypePackages() {
-  console.log('Instalando pacotes de tipos necessários...');
-  try {
-    execSync('yarn add --dev @types/react@18.2.12 @types/react-dom@18.2.5', { stdio: 'inherit' });
-    console.log('Pacotes de tipos instalados com sucesso!');
-    return true;
-  } catch (error) {
-    console.error('Erro ao instalar pacotes de tipos:', error);
-    return false;
-  }
-}
-
 // Função para adicionar exportação default a um arquivo se ainda não existir
 function addDefaultExportIfNeeded(filePath, componentName) {
   try {
@@ -71,7 +58,13 @@ try {
   console.log('Diretório atual: ' + process.cwd());
   
   // Verificar e instalar pacotes de tipos necessários
-  installTypePackages();
+  logSection('Instalando pacotes de tipos necessários');
+  try {
+    execSync('yarn add --dev typescript@5.0.4 @types/react@18.2.12 @types/react-dom@18.2.5', { stdio: 'inherit' });
+    console.log('Pacotes de tipos instalados com sucesso!');
+  } catch (error) {
+    console.error('Erro ao instalar pacotes de tipos:', error);
+  }
   
   // Corrigir o tsconfig.json para garantir que o alias @/ esteja corretamente configurado
   logSection('Corrigindo configuração de TypeScript');
@@ -166,7 +159,6 @@ const nextConfig = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src'),
     };
-    config.ignoreWarnings = [/export .* was not found in/];
     return config;
   },
   async redirects() {
@@ -271,11 +263,12 @@ export default function handler(
   // Build com flags para ignorar erros
   console.log('Executando build...');
   try {
-    execSync('NODE_OPTIONS="--max_old_space_size=4096" NEXT_TELEMETRY_DISABLED=1 NEXT_SKIP_TYPECHECKING=1 next build', { 
+    execSync('NODE_OPTIONS="--max_old_space_size=4096" NEXT_TELEMETRY_DISABLED=1 yarn next build', { 
       stdio: 'inherit',
       env: { 
         ...process.env, 
         NEXT_TYPECHECK: 'false', 
+        NEXT_SKIP_TYPECHECKING: '1',
         TSC_COMPILE_ON_ERROR: 'true'
       }
     });
@@ -283,64 +276,33 @@ export default function handler(
     logSection('BUILD CONCLUÍDO COM SUCESSO');
     console.log('Frontend corrigido preservando a estrutura original!');
   } catch (buildError) {
-    console.error('Erro durante o build normal, tentando build com --no-check');
-    // Tentar build com --no-check para ignorar completamente TypeScript
-    execSync('NODE_OPTIONS="--max_old_space_size=4096" NEXT_TELEMETRY_DISABLED=1 npx next build --no-check', {
-      stdio: 'inherit'
-    });
+    console.error('\n\nERRO DURANTE O BUILD DO FRONTEND:');
+    console.error(buildError);
     
-    logSection('BUILD COM --NO-CHECK CONCLUÍDO COM SUCESSO');
-    console.log('Frontend construído ignorando verificações de tipo!');
+    // Adicionar fallback conservador
+    try {
+      logSection('TENTANDO ABORDAGEM ALTERNATIVA');
+      console.log('Usando NODE_ENV=production para build');
+      
+      execSync('NODE_ENV=production NODE_OPTIONS="--max_old_space_size=4096" NEXT_TELEMETRY_DISABLED=1 yarn next build', { 
+        stdio: 'inherit',
+        env: { 
+          ...process.env,
+          NODE_ENV: 'production',
+          NEXT_TYPECHECK: 'false', 
+          NEXT_SKIP_TYPECHECKING: '1',
+          TSC_COMPILE_ON_ERROR: 'true'
+        }
+      });
+      
+      logSection('BUILD ALTERNATIVO CONCLUÍDO COM SUCESSO');
+    } catch (fallbackError) {
+      console.error('Erro no build alternativo:', fallbackError);
+      process.exit(1);
+    }
   }
 } catch (error) {
-  console.error('\n\nERRO DURANTE O BUILD DO FRONTEND:');
+  console.error('\n\nERRO GERAL:');
   console.error(error);
-  
-  // Adicionar fallback mais conservador que mantém a estrutura original
-  try {
-    logSection('TENTANDO MEDIDA DE EMERGÊNCIA');
-    console.log('Criando .env.production.local para forçar TypeScript a ignorar erros');
-    
-    // Criar arquivo .env.production.local com configurações para ignorar erros
-    fs.writeFileSync(
-      path.join(process.cwd(), '.env.production.local'),
-      'NEXT_SKIP_TYPECHECKING=1\nNEXT_TYPECHECK=false\nTSC_COMPILE_ON_ERROR=true\n'
-    );
-    
-    // Atualizar o next.config.js para ser mais permissivo
-    const emergencyNextConfig = `
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
-  webpack: (config) => {
-    // Fazer webpack ignorar erros de importação
-    config.ignoreWarnings = [/export .* was not found in/];
-    return config;
-  }
-}
-module.exports = nextConfig
-`;
-    fs.writeFileSync(path.join(process.cwd(), 'next.config.js'), emergencyNextConfig);
-    
-    // Instalar pacotes de tipos necessários novamente
-    console.log('Reinstalando pacotes de tipos necessários...');
-    try {
-      execSync('yarn add --dev @types/react@18.2.12 @types/react-dom@18.2.5', { stdio: 'inherit' });
-    } catch (typeError) {
-      console.error('Erro ao instalar pacotes de tipos, continuando mesmo assim:', typeError);
-    }
-    
-    // Tentar build com --no-check como último recurso
-    console.log('Tentando build com --no-check como medida de emergência...');
-    execSync('NODE_OPTIONS="--max_old_space_size=4096" NEXT_TELEMETRY_DISABLED=1 npx next build --no-check', { 
-      stdio: 'inherit', 
-      env: { ...process.env, NEXT_TYPECHECK: 'false', TSC_COMPILE_ON_ERROR: 'true' } 
-    });
-    
-    logSection('BUILD DE EMERGÊNCIA CONCLUÍDO');
-  } catch (fallbackError) {
-    console.error('Erro no build de emergência:', fallbackError);
-    process.exit(1);
-  }
+  process.exit(1);
 }

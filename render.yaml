@@ -34,7 +34,7 @@ services:
     buildCommand: >
       yarn install --ignore-scripts &&
       cd packages/frontend &&
-      yarn add --dev @types/react@18.2.12 @types/react-dom@18.2.5 &&
+      yarn add --dev typescript@5.0.4 @types/react@18.2.12 @types/react-dom@18.2.5 &&
       cd ../.. &&
       node scripts/render-frontend-proper-fix.js
     startCommand: cd packages/frontend && yarn start
