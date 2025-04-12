@@ -6,7 +6,6 @@ import {
   Button, 
   TextField, 
   Typography, 
-  Container, 
   Paper, 
   Alert,
   CircularProgress
@@ -14,6 +13,7 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { LockOutlined } from '@mui/icons-material';
+import { LoginContainer } from '@/components/LoginContainer';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -57,11 +57,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <LoginContainer>
       <Paper 
         elevation={3} 
         sx={{ 
-          mt: 8, 
           p: 4, 
           display: 'flex', 
           flexDirection: 'column', 
@@ -154,10 +153,10 @@ export default function LoginPage() {
       
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} Lino's Panificadora. Todos os direitos reservados.
+          {new Date().getFullYear()} Lino's Panificadora. Todos os direitos reservados.
         </Typography>
       </Box>
-    </Container>
+    </LoginContainer>
   );
 }
 
