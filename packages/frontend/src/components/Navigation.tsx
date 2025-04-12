@@ -16,11 +16,16 @@ import {
   Typography,
   useTheme,
   Divider,
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
 } from '@mui/material';
-import {Menu as MenuIcon, Home as HomeIcon, ShoppingCart as PedidosIcon, Inventory as ProdutosIcon, People as ClientesIcon, Assessment as RelatoriosIcon, Add as AddIcon, Dashboard as DashboardIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import {Menu as MenuIcon, Home as HomeIcon, ShoppingCart as PedidosIcon, Inventory as ProdutosIcon, People as ClientesIcon, Assessment as RelatoriosIcon, Add as AddIcon, Dashboard as DashboardIcon, Settings as SettingsIcon, Logout as LogoutIcon, Person as PersonIcon, SupervisorAccount as AdminIcon } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Breadcrumbs } from './Breadcrumbs';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DRAWER_WIDTH = 240;
 
@@ -55,8 +60,10 @@ const menuItems = [
 export function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const pathname = usePathname();
   const theme = useTheme();
+  const { usuario, logout, isAuthenticated } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -64,6 +71,19 @@ export function Navigation() {
   
   const handleExpandClick = (text: string) => {
     setExpandedItem(expandedItem === text ? null : text);
+  };
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  const handleLogout = () => {
+    handleCloseUserMenu();
+    logout();
   };
 
   const drawer = (
@@ -259,16 +279,11 @@ export function Navigation() {
 
   return (
     <>
-      <AppBar
-        position="fixed"
-        elevation={1}
-        sx={{
-          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { sm: `${DRAWER_WIDTH}px` },
-          bgcolor: 'white',
-          color: 'text.primary',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
         }}
       >
         <Toolbar>
@@ -281,18 +296,73 @@ export function Navigation() {
           >
             <MenuIcon />
           </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-              {/* Título da página atual baseado na rota */}
-              {pathname === '/' ? 'Início' : 
-               pathname === '/pedidos/novo' ? 'Novo Pedido' : 
-               pathname.startsWith('/pedidos/') ? 'Detalhes do Pedido' :
-               pathname === '/pedidos' ? 'Pedidos' :
-               pathname === '/produtos' ? 'Produtos' :
-               pathname === '/clientes' ? 'Clientes' :
-               pathname === '/relatorios' ? 'Relatórios' : 'Lino\'s Panificadora'}
-            </Typography>
+          
+          <Box sx={{ flexGrow: 1 }}>
+            <Breadcrumbs />
           </Box>
+
+          {isAuthenticated && usuario && (
+            <Box sx={{ flexShrink: 0 }}>
+              <Tooltip title="Abrir opções de perfil">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Avatar 
+                    sx={{ 
+                      bgcolor: theme.palette.secondary.main,
+                      color: theme.palette.secondary.contrastText
+                    }}
+                  >
+                    {usuario.nome.charAt(0).toUpperCase()}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {usuario.nome}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {usuario.papel.nome}
+                  </Typography>
+                </Box>
+                <Divider />
+                <MenuItem onClick={handleCloseUserMenu} component={Link} href="/perfil">
+                  <ListItemIcon>
+                    <PersonIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Meu Perfil</ListItemText>
+                </MenuItem>
+                {usuario.papel.nome === 'Administrador' && (
+                  <MenuItem onClick={handleCloseUserMenu} component={Link} href="/usuarios">
+                    <ListItemIcon>
+                      <AdminIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Gerenciar Usuários</ListItemText>
+                  </MenuItem>
+                )}
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Sair</ListItemText>
+                </MenuItem>
+              </Menu>
+            </Box>
+          )}
         </Toolbar>
       </AppBar>
 

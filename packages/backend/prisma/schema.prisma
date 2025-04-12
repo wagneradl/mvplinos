@@ -10,6 +10,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Usuario {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  email      String    @unique
+  senha      String
+  papel_id   Int
+  status     String    @default("ativo")
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  papel      Papel     @relation(fields: [papel_id], references: [id])
+}
+
+model Papel {
+  id              Int       @id @default(autoincrement())
+  nome            String    @unique
+  descricao       String
+  permissoes      String    // JSON com as permissões (ex: {"clientes": "read,write", "produtos": "read"})
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  usuarios        Usuario[]
+}
+
 model Cliente {
   id            Int       @id @default(autoincrement())
   cnpj          String    @unique

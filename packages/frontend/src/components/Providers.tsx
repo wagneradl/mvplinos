@@ -10,6 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
 import { theme } from '@/theme';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,7 +45,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 horizontal: 'right',
               }}
             >
-              {children}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
             </SnackbarProvider>
           </LocalizationProvider>
         </ThemeProvider>

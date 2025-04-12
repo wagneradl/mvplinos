@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: yarn install --ignore-scripts && node scripts/render-postinstall.js && node scripts/render-backend-build.js
-    startCommand: cd packages/backend && node dist/main
+    startCommand: cd packages/backend && npx prisma migrate deploy && npx prisma generate && npx ts-node prisma/seed.ts && node dist/main
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
