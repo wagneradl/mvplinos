@@ -73,3 +73,6 @@ export function useSnackbar() {
     closeSnackbar,
   };
 }
+
+// Adicionar exportação default para compatibilidade
+export default useSnackbar;

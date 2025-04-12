@@ -90,3 +90,6 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
   
   return returnValue;
 }
+
+// Adicionar exportação default sem remover a exportação nomeada para manter compatibilidade
+export default useClientes;

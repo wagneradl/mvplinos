@@ -81,3 +81,6 @@ export function useProdutos(page = 1, limit = 10, status?: string, search?: stri
     reativarProduto,
   };
 }
+
+// Adicionar exportação default para compatibilidade
+export default useProdutos;

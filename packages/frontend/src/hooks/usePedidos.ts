@@ -212,3 +212,9 @@ export function useRelatorio(filtros: {
     downloadPdf,
   };
 }
+
+// Adicionar exportações default para compatibilidade
+export default usePedidos;
+// Também adicionamos exportações default para outras funções no arquivo
+export const usePedidoDefault = usePedido;
+export const useRelatorioDefault = useRelatorio;

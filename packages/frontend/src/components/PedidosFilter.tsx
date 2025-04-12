@@ -153,3 +153,6 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
     </Paper>
   );
 }
+
+// Adicionar exportação default para compatibilidade
+export default PedidosFilter;

@@ -22,3 +22,6 @@ export function useRelatorios({
     enabled,
   });
 }
+
+// Adicionar exportação default para compatibilidade
+export default useRelatorios;

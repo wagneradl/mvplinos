@@ -20,3 +20,6 @@ export function PageContainer({ title, actions, children }: PageContainerProps) 
     </>
   );
 }
+
+// Adicionar exportação default sem remover a exportação nomeada para manter compatibilidade
+export default PageContainer;

@@ -31,7 +31,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-build-fix.js
+    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-proper-fix.js
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
@@ -44,7 +44,9 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
       - key: NODE_OPTIONS
-        value: "--max_old_space_size=2048"
+        value: "--max_old_space_size=4096"
+      - key: TSC_COMPILE_ON_ERROR
+        value: "true"
 
 envVarGroups:
   - name: linos-secrets

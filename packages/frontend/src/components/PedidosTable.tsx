@@ -201,3 +201,6 @@ export function PedidosTable({
     </>
   );
 }
+
+// Adicionar exportação default para compatibilidade
+export default PedidosTable;

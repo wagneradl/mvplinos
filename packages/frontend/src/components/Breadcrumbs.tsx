@@ -74,3 +74,6 @@ export function Breadcrumbs() {
     </MuiBreadcrumbs>
   );
 }
+
+// Adicionar exportação default para compatibilidade
+export default Breadcrumbs;
