@@ -36,5 +36,8 @@
   "prisma": {
     "schema": "prisma/schema.prisma"
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.19",
+  "dependencies": {
+    "glob": "^11.0.1"
+  }
 }
