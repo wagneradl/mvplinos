@@ -31,7 +31,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-build.js
+    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-build-fix.js
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
@@ -41,6 +41,10 @@ services:
         value: https://linos-backend.onrender.com
       - key: NEXT_SKIP_TYPECHECKING
         value: "1"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NODE_OPTIONS
+        value: "--max_old_space_size=2048"
 
 envVarGroups:
   - name: linos-secrets
