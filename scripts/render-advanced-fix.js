@@ -57,9 +57,16 @@ function makeComponentSSRSafe(filePath) {
     // Logs explícitos para depuração
     console.log('\n\n👉 Analisando arquivo:', filePath);
 
-    // CONDIÇÃO FORÇADA - Ignorar qualquer arquivo com login/layout.tsx no caminho
-    if (filePath && filePath.toLowerCase().includes('login/layout.tsx') || 
-        filePath && filePath.toLowerCase().includes('login\\layout.tsx')) {
+    // VERIFICAÇÃO CORRIGIDA - com lógica segura para nulos e mais clara
+    const lowerPath = filePath?.toLowerCase() || '';
+    
+    // Verifica várias possíveis formas de incluir login/layout.tsx no caminho
+    if (
+      lowerPath.includes('/login/layout.tsx') ||
+      lowerPath.includes('\\login\\layout.tsx') ||
+      lowerPath.includes('login/layout.tsx') ||
+      lowerPath.includes('login\\layout.tsx')
+    ) {
       console.log(`🛑 FORÇANDO IGNORAR login/layout.tsx: ${filePath}`);
       return;
     }
@@ -73,6 +80,19 @@ function makeComponentSSRSafe(filePath) {
     const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
     console.log('🔎 Caminho normalizado:', normalizedPath);
 
+    // Verificação por conteúdo - primeiro para garantir que seja feita
+    const content = fs.readFileSync(filePath, 'utf8');
+    const fileName = path.basename(filePath);
+    const componentName = path.basename(filePath, path.extname(filePath));
+    
+    console.log('📄 Analisando conteúdo do arquivo:', fileName);
+    
+    // VERIFICAÇÃO APRIMORADA - qualquer arquivo layout com metadata NUNCA deve receber 'use client'
+    if (fileName === 'layout.tsx' && content.includes('export const metadata')) {
+      console.log(`🔒 PROTEÇÃO CRÍTICA: Pulando ${filePath} por conter 'export const metadata'`);
+      return;
+    }
+    
     // Múltiplas abordagens para detectar o arquivo de layout do login
     if (
       normalizedPath.endsWith('/src/app/login/layout.tsx') || 
@@ -81,18 +101,6 @@ function makeComponentSSRSafe(filePath) {
       normalizedPath.match(/login[\\/]layout\.tsx$/)
     ) {
       console.log(`### IMPORTANTE: Pulando ${filePath} para evitar conflito com exportação metadata ###`);
-      return;
-    }
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    const fileName = path.basename(filePath);
-    const componentName = path.basename(filePath, path.extname(filePath));
-    
-    console.log('📄 Analisando conteúdo do arquivo:', fileName);
-    
-    // Verificação adicional - se for layout e tiver metadata, pular
-    if (fileName === 'layout.tsx' && content.includes('export const metadata')) {
-      console.log(`### IMPORTANTE: Pulando ${filePath} por conter 'export const metadata' ###`);
       return;
     }
     
