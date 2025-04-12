@@ -54,16 +54,26 @@ function addDefaultExport(filePath, componentName) {
 // Função para fazer componentes com segurança de SSR usando dynamic imports
 function makeComponentSSRSafe(filePath) {
   try {
-    if (!fs.existsSync(filePath)) {
-      console.log(`Arquivo ${filePath} não encontrado. Pulando.`);
+    // Logs explícitos para depuração
+    console.log('\n\n👉 Analisando arquivo:', filePath);
+
+    // CONDIÇÃO FORÇADA - Ignorar qualquer arquivo com login/layout.tsx no caminho
+    if (filePath && filePath.toLowerCase().includes('login/layout.tsx') || 
+        filePath && filePath.toLowerCase().includes('login\\layout.tsx')) {
+      console.log(`🛑 FORÇANDO IGNORAR login/layout.tsx: ${filePath}`);
       return;
     }
 
-    // Log para debug de todos os arquivos sendo processados
-    console.log(`Processando arquivo: ${filePath}`);
+    if (!fs.existsSync(filePath)) {
+      console.log(`❌ Arquivo ${filePath} não encontrado. Pulando.`);
+      return;
+    }
+
+    // Normalizar o caminho e logar
+    const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
+    console.log('🔎 Caminho normalizado:', normalizedPath);
 
     // Múltiplas abordagens para detectar o arquivo de layout do login
-    const normalizedPath = filePath.replace(/\\/g, '/');
     if (
       normalizedPath.endsWith('/src/app/login/layout.tsx') || 
       normalizedPath.includes('/app/login/layout.tsx') ||
@@ -78,6 +88,8 @@ function makeComponentSSRSafe(filePath) {
     const fileName = path.basename(filePath);
     const componentName = path.basename(filePath, path.extname(filePath));
     
+    console.log('📄 Analisando conteúdo do arquivo:', fileName);
+    
     // Verificação adicional - se for layout e tiver metadata, pular
     if (fileName === 'layout.tsx' && content.includes('export const metadata')) {
       console.log(`### IMPORTANTE: Pulando ${filePath} por conter 'export const metadata' ###`);
@@ -86,15 +98,18 @@ function makeComponentSSRSafe(filePath) {
     
     // Verifica se o arquivo já foi modificado para SSR
     if (content.includes('use client') || content.includes('// SSR Safe')) {
-      console.log(`Arquivo ${filePath} já é seguro para SSR. Pulando.`);
+      console.log(`✓ Arquivo ${filePath} já é seguro para SSR. Pulando.`);
       return;
     }
+    
+    // Log antes de modificar o arquivo
+    console.log(`⚠️ Nenhuma regra de exceção aplicada para ${filePath} — seguirá para inserção de use client.`);
     
     // Adiciona 'use client' diretiva no topo do arquivo se for um componente
     if (filePath.includes('/components/') && !content.startsWith('\'use client\'')) {
       const newContent = '\'use client\';\n\n// SSR Safe - Modificado para funcionar com Next.js SSR\n' + content;
       fs.writeFileSync(filePath, newContent);
-      console.log(`Adicionado 'use client' diretiva em ${filePath}`);
+      console.log(`✅ Adicionado 'use client' diretiva em ${filePath}`);
     }
     
     // Adiciona verificações de segurança para hooks de dados no lado do cliente
@@ -104,11 +119,11 @@ function makeComponentSSRSafe(filePath) {
         content.includes('useState') ||
         content.includes('useEffect')
       )) {
-      console.log(`Processando hook ${componentName} para segurança SSR...`);
+      console.log(`🔄 Processando hook ${componentName} para segurança SSR...`);
       addDefaultExport(filePath, componentName);
     }
   } catch (error) {
-    console.error(`Erro ao processar ${filePath}:`, error);
+    console.error(`❌ Erro ao processar ${filePath}:`, error);
   }
 }
 
