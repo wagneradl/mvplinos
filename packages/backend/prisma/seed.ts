@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   // Limpar dados existentes
   console.log('Limpando dados existentes...');
-  await prisma.itensPedido.deleteMany();
+  await prisma.itemPedido.deleteMany();
   await prisma.pedido.deleteMany();
   await prisma.produto.deleteMany();
   await prisma.cliente.deleteMany();
