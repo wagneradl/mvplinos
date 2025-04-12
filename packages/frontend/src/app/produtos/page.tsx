@@ -1,5 +1,8 @@
 'use client';
 
+// Força renderização no lado do cliente, evitando SSG/SSR
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import {
   Box,
@@ -33,12 +36,20 @@ export default function ProdutosPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const queryClient = useQueryClient();
-  const { produtos, meta, isLoading, deletarProduto, reativarProduto } = useProdutos(
+  
+  // Valores padrão seguros para evitar erros de referência
+  const { 
+    produtos = [], 
+    meta = { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, 
+    isLoading = false, 
+    deletarProduto, 
+    reativarProduto 
+  } = useProdutos(
     page + 1, 
     rowsPerPage,
     statusFilter,
     searchTerm
-  );
+  ) || { produtos: [], meta: { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, isLoading: true };
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -57,7 +68,7 @@ export default function ProdutosPage() {
     }
   };
   
-  const handleReactivate = async (id: number) => {
+  const handleReativar = async (id: number) => {
     if (window.confirm('Tem certeza que deseja reativar este produto?')) {
       await reativarProduto(id);
       // Força uma nova busca após reativar
@@ -74,6 +85,37 @@ export default function ProdutosPage() {
     setSearchTerm(event.target.value);
     setPage(0); // Resetar para a primeira página ao mudar a busca
   };
+
+  // Renderização segura - verifica se os dados estão disponíveis
+  if (isLoading) {
+    return (
+      <PageContainer title="Produtos">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </PageContainer>
+    );
+  }
+
+  // Verificação adicional de segurança
+  if (!produtos) {
+    return (
+      <PageContainer title="Produtos">
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '50vh', 
+          flexDirection: 'column' 
+        }}>
+          <Typography variant="h6" gutterBottom>
+            Carregando dados...
+          </Typography>
+          <CircularProgress />
+        </Box>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer
@@ -126,91 +168,83 @@ export default function ProdutosPage() {
         </Grid>
       </Box>
       
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nome</TableCell>
-                  <TableCell>Tipo</TableCell>
-                  <TableCell align="right">Preço</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {produtos.map((produto) => (
-                  <TableRow key={produto.id}>
-                    <TableCell>{produto.nome}</TableCell>
-                    <TableCell>{produto.tipo_medida}</TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(produto.preco_unitario)}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={produto.status}
-                        color={produto.status === 'ativo' ? 'success' : 'error'}
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Nome</TableCell>
+              <TableCell>Tipo</TableCell>
+              <TableCell align="right">Preço</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Ações</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {produtos.map((produto) => (
+              <TableRow key={produto.id}>
+                <TableCell>{produto.nome}</TableCell>
+                <TableCell>{produto.tipo_medida}</TableCell>
+                <TableCell align="right">
+                  {formatCurrency(produto.preco_unitario)}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={produto.status}
+                    color={produto.status === 'ativo' ? 'success' : 'error'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  {/* Botão de editar sempre aparece */}
+                  <Tooltip title="Editar">
+                    <IconButton
+                      component={Link}
+                      href={`/produtos/${produto.id}/editar`}
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  
+                  {/* Botão de inativar/reativar dependendo do status */}
+                  {produto.status === 'ativo' ? (
+                    <Tooltip title="Inativar">
+                      <IconButton
+                        onClick={() => handleDelete(produto.id)}
                         size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      {/* Botão de editar sempre aparece */}
-                      <Tooltip title="Editar">
-                        <IconButton
-                          component={Link}
-                          href={`/produtos/${produto.id}/editar`}
-                          size="small"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      {/* Botão de inativar/reativar dependendo do status */}
-                      {produto.status === 'ativo' ? (
-                        <Tooltip title="Inativar">
-                          <IconButton
-                            onClick={() => handleDelete(produto.id)}
-                            size="small"
-                            color="error"
-                          >
-                            <BlockIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="Reativar">
-                          <IconButton
-                            onClick={() => handleReactivate(produto.id)}
-                            size="small"
-                            color="success"
-                          >
-                            <CheckCircleIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={meta?.itemCount ?? 0}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25]}
-            labelRowsPerPage="Itens por página"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-          />
-        </>
-      )}
+                        color="error"
+                      >
+                        <BlockIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Reativar">
+                      <IconButton
+                        onClick={() => handleReativar(produto.id)}
+                        size="small"
+                        color="success"
+                      >
+                        <CheckCircleIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        component="div"
+        count={meta?.itemCount ?? 0}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25]}
+        labelRowsPerPage="Itens por página"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+      />
     </PageContainer>
   );
 }

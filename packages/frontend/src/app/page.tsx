@@ -1,5 +1,8 @@
 'use client';
 
+// Força renderização no lado do cliente, evitando SSG/SSR
+export const dynamic = 'force-dynamic';
+
 import { useMemo } from 'react';
 import { 
   Box, 
@@ -34,17 +37,17 @@ export default function DashboardPage() {
   const dataInicio = format(subDays(hoje, 7), 'yyyy-MM-dd');
   const dataFim = format(hoje, 'yyyy-MM-dd');
 
-  // Hooks para buscar dados
-  const { pedidos, isLoading: isLoadingPedidos } = usePedidos({
+  // Hooks para buscar dados com valores padrão seguros
+  const { pedidos = [], isLoading: isLoadingPedidos } = usePedidos({
     page: 1,
     limit: 5,
     filters: {
       status: 'ATIVO',
     },
-  });
+  }) || { pedidos: [], isLoading: true };
 
-  const { clientes, isLoading: isLoadingClientes } = useClientes(1, 100, 'ativo');
-  const { produtos, isLoading: isLoadingProdutos } = useProdutos(1, 100, 'ativo');
+  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100, 'ativo') || { clientes: [], isLoading: true };
+  const { produtos = [], isLoading: isLoadingProdutos } = useProdutos(1, 100, 'ativo') || { produtos: [], isLoading: true };
 
   // Calcular estatísticas
   const estatisticas = useMemo(() => {
@@ -68,6 +71,16 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Verificação adicional de segurança
+  if (!pedidos || !clientes || !produtos) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', flexDirection: 'column' }}>
+        <Typography variant="h6" gutterBottom>Carregando dados...</Typography>
         <CircularProgress />
       </Box>
     );
