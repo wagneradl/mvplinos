@@ -5,7 +5,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && node scripts/render-postinstall.js && cd packages/backend && npx prisma generate && yarn build
+    buildCommand: yarn install --ignore-scripts && node scripts/render-postinstall.js && node scripts/render-backend-build.js
     startCommand: cd packages/backend && node dist/main
     healthCheckPath: /health
     envVars:
@@ -31,7 +31,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && cd packages/frontend && yarn build
+    buildCommand: yarn install --ignore-scripts && node scripts/render-frontend-build.js
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
