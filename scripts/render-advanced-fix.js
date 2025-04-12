@@ -59,6 +59,12 @@ function makeComponentSSRSafe(filePath) {
       return;
     }
 
+    // Pular o arquivo de layout do login para evitar conflito com metadata
+    if (filePath.includes('/login/layout.tsx')) {
+      console.log(`Pulando ${filePath} para evitar conflito com exportação metadata`);
+      return;
+    }
+
     const content = fs.readFileSync(filePath, 'utf8');
     const fileName = path.basename(filePath);
     const componentName = path.basename(filePath, path.extname(filePath));
