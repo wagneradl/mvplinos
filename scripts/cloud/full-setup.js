@@ -5,6 +5,8 @@
 
 const { execSync } = require('child_process');
 const { setupStaticFiles } = require('./setup-static');
+const path = require('path');
+const fs = require('fs');
 
 async function fullSetup() {
   try {
@@ -12,11 +14,29 @@ async function fullSetup() {
     
     // Etapa 1: Gerar cliente Prisma
     console.log('\n📦 Gerando cliente Prisma...');
-    execSync('yarn prisma generate', { stdio: 'inherit' });
+    try {
+      execSync('npx prisma generate', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('Erro ao gerar cliente Prisma:', error);
+      console.log('Tentando com caminho alternativo...');
+      const prismaBin = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
+      if (fs.existsSync(prismaBin)) {
+        execSync(`${prismaBin} generate`, { stdio: 'inherit' });
+      } else {
+        console.error('Binário do Prisma não encontrado. Instalando Prisma...');
+        execSync('npm install prisma --no-save', { stdio: 'inherit' });
+        execSync('npx prisma generate', { stdio: 'inherit' });
+      }
+    }
     
     // Etapa 2: Aplicar migrações do banco de dados
     console.log('\n🗄️ Aplicando migrações do banco de dados...');
-    execSync('yarn prisma migrate deploy', { stdio: 'inherit' });
+    try {
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('Erro ao aplicar migrações:', error);
+      console.log('Verificando estrutura do banco...');
+    }
     
     // Etapa 3: Configurar arquivos estáticos
     console.log('\n🖼️ Configurando arquivos estáticos...');
@@ -28,7 +48,7 @@ async function fullSetup() {
     try {
       // Aqui poderíamos verificar se o banco já tem dados e só aplicar o seed se necessário
       // Por ora, vamos apenas notificar, mas não executar automaticamente para evitar duplicação
-      console.log('⚠️ Se necessário, execute o seed manualmente com: yarn seed');
+      console.log('⚠️ Se necessário, execute o seed manualmente com: npx ts-node prisma/seed.ts');
     } catch (error) {
       console.warn('⚠️ Erro ao verificar dados: ', error.message);
     }
