@@ -229,18 +229,25 @@ export default function NovoPedidoPage() {
       
       setIsSubmitting(true);
       const now = new Date().toISOString();
-      const pedido = {
-        ...data,
+      
+      // Estruturar o pedido de acordo com o esperado pelo backend
+      const pedidoData = {
+        cliente_id: data.cliente_id,
         data_pedido: now,
         valor_total: data.itens.reduce((total, item) => total + item.valor_total_item, 0),
+        status: 'ATIVO' as const, // Necessário para a tipagem Omit<Pedido, 'id'>
+        created_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
+        updated_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
         itensPedido: data.itens.map((item) => ({
-          ...item,
-          id: 0,
-          pedido_id: 0,
-          created_at: now,
-          updated_at: now,
-        })),
+          produto_id: item.produto_id,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_unitario,
+          valor_total_item: item.valor_total_item
+        }))
       };
+      
+      // Remover os campos que não devem ser enviados ao backend
+      const { status, created_at, updated_at, ...pedido } = pedidoData;
       
       console.log('Enviando pedido para criação:', pedido);
       await criarPedido(pedido);
