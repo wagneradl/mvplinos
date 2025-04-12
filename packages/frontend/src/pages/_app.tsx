@@ -1,3 +1,6 @@
+'use client';
+
+// SSR Safe - Modificado para funcionar com Next.js SSR
 import type { AppProps } from 'next/app';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';

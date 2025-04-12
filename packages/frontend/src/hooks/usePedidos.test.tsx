@@ -66,3 +66,7 @@ describe('usePedidos', () => {
     expect(PedidosService.repetirPedido).toHaveBeenCalledWith(1);
   });
 });
+
+
+// Adicionar exportação default para compatibilidade
+export default usePedidos.test;

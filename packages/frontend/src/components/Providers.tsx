@@ -55,3 +55,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </AppRouterCacheProvider>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default Providers;

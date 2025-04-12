@@ -1,3 +1,6 @@
+'use client';
+
+// SSR Safe - Modificado para funcionar com Next.js SSR
 import {
   Box,
   Button,
@@ -129,3 +132,7 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
     </Box>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default RelatorioVendas;

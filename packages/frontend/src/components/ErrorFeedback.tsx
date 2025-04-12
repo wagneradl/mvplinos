@@ -126,3 +126,7 @@ export function ErrorFeedback({
     </Collapse>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default ErrorFeedback;

@@ -430,3 +430,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     </Box>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default ClienteForm;

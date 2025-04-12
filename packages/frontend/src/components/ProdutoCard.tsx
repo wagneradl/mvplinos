@@ -1,3 +1,6 @@
+'use client';
+
+// SSR Safe - Modificado para funcionar com Next.js SSR
 import React, { useState } from 'react';
 import {
   Card,
@@ -94,3 +97,7 @@ export function ProdutoCard({ produto, onEdit, onDelete }: ProdutoCardProps) {
     </>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default ProdutoCard;

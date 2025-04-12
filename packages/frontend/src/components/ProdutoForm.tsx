@@ -349,3 +349,7 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
     </Box>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default ProdutoForm;

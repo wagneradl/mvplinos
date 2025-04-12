@@ -20,3 +20,7 @@ export function LoginContainer({ children }: { children: React.ReactNode }) {
     </Providers>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default LoginContainer;

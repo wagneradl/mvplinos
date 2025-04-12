@@ -404,3 +404,7 @@ export function Navigation() {
     </>
   );
 }
+
+
+// Adicionar exportação default para compatibilidade
+export default Navigation;
