@@ -193,6 +193,8 @@ try {
   const nextConfigPath = path.join(process.cwd(), 'next.config.js');
   const nextConfigContent = `
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
