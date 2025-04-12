@@ -231,11 +231,8 @@ export default function NovoPedidoPage() {
       const now = new Date().toISOString();
       const pedido = {
         ...data,
-        status: 'ATIVO' as const,
         data_pedido: now,
         valor_total: data.itens.reduce((total, item) => total + item.valor_total_item, 0),
-        created_at: now,
-        updated_at: now,
         itensPedido: data.itens.map((item) => ({
           ...item,
           id: 0,

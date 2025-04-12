@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface Usuario {
@@ -32,6 +32,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setUsuario(null);
+    setIsAuthenticated(false);
+    router.push('/login');
+    router.refresh(); // Força uma atualização completa da navegação
+  }, [router]);
+
   useEffect(() => {
     // Verificar se o usuário está autenticado ao carregar a página
     const token = localStorage.getItem('authToken');
@@ -49,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLoading(false);
-  }, []);
+  }, [logout]);
 
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
@@ -69,14 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUsuario(userData);
     setIsAuthenticated(true);
     router.push('/');
-  };
-
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    setUsuario(null);
-    setIsAuthenticated(false);
-    router.push('/login');
+    router.refresh(); // Força uma atualização completa da navegação
   };
 
   const hasPermission = (recurso: string, acao: string): boolean => {
