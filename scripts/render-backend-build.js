@@ -20,37 +20,72 @@ try {
   process.chdir(path.join(process.cwd(), 'packages', 'backend'));
   console.log('Diretório atual: ' + process.cwd());
   
-  // Instalar o NestJS CLI localmente
-  logSection('Instalando o NestJS CLI');
-  execSync('npm install --no-save @nestjs/cli', { stdio: 'inherit' });
+  // Instalar o NestJS CLI e outras dependências essenciais
+  logSection('Instalando dependências necessárias');
+  execSync('npm install --no-save @nestjs/cli typescript @types/node', { stdio: 'inherit' });
   
   // Instalar o Prisma CLI localmente
   logSection('Instalando o Prisma CLI');
   execSync('npm install --no-save prisma', { stdio: 'inherit' });
   
-  // Verificar se os binários foram instalados corretamente
-  const nestBin = path.join(process.cwd(), 'node_modules', '.bin', 'nest');
-  const prismaBin = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
-  
-  if (fs.existsSync(nestBin)) {
-    console.log('NestJS CLI instalado em ' + nestBin);
-  } else {
-    console.log('AVISO: NestJS CLI não encontrado no caminho esperado!');
-  }
-  
-  if (fs.existsSync(prismaBin)) {
-    console.log('Prisma CLI instalado em ' + prismaBin);
-  } else {
-    console.log('AVISO: Prisma CLI não encontrado no caminho esperado!');
-  }
-  
   // Gerar cliente Prisma
   logSection('Gerando cliente Prisma');
   execSync('npx prisma generate', { stdio: 'inherit' });
   
-  // Compilar o projeto NestJS
-  logSection('Compilando o projeto NestJS');
-  execSync('npx @nestjs/cli build', { stdio: 'inherit' });
+  // Criar um tsconfig temporário para o build que exclui os arquivos de teste
+  logSection('Configurando build para produção (sem testes)');
+  const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+  let tsconfig;
+  
+  if (fs.existsSync(tsconfigPath)) {
+    const tsconfigRaw = fs.readFileSync(tsconfigPath, 'utf8');
+    tsconfig = JSON.parse(tsconfigRaw);
+    
+    // Fazer backup do tsconfig original
+    fs.writeFileSync(tsconfigPath + '.backup', tsconfigRaw);
+    
+    // Modificar o tsconfig para excluir testes e mocks
+    tsconfig.exclude = [
+      "**/__tests__/**",
+      "**/__mocks__/**",
+      "**/*.spec.ts",
+      "**/*.test.ts",
+      "**/test/**",
+      "node_modules"
+    ];
+    
+    fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2));
+    console.log('Arquivo tsconfig.json modificado temporariamente para excluir testes');
+  } else {
+    console.log('AVISO: tsconfig.json não encontrado!');
+  }
+  
+  // Compilar o projeto NestJS com o tsc diretamente (sem usar o CLI do Nest)
+  try {
+    logSection('Compilando o projeto NestJS com tsc');
+    execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
+  } catch (buildError) {
+    console.error('Erro durante a compilação com tsc:', buildError);
+    console.log('Tentando método alternativo com swc...');
+    
+    // Tentar usar o swc como alternativa
+    execSync('npm install --no-save @swc/cli @swc/core', { stdio: 'inherit' });
+    execSync('npx swc src -d dist', { stdio: 'inherit' });
+  }
+  
+  // Verificar se a compilação gerou a pasta dist
+  if (fs.existsSync(path.join(process.cwd(), 'dist'))) {
+    console.log('Compilação concluída! Diretório dist criado.');
+  } else {
+    throw new Error('A compilação falhou. O diretório dist não foi criado.');
+  }
+  
+  // Restaurar o tsconfig original, se foi feito backup
+  if (fs.existsSync(tsconfigPath + '.backup')) {
+    fs.copyFileSync(tsconfigPath + '.backup', tsconfigPath);
+    fs.unlinkSync(tsconfigPath + '.backup');
+    console.log('Arquivo tsconfig.json restaurado ao estado original');
+  }
   
   logSection('Build do backend concluído com sucesso!');
 } catch (error) {

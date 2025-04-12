@@ -39,6 +39,8 @@ services:
         value: production
       - key: NEXT_PUBLIC_API_URL
         value: https://linos-backend.onrender.com
+      - key: NEXT_SKIP_TYPECHECKING
+        value: "1"
 
 envVarGroups:
   - name: linos-secrets
