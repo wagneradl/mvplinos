@@ -36,7 +36,7 @@ services:
       cd packages/frontend &&
       yarn add --dev typescript@5.0.4 @types/react@18.2.12 @types/react-dom@18.2.5 &&
       cd ../.. &&
-      node scripts/render-frontend-proper-fix.js
+      node scripts/render-advanced-fix.js
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
