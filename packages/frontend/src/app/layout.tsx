@@ -114,19 +114,20 @@ function AppContent({ children }: { children: React.ReactNode }) {
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <Navigation />
-        {/* Ajuste do box do conteúdo principal, garantindo que o conteúdo não fique sob a navbar */}
+        {/* Ajuste do box do conteúdo principal para garantir que não fique sob a navbar */}
         <Box 
           component="main" 
           sx={{ 
-            flexGrow: 1, 
-            p: 3,
+            flexGrow: 1,
+            pt: { xs: 8, sm: 9 }, // Padding top aumentado para evitar sobreposição
+            px: 3,
+            pb: 4,
             width: '100%',
-            overflow: 'auto'
+            overflow: 'auto',
+            position: 'relative' // Para garantir posicionamento correto
           }}
         >
-          {/* Espaçamento para evitar que o conteúdo fique sob o AppBar */}
-          <Toolbar />
-          {/* Container do conteúdo principal com margens ajustadas */}
+          {/* Toolbar removida pois estamos usando padding-top específico acima */}
           <Container 
             maxWidth="lg" 
             sx={{ 
