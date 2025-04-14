@@ -19,15 +19,21 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useSnackbar();
 
-  const { data, isLoading } = useQuery<PaginatedResponse<Cliente>, Error>({
+  const { data, isLoading, error, refetch } = useQuery<PaginatedResponse<Cliente>, Error>({
     queryKey: ['clientes', page, limit, status, search],
     queryFn: async () => {
-      console.log('Buscando clientes com page:', page, 'limit:', limit, 'status:', status, 'search:', search);
-      const response = await ClientesService.listarClientes(page, limit, status, search);
-      console.log('Resposta da API de clientes:', response);
-      return response;
+      try {
+        console.log('Buscando clientes com page:', page, 'limit:', limit, 'status:', status, 'search:', search);
+        const response = await ClientesService.listarClientes(page, limit, status, search);
+        console.log('Resposta da API de clientes:', response);
+        return response;
+      } catch (err) {
+        console.error('Erro ao buscar clientes:', err);
+        throw err;
+      }
     },
     staleTime: 60000, // 1 minuto
+    retry: 1, // Limita as tentativas automáticas para não sobrecarregar o servidor
   });
 
   const { mutate: criarCliente } = useMutation({
@@ -36,8 +42,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente criado com sucesso!');
     },
-    onError: () => {
-      showError('Erro ao criar cliente');
+    onError: (err) => {
+      console.error('Erro ao criar cliente:', err);
+      showError(`Erro ao criar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     },
   });
 
@@ -48,8 +55,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente atualizado com sucesso!');
     },
-    onError: () => {
-      showError('Erro ao atualizar cliente');
+    onError: (err) => {
+      console.error('Erro ao atualizar cliente:', err);
+      showError(`Erro ao atualizar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     },
   });
 
@@ -59,8 +67,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente inativado com sucesso!');
     },
-    onError: () => {
-      showError('Erro ao inativar cliente');
+    onError: (err) => {
+      console.error('Erro ao inativar cliente:', err);
+      showError(`Erro ao inativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     },
   });
   
@@ -70,8 +79,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente reativado com sucesso!');
     },
-    onError: () => {
-      showError('Erro ao reativar cliente');
+    onError: (err) => {
+      console.error('Erro ao reativar cliente:', err);
+      showError(`Erro ao reativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     },
   });
 
@@ -80,6 +90,8 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     clientes: data?.data || [],
     meta: data?.meta,
     isLoading,
+    error: error ? error.message : null,
+    refetch,
     criarCliente,
     atualizarCliente,
     deletarCliente,

@@ -9,6 +9,8 @@ import { PedidosFilter } from '@/components/PedidosFilter';
 import { PedidosTable } from '@/components/PedidosTable';
 import { useClientes } from '@/hooks/useClientes';
 import { usePedidos } from '@/hooks/usePedidos';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 
 export default function PedidosPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,8 +21,9 @@ export default function PedidosPage() {
     cliente_id?: number;
     status?: string;
   }>({});
+  const [error, setError] = useState<string | null>(null);
 
-  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
+  const { clientes = [], isLoading: isLoadingClientes, error: clientesError } = useClientes(1, 100);
   const { 
     pedidos, 
     isLoading: isLoadingPedidos,
@@ -28,7 +31,8 @@ export default function PedidosPage() {
     page,
     limit,
     totalPages,
-    refetch
+    refetch,
+    error: pedidosError
   } = usePedidos({
     page: currentPage,
     limit: itemsPerPage,
@@ -40,18 +44,36 @@ export default function PedidosPage() {
     refetch();
   }, [currentPage, itemsPerPage, refetch]);
   
-  console.log('PedidosPage - Pedidos carregados:', pedidos, {
-    page: currentPage,
-    itemsPerPage,
-    totalCount
-  });
+  // Combinar os erros
+  useEffect(() => {
+    if (clientesError) {
+      setError(`Erro ao carregar clientes: ${clientesError}`);
+    } else if (pedidosError) {
+      setError(`Erro ao carregar pedidos: ${pedidosError}`);
+    } else {
+      setError(null);
+    }
+  }, [clientesError, pedidosError]);
 
+  // Exibir estado de carregamento
   if (isLoadingClientes) {
     return (
       <PageContainer title="Pedidos">
         <Box display="flex" justifyContent="center" p={4}>
           <CircularProgress />
         </Box>
+      </PageContainer>
+    );
+  }
+
+  // Exibir estado de erro
+  if (error) {
+    return (
+      <PageContainer title="Pedidos">
+        <ErrorState 
+          message={error}
+          retryAction={refetch}
+        />
       </PageContainer>
     );
   }

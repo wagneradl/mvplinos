@@ -283,7 +283,9 @@ export function Navigation() {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+          bgcolor: 'background.paper', // Cor de fundo clara
+          color: 'text.primary' // Cor do texto escura
         }}
       >
         <Toolbar>
@@ -297,18 +299,51 @@ export function Navigation() {
             <MenuIcon />
           </IconButton>
           
-          <Box sx={{ flexGrow: 1 }}>
-            <Breadcrumbs />
+          {/* Logo na AppBar para telas maiores */}
+          <Box 
+            sx={{ 
+              display: { xs: 'none', sm: 'flex' },
+              alignItems: 'center',
+              mr: 2
+            }}
+          >
+            <Image 
+              src="/logo.png" 
+              alt="Lino's Panificadora" 
+              width={40} 
+              height={40}
+              style={{ objectFit: 'contain' }}
+            />
           </Box>
+          
+          {/* Título do app na barra */}
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 'bold', color: theme.palette.primary.main }}
+          >
+            Lino's Panificadora
+          </Typography>
+
+          <Box sx={{ flexGrow: 1 }} />
 
           {isAuthenticated && usuario && (
-            <Box sx={{ flexShrink: 0 }}>
-              <Tooltip title="Abrir opções de perfil">
+            <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ mr: 2, textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  {usuario.nome}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {usuario.papel.nome}
+                </Typography>
+              </Box>
+              <Tooltip title="Opções de perfil">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar 
                     sx={{ 
-                      bgcolor: theme.palette.secondary.main,
-                      color: theme.palette.secondary.contrastText
+                      bgcolor: theme.palette.primary.main,
+                      color: theme.palette.primary.contrastText
                     }}
                   >
                     {usuario.nome.charAt(0).toUpperCase()}
@@ -331,32 +366,6 @@ export function Navigation() {
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
-                <Box sx={{ px: 2, py: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    {usuario.nome}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {usuario.papel.nome}
-                  </Typography>
-                </Box>
-                <Divider />
-                {/* Remover temporariamente até que as rotas sejam implementadas */}
-                {/* 
-                <MenuItem onClick={handleCloseUserMenu}>
-                  <ListItemIcon>
-                    <PersonIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Meu Perfil</ListItemText>
-                </MenuItem>
-                {usuario.papel.nome === 'Administrador' && (
-                  <MenuItem onClick={handleCloseUserMenu}>
-                    <ListItemIcon>
-                      <AdminIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Gerenciar Usuários</ListItemText>
-                  </MenuItem>
-                )}
-                */}
                 <MenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <LogoutIcon fontSize="small" />
@@ -369,6 +378,7 @@ export function Navigation() {
         </Toolbar>
       </AppBar>
 
+      {/* Drawer para a navegação lateral */}
       <Box
         component="nav"
         sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}

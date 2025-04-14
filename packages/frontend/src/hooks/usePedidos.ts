@@ -48,11 +48,18 @@ export function usePedidos(params?: PedidosParams) {
   const pedidosQuery = useQuery<PaginatedResponse<Pedido>, Error>({
     queryKey: ['pedidos', params?.page, params?.limit, params?.filters],
     queryFn: async () => {
-      console.log('Buscando pedidos com params:', params);
-      const response = await PedidosService.listarPedidos(params);
-      console.log('Resposta da API de pedidos:', response);
-      return response;
+      try {
+        console.log('Buscando pedidos com params:', params);
+        const response = await PedidosService.listarPedidos(params);
+        console.log('Resposta da API de pedidos:', response);
+        return response;
+      } catch (err) {
+        console.error('Erro ao buscar pedidos:', err);
+        throw err;
+      }
     },
+    retry: 1, // Limita as tentativas automáticas para não sobrecarregar o servidor
+    staleTime: 30000, // 30 segundos
   });
 
   const criarPedidoMutation = useMutation({
@@ -67,9 +74,10 @@ export function usePedidos(params?: PedidosParams) {
         enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
       }
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('Erro ao criar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar('Erro ao criar pedido', { variant: 'error' });
+        enqueueSnackbar(`Erro ao criar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
       }
     },
   });
@@ -84,9 +92,10 @@ export function usePedidos(params?: PedidosParams) {
         enqueueSnackbar('Pedido atualizado com sucesso!', { variant: 'success' });
       }
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('Erro ao atualizar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar('Erro ao atualizar pedido', { variant: 'error' });
+        enqueueSnackbar(`Erro ao atualizar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
       }
     },
   });
@@ -100,9 +109,10 @@ export function usePedidos(params?: PedidosParams) {
         enqueueSnackbar('Pedido deletado com sucesso!', { variant: 'success' });
       }
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('Erro ao deletar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar('Erro ao deletar pedido', { variant: 'error' });
+        enqueueSnackbar(`Erro ao deletar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
       }
     },
   });
@@ -118,9 +128,10 @@ export function usePedidos(params?: PedidosParams) {
       
       return data;
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('Erro ao repetir pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar('Erro ao repetir pedido', { variant: 'error' });
+        enqueueSnackbar(`Erro ao repetir pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
       }
     },
   });
@@ -132,7 +143,7 @@ export function usePedidos(params?: PedidosParams) {
   const returnValue = {
     pedidos: pedidosQuery.data?.data || [],
     isLoading: pedidosQuery.isLoading,
-    error: pedidosQuery.error,
+    error: pedidosQuery.error ? pedidosQuery.error.message : null,
     // Metadados de paginação
     totalCount: pedidosQuery.data?.meta?.total || 0,
     page: pedidosQuery.data?.meta?.page || 1,
@@ -155,16 +166,27 @@ export function usePedidos(params?: PedidosParams) {
 export function usePedido(id: number) {
   const { enqueueSnackbar } = useSnackbar();
 
-  const { data, isLoading, error } = useQuery<Pedido, Error>({
+  const pedidoQuery = useQuery<Pedido, Error>({
     queryKey: ['pedido', id],
-    queryFn: () => PedidosService.obterPedido(id),
+    queryFn: async () => {
+      try {
+        return await PedidosService.obterPedido(id);
+      } catch (err) {
+        console.error(`Erro ao carregar pedido #${id}:`, err);
+        throw err;
+      }
+    },
+    retry: 1,
   });
 
-  if (error) {
-    enqueueSnackbar('Erro ao carregar pedido', { variant: 'error' });
-  }
+  const returnValue = {
+    pedido: pedidoQuery.data,
+    isLoading: pedidoQuery.isLoading,
+    error: pedidoQuery.error ? pedidoQuery.error.message : null,
+    refetch: pedidoQuery.refetch
+  };
 
-  return { data, isLoading, error };
+  return returnValue;
 }
 
 export function useRelatorio(filtros: {

@@ -24,10 +24,12 @@ import {
   InputAdornment,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon, People as PeopleIcon } from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
 import { useClientes } from '@/hooks/useClientes';
 import Link from 'next/link';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 
 function formatCNPJ(cnpj: string) {
   return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -50,7 +52,9 @@ export default function ClientesPage() {
   const { 
     clientes = [], 
     meta = { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, 
-    isLoading = false, 
+    isLoading = false,
+    error = null,
+    refetch,
     deletarCliente, 
     reativarCliente 
   } = useClientes(
@@ -88,6 +92,18 @@ export default function ClientesPage() {
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
           <CircularProgress />
         </Box>
+      </PageContainer>
+    );
+  }
+
+  // Tratamento de erro
+  if (error) {
+    return (
+      <PageContainer title="Clientes">
+        <ErrorState 
+          message={`Erro ao carregar clientes: ${error}`}
+          retryAction={refetch}
+        />
       </PageContainer>
     );
   }
@@ -164,88 +180,96 @@ export default function ClientesPage() {
       </Box>
       
       <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>CNPJ</TableCell>
-              <TableCell>Razão Social</TableCell>
-              <TableCell>Nome Fantasia</TableCell>
-              <TableCell>Contato</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Ações</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clientes?.map((cliente) => (
-              <TableRow key={cliente.id}>
-                <TableCell>{formatCNPJ(cliente.cnpj)}</TableCell>
-                <TableCell>{cliente.razao_social}</TableCell>
-                <TableCell>{cliente.nome_fantasia}</TableCell>
-                <TableCell>
-                  <Box>
-                    <div>{formatTelefone(cliente.telefone)}</div>
-                    <div style={{ color: 'gray', fontSize: '0.875rem' }}>{cliente.email}</div>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={cliente.status}
-                    color={cliente.status === 'ativo' ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  {/* Botão de editar sempre aparece */}
-                  <Tooltip title="Editar">
-                    <IconButton
-                      component={Link}
-                      href={`/clientes/${cliente.id}/editar`}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  {/* Botão de inativar/reativar dependendo do status */}
-                  {cliente.status === 'ativo' ? (
-                    <Tooltip title="Inativar">
-                      <IconButton
-                        onClick={() => handleDelete(cliente.id)}
-                        size="small"
-                        color="error"
-                      >
-                        <BlockIcon />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip title="Reativar">
-                      <IconButton
-                        onClick={() => handleReativar(cliente.id)}
-                        size="small"
-                        color="success"
-                      >
-                        <CheckCircleIcon />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </TableCell>
+        {clientes.length === 0 ? (
+          <EmptyState 
+            title="Nenhum cliente encontrado"
+            message="Não há clientes registrados com os filtros atuais. Você pode adicionar um novo cliente usando o botão 'Novo Cliente'."
+            icon={<PeopleIcon fontSize="large" />}
+            sx={{ py: 6 }}
+          />
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>CNPJ</TableCell>
+                <TableCell>Razão Social</TableCell>
+                <TableCell>Nome Fantasia</TableCell>
+                <TableCell>Contato</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Ações</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {clientes.map((cliente) => (
+                <TableRow key={cliente.id}>
+                  <TableCell>{formatCNPJ(cliente.cnpj)}</TableCell>
+                  <TableCell>{cliente.razao_social}</TableCell>
+                  <TableCell>{cliente.nome_fantasia}</TableCell>
+                  <TableCell>
+                    <Box>
+                      <div>{formatTelefone(cliente.telefone)}</div>
+                      <div style={{ color: 'gray', fontSize: '0.875rem' }}>{cliente.email}</div>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={cliente.status}
+                      color={cliente.status === 'ativo' ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    {/* Botão de editar sempre aparece */}
+                    <Tooltip title="Editar">
+                      <IconButton
+                        component={Link}
+                        href={`/clientes/${cliente.id}`}
+                        size="small"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    
+                    {/* Mostra o botão de inativar ou reativar, dependendo do status atual */}
+                    {cliente.status === 'ativo' ? (
+                      <Tooltip title="Inativar">
+                        <IconButton 
+                          size="small"
+                          onClick={() => handleDelete(cliente.id)}
+                        >
+                          <BlockIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Reativar">
+                        <IconButton 
+                          size="small"
+                          onClick={() => handleReativar(cliente.id)}
+                        >
+                          <CheckCircleIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </TableContainer>
+
       <TablePagination
         component="div"
         count={meta?.itemCount || 0}
-        rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
         labelRowsPerPage="Itens por página"
         labelDisplayedRows={({ from, to, count }) =>
           `${from}-${to} de ${count !== -1 ? count : 'mais de ' + to}`
         }
+        rowsPerPageOptions={[5, 10, 25, 50]}
       />
     </PageContainer>
   );

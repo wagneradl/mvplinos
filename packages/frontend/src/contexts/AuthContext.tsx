@@ -102,14 +102,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Só aplicar redirecionamentos se não estivermos carregando
     if (!loading) {
-      // Redirecionar para login se não estiver autenticado
-      if (!isAuthenticated && pathname !== '/login') {
+      const currentPath = pathname || '';
+      
+      // Redirecionar para login se não estiver autenticado e não estiver na página de login
+      if (!isAuthenticated && currentPath !== '/login') {
+        console.log('Não autenticado, redirecionando para login');
         router.push('/login');
       }
 
       // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
-      if (isAuthenticated && pathname === '/login') {
-        router.push('/');
+      if (isAuthenticated && currentPath === '/login') {
+        console.log('Já autenticado, redirecionando para dashboard');
+        router.push('/pedidos');
       }
     }
   }, [isAuthenticated, loading, pathname, router]);
@@ -117,33 +121,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((token: string, userData: Usuario) => {
     try {
       if (typeof window !== 'undefined') {
+        // Primeiro armazenar dados no localStorage
         localStorage.setItem('authToken', token);
         localStorage.setItem('userData', JSON.stringify(userData));
-      }
       
-      // Set state in a single update to avoid partial renders
-      setUsuario(userData);
-      setIsAuthenticated(true);
-      setLoading(false);
+        // Então atualizar o estado em uma única operação para evitar renderizações parciais
+        setUsuario(userData);
+        setIsAuthenticated(true);
+        setLoading(false);
       
-      console.log('Login bem-sucedido, redirecionando para dashboard...');
-      
-      // Wait for next tick before navigation to ensure state is fully updated
-      setTimeout(() => {
-        router.push('/pedidos');
+        console.log('Login bem-sucedido, redirecionando para dashboard...');
         
-        // Add a slight delay before refresh to ensure navigation completes
+        // Forçar render e garantir que a UI reflita o estado atualizado antes do redirecionamento
         setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            router.refresh();
-          }
-        }, 200);
-      }, 50);
+          // Redirecionar para a página de pedidos
+          window.location.href = '/pedidos';
+        }, 100);
+      }
     } catch (error) {
       console.error('Erro ao realizar login:', error);
       alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
     }
-  }, [router]);
+  }, []);
 
   const hasPermission = (recurso: string, acao: string): boolean => {
     if (!usuario || !usuario.papel || !usuario.papel.permissoes) {
