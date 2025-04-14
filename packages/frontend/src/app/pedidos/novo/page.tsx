@@ -250,12 +250,15 @@ export default function NovoPedidoPage() {
       const { status, created_at, updated_at, data_pedido, valor_total, itensPedido, ...pedido } = pedidoData;
       
       // Limpar os campos não aceitos de cada item
-      const itensLimpos = itensPedido.map(({ preco_unitario, ...item }) => item);
+      // Removendo campos que causaram erros anteriores: preco_unitario e valor_total_item
+      const itensLimpos = itensPedido.map(({ preco_unitario, valor_total_item, ...item }) => item);
       
-      // Preparar objeto para envio ao backend
+      // Preparar objeto para envio ao backend - garantindo que contém apenas campos esperados
+      // Estrutura esperada pelo backend:
+      // { cliente_id: number, itens: Array<{ produto_id: number, quantidade: number }> }
       const pedidoFinal = {
-        ...pedido,
-        itens: itensLimpos // Usando os itens sem o campo preco_unitario
+        ...pedido, // Contém apenas cliente_id neste ponto
+        itens: itensLimpos // Contém apenas produto_id e quantidade em cada item
       };
       
       console.log('Enviando pedido para criação:', pedidoFinal);
