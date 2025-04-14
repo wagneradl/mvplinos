@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { LockOutlined } from '@mui/icons-material';
 import { LoginContainer } from '@/components/LoginContainer';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +22,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
+
+  // Efeito para evitar fazer login se já estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +51,10 @@ export default function LoginPage() {
         throw new Error(data.message || 'Erro ao fazer login');
       }
 
-      // Armazenar token e informações do usuário no localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userData', JSON.stringify(data.usuario));
-
-      // Redirecionar para a página inicial
-      router.push('/');
+      // Usar a função login do contexto de autenticação
+      // que já cuida do armazenamento do token e redirecionamento
+      login(data.token, data.usuario);
+      
     } catch (error) {
       console.error('Erro de login:', error);
       setError(error instanceof Error ? error.message : 'Erro ao fazer login');

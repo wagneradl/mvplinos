@@ -21,6 +21,16 @@ api.interceptors.request.use(
   (config) => {
     const { method, url, params, data } = config;
     
+    // Adicionar token de autenticação se disponível
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+        apiLogger.debug('Token de autenticação adicionado à requisição');
+      }
+    }
+    
     // Log detalhado para debug
     apiLogger.debug(`Requisição ${method?.toUpperCase()} para ${url}`, { 
       params: params || {}, 
