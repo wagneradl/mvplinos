@@ -233,11 +233,11 @@ export default function NovoPedidoPage() {
       // Estruturar o pedido de acordo com o esperado pelo backend
       const pedidoData = {
         cliente_id: data.cliente_id,
-        data_pedido: now,
         valor_total: data.itens.reduce((total, item) => total + item.valor_total_item, 0),
         status: 'ATIVO' as const, // Necessário para a tipagem Omit<Pedido, 'id'>
         created_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
         updated_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
+        data_pedido: now, // Necessário para a tipagem, mas será removido abaixo
         itensPedido: data.itens.map((item) => ({
           produto_id: item.produto_id,
           quantidade: item.quantidade,
@@ -247,7 +247,7 @@ export default function NovoPedidoPage() {
       };
       
       // Remover os campos que não devem ser enviados ao backend
-      const { status, created_at, updated_at, ...pedido } = pedidoData;
+      const { status, created_at, updated_at, data_pedido, ...pedido } = pedidoData;
       
       console.log('Enviando pedido para criação:', pedido);
       await criarPedido(pedido);
