@@ -249,10 +249,13 @@ export default function NovoPedidoPage() {
       // Remover os campos que não devem ser enviados ao backend
       const { status, created_at, updated_at, data_pedido, valor_total, itensPedido, ...pedido } = pedidoData;
       
+      // Limpar os campos não aceitos de cada item
+      const itensLimpos = itensPedido.map(({ preco_unitario, ...item }) => item);
+      
       // Preparar objeto para envio ao backend
       const pedidoFinal = {
         ...pedido,
-        itens: itensPedido // Renomear para 'itens' que é o campo esperado pelo backend
+        itens: itensLimpos // Usando os itens sem o campo preco_unitario
       };
       
       console.log('Enviando pedido para criação:', pedidoFinal);
