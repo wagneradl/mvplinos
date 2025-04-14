@@ -121,11 +121,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
             flexGrow: 1,
             // No desktop (sm e acima), não precisamos de padding-top, pois a navbar não existe
             // No mobile (xs), precisamos de padding-top para ficar abaixo da navbar
-            pt: { xs: 7, sm: 0 },
+            pt: { xs: 7, sm: 2 },
             px: { xs: 2, sm: 3 },
             pb: 4,
-            width: { xs: '100%', sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-            ml: { sm: `${DRAWER_WIDTH}px` }, // margem à esquerda apenas em desktop
+            width: '100%', // Use a largura total disponível após o drawer
             overflow: 'auto'
           }}
         >
