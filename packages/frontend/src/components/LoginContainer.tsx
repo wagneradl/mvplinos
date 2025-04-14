@@ -6,7 +6,17 @@ import { Providers } from '@/components/Providers';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
-export function LoginContainer({ children }: { children: React.ReactNode }) {
+interface LoginContainerProps {
+  children: React.ReactNode;
+  fullHeight?: boolean;
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
+}
+
+export function LoginContainer({ 
+  children, 
+  fullHeight = true,
+  maxWidth = 'sm'
+}: LoginContainerProps) {
   return (
     <Providers>
       <CssBaseline />
@@ -17,13 +27,13 @@ export function LoginContainer({ children }: { children: React.ReactNode }) {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: '100vh',
+          minHeight: fullHeight ? '100vh' : 'auto',
           py: 4,
           px: 2,
           backgroundColor: 'background.default'
         }}
       >
-        <Container maxWidth="sm" sx={{ my: 2 }}>
+        <Container maxWidth={maxWidth} sx={{ my: 2 }}>
           <Box 
             sx={{ 
               width: '100%',
