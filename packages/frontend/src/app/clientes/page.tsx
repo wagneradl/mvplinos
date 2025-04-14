@@ -223,7 +223,7 @@ export default function ClientesPage() {
                     <Tooltip title="Editar">
                       <IconButton
                         component={Link}
-                        href={`/clientes/editar/${cliente.id}`}
+                        href={`/clientes/${cliente.id}/editar`}
                         size="small"
                       >
                         <EditIcon fontSize="small" />

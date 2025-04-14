@@ -247,7 +247,7 @@ export default function NovoPedidoPage() {
       };
       
       // Remover os campos que não devem ser enviados ao backend
-      const { status, created_at, updated_at, data_pedido, ...pedido } = pedidoData;
+      const { status, created_at, updated_at, data_pedido, valor_total, ...pedido } = pedidoData;
       
       console.log('Enviando pedido para criação:', pedido);
       await criarPedido(pedido);
