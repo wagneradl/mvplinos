@@ -247,10 +247,16 @@ export default function NovoPedidoPage() {
       };
       
       // Remover os campos que não devem ser enviados ao backend
-      const { status, created_at, updated_at, data_pedido, valor_total, ...pedido } = pedidoData;
+      const { status, created_at, updated_at, data_pedido, valor_total, itensPedido, ...pedido } = pedidoData;
       
-      console.log('Enviando pedido para criação:', pedido);
-      await criarPedido(pedido);
+      // Preparar objeto para envio ao backend
+      const pedidoFinal = {
+        ...pedido,
+        itens: itensPedido // Renomear para 'itens' que é o campo esperado pelo backend
+      };
+      
+      console.log('Enviando pedido para criação:', pedidoFinal);
+      await criarPedido(pedidoFinal);
       console.log('Pedido criado com sucesso');
       
       enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
