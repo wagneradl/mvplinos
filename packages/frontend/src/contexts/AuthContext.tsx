@@ -64,52 +64,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Efeito para verificar a autenticação ao carregar a página
   useEffect(() => {
-    // Verificar se o usuário está autenticado ao carregar a página
-    if (typeof window !== 'undefined') {
-      try {
-        const token = localStorage.getItem('authToken');
-        const userData = localStorage.getItem('userData');
+    const checkAuth = async () => {
+      setLoading(true);
+      
+      if (typeof window !== 'undefined') {
+        try {
+          const token = localStorage.getItem('authToken');
+          const userData = localStorage.getItem('userData');
 
-        if (token && userData) {
-          // Verificar se o token não está expirado
-          if (isTokenValid(token)) {
-            try {
-              const parsedUser = JSON.parse(userData);
-              setUsuario(parsedUser);
-              setIsAuthenticated(true);
-            } catch (error) {
-              console.error('Erro ao processar dados do usuário:', error);
-              logout();
+          if (token && userData) {
+            // Verificar se o token não está expirado
+            if (isTokenValid(token)) {
+              try {
+                const parsedUser = JSON.parse(userData);
+                setUsuario(parsedUser);
+                setIsAuthenticated(true);
+              } catch (error) {
+                console.error('Erro ao processar dados do usuário:', error);
+                // Limpar dados inválidos
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                setIsAuthenticated(false);
+                setUsuario(null);
+              }
+            } else {
+              // Token expirado, fazer logout
+              console.warn('Token expirado ou inválido');
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userData');
+              setIsAuthenticated(false);
+              setUsuario(null);
             }
           } else {
-            // Token expirado, fazer logout
-            console.warn('Token expirado ou inválido');
-            logout();
+            // Sem token ou dados de usuário
+            setIsAuthenticated(false);
+            setUsuario(null);
           }
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+          setIsAuthenticated(false);
+          setUsuario(null);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-      } finally {
+      } else {
+        // Não estamos em um ambiente de navegador (SSR)
         setLoading(false);
       }
-    } else {
-      // Não estamos em um ambiente de navegador (SSR)
-      setLoading(false);
-    }
-  }, [logout, isTokenValid]);
+    };
 
+    checkAuth();
+  }, [isTokenValid]);
+
+  // Gerenciar redirecionamentos baseados no estado de autenticação
   useEffect(() => {
     // Só aplicar redirecionamentos se não estivermos carregando
     if (!loading) {
       const currentPath = pathname || '';
       
-      // Redirecionar para login se não estiver autenticado e não estiver na página de login
-      if (!isAuthenticated && currentPath !== '/login') {
-        console.log('Não autenticado, redirecionando para login');
-        router.push('/login');
-      }
-
       // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
       if (isAuthenticated && currentPath === '/login') {
         console.log('Já autenticado, redirecionando para dashboard');
@@ -118,31 +132,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  const login = useCallback((token: string, userData: Usuario) => {
+  const login = useCallback(async (token: string, userData: Usuario) => {
     try {
       if (typeof window !== 'undefined') {
-        // Primeiro armazenar dados no localStorage
+        // Primeiro armazenar dados no localStorage de forma síncrona
         localStorage.setItem('authToken', token);
         localStorage.setItem('userData', JSON.stringify(userData));
-      
-        // Então atualizar o estado em uma única operação para evitar renderizações parciais
+        
+        // Atualizar estado de forma síncrona para garantir consistência
         setUsuario(userData);
         setIsAuthenticated(true);
-        setLoading(false);
-      
+        
         console.log('Login bem-sucedido, redirecionando para dashboard...');
         
-        // Forçar render e garantir que a UI reflita o estado atualizado antes do redirecionamento
-        setTimeout(() => {
-          // Redirecionar para a página de pedidos
-          window.location.href = '/pedidos';
-        }, 100);
+        // Usar o router do Next.js para navegação sem refresh completo
+        router.push('/pedidos');
       }
     } catch (error) {
       console.error('Erro ao realizar login:', error);
+      // Limpar quaisquer dados inconsistentes em caso de erro
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      setUsuario(null);
+      setIsAuthenticated(false);
       alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   const hasPermission = (recurso: string, acao: string): boolean => {
     if (!usuario || !usuario.papel || !usuario.papel.permissoes) {

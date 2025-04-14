@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Button, 
@@ -13,9 +13,7 @@ import {
   Container
 } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { LockOutlined } from '@mui/icons-material';
-import { LoginContainer } from '@/components/LoginContainer';
 import { useAuth } from '@/contexts/AuthContext';
 import { extractErrorMessage } from '@/services/api';
 
@@ -24,15 +22,7 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { login, isAuthenticated } = useAuth();
-
-  // Efeito para evitar fazer login se já estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/');
-    }
-  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,17 +44,22 @@ export default function LoginPage() {
         throw new Error(data.message || 'Erro ao fazer login');
       }
 
-      // Usar a função login do contexto de autenticação
       login(data.token, data.usuario);
       
     } catch (error) {
       console.error('Erro de login:', error);
-      // Usar utilidade de formatação de erro para mensagens mais amigáveis
       setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');
-    } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="sm" sx={{ 
@@ -96,49 +91,26 @@ export default function LoginPage() {
                 width={120}
                 height={120}
                 style={{ objectFit: 'contain' }}
-                onError={(e) => {
-                  // Fallback se a imagem não carregar
-                  console.error('Erro ao carregar logo');
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                }}
+                priority
               />
             </Box>
-            <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-              Lino's Panificadora
+            <Typography component="h1" variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+              Lino&apos;s Panificadora
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography variant="subtitle1" sx={{ mt: 1, color: 'text.secondary' }}>
               Sistema de Gestão
             </Typography>
           </Box>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              backgroundColor: 'primary.main', 
-              color: 'white', 
-              width: 40, 
-              height: 40, 
-              borderRadius: '50%',
-              mb: 2
-            }}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ mt: 2, width: '100%' }}
           >
-            <LockOutlined />
-          </Box>
-          
-          <Typography component="h1" variant="h5" gutterBottom>
-            Login
-          </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mt: 2, mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
             <TextField
               margin="normal"
               required
@@ -150,11 +122,8 @@ export default function LoginPage() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              variant="outlined"
               disabled={loading}
-              error={!!error}
-              InputProps={{
-                sx: { borderRadius: 1 }
-              }}
             />
             <TextField
               margin="normal"
@@ -163,39 +132,33 @@ export default function LoginPage() {
               name="senha"
               label="Senha"
               type="password"
-              id="senha"
+              id="password"
               autoComplete="current-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
+              variant="outlined"
               disabled={loading}
-              error={!!error}
-              InputProps={{
-                sx: { borderRadius: 1 }
-              }}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ 
-                mt: 3, 
-                mb: 2, 
-                py: 1.5,
-                borderRadius: 1
-              }}
+              sx={{ mt: 3, mb: 2, py: 1.5 }}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </Box>
         </Paper>
       </Fade>
       
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          {new Date().getFullYear()} Lino's Panificadora. Todos os direitos reservados.
-        </Typography>
-      </Box>
+      <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+        Lino&apos;s Panificadora &copy; {new Date().getFullYear()}
+      </Typography>
     </Container>
   );
 }
