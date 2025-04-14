@@ -91,16 +91,16 @@ export default function LoginPage() {
           <Box sx={{ mb: 3, textAlign: 'center' }}>
             <Box sx={{ width: 120, height: 120, mx: 'auto', mb: 2, position: 'relative' }}>
               <Image
-                src="/assets/logo.png"
+                src="/logo.png"
                 alt="Lino's Panificadora"
                 width={120}
                 height={120}
                 style={{ objectFit: 'contain' }}
                 onError={(e) => {
                   // Fallback se a imagem não carregar
+                  console.error('Erro ao carregar logo');
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
-                  target.src = '/logo.png'; // Tentar caminho alternativo
                 }}
               />
             </Box>

@@ -95,6 +95,28 @@ api.interceptors.response.use(
       stack: error.stack
     });
 
+    // Tratar erros de rede para melhor feedback ao usuário
+    if (!error.response) {
+      // Mostrar notificação ao usuário se disponível
+      if (typeof window !== 'undefined') {
+        // Simular uma notificação com alert para fins de demonstração
+        // Em produção, usar um sistema de notificação mais elegante como toast
+        try {
+          const message = "Erro de conexão com o servidor. Verifique sua internet e tente novamente.";
+          console.error(message);
+          // Evitar múltiplos alertas - mostrar apenas um a cada 5 segundos
+          if (!window.__lastNetworkErrorAlert || Date.now() - window.__lastNetworkErrorAlert > 5000) {
+            window.__lastNetworkErrorAlert = Date.now();
+            setTimeout(() => {
+              alert(message);
+            }, 100);
+          }
+        } catch (err) {
+          console.error('Erro ao exibir notificação:', err);
+        }
+      }
+    }
+
     // Tratamento especial para erros de autenticação
     if (error.response?.status === 401) {
       // Token expirado ou inválido
@@ -105,9 +127,18 @@ api.interceptors.response.use(
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
         
-        // Redirecionar para login, mas apenas se estamos em um navegador e não em SSR
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
+        // Mostrar feedback ao usuário
+        console.warn('Sessão expirada. Você será redirecionado para o login.');
+        
+        // Evitar múltiplos alertas/redirecionamentos
+        if (!window.__authRedirectInProgress) {
+          window.__authRedirectInProgress = true;
+          
+          // Mostrar mensagem antes de redirecionar
+          if (!window.location.pathname.includes('/login')) {
+            alert('Sua sessão expirou. Você será redirecionado para a página de login.');
+            window.location.href = '/login?expired=true';
+          }
         }
       }
     }

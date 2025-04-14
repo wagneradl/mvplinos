@@ -340,20 +340,23 @@ export function Navigation() {
                   </Typography>
                 </Box>
                 <Divider />
-                <MenuItem onClick={handleCloseUserMenu} component={Link} href="/perfil">
+                {/* Remover temporariamente até que as rotas sejam implementadas */}
+                {/* 
+                <MenuItem onClick={handleCloseUserMenu}>
                   <ListItemIcon>
                     <PersonIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Meu Perfil</ListItemText>
                 </MenuItem>
                 {usuario.papel.nome === 'Administrador' && (
-                  <MenuItem onClick={handleCloseUserMenu} component={Link} href="/usuarios">
+                  <MenuItem onClick={handleCloseUserMenu}>
                     <ListItemIcon>
                       <AdminIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText>Gerenciar Usuários</ListItemText>
                   </MenuItem>
                 )}
+                */}
                 <MenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <LogoutIcon fontSize="small" />

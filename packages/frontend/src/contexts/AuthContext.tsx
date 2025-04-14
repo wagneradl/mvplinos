@@ -123,9 +123,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUsuario(userData);
       setIsAuthenticated(true);
       
-      // Usar setTimeout para evitar problemas de race condition na navegação
+      console.log('Login bem-sucedido, redirecionando para dashboard...');
+      
+      // Primeiro garantir que o estado foi atualizado, depois navegar
+      // Isso elimina potenciais race conditions
+      router.push('/');
+      
+      // Forçar refresh para garantir que a página será carregada com os novos dados
       setTimeout(() => {
-        router.push('/');
+        if (typeof window !== 'undefined') {
+          router.refresh();
+        }
       }, 100);
     } catch (error) {
       console.error('Erro ao realizar login:', error);
