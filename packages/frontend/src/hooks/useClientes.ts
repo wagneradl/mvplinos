@@ -91,5 +91,6 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
   return returnValue;
 }
 
-// Adicionar exportação default sem remover a exportação nomeada para manter compatibilidade
+// Proper export for Render compatibility - avoid redeclaring the variable
+// This ensures compatibility with both import { useClientes } and import useClientes
 export default useClientes;

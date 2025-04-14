@@ -114,32 +114,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  const login = (token: string, userData: Usuario) => {
+  const login = useCallback((token: string, userData: Usuario) => {
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', token);
         localStorage.setItem('userData', JSON.stringify(userData));
       }
+      
+      // Set state in a single update to avoid partial renders
       setUsuario(userData);
       setIsAuthenticated(true);
+      setLoading(false);
       
       console.log('Login bem-sucedido, redirecionando para dashboard...');
       
-      // Primeiro garantir que o estado foi atualizado, depois navegar
-      // Isso elimina potenciais race conditions
-      router.push('/');
-      
-      // Forçar refresh para garantir que a página será carregada com os novos dados
+      // Wait for next tick before navigation to ensure state is fully updated
       setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          router.refresh();
-        }
-      }, 100);
+        router.push('/pedidos');
+        
+        // Add a slight delay before refresh to ensure navigation completes
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            router.refresh();
+          }
+        }, 200);
+      }, 50);
     } catch (error) {
       console.error('Erro ao realizar login:', error);
       alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
     }
-  };
+  }, [router]);
 
   const hasPermission = (recurso: string, acao: string): boolean => {
     if (!usuario || !usuario.papel || !usuario.papel.permissoes) {

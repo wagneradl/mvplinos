@@ -213,8 +213,5 @@ export function useRelatorio(filtros: {
   };
 }
 
-// Adicionar exportações default para compatibilidade
+// Only use a single default export for Render compatibility
 export default usePedidos;
-// Também adicionamos exportações default para outras funções no arquivo
-export const usePedidoDefault = usePedido;
-export const useRelatorioDefault = useRelatorio;

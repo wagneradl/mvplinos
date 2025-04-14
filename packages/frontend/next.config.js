@@ -1,17 +1,16 @@
-
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, // Disable strict mode to prevent double rendering in development
   swcMinify: true,
   
-  // Desabilitar SSG para arquivos problemáticos
+  // Simplify experimental features
   experimental: {
     serverActions: true,
-    optimizeCss: false,
   },
   
+  // Prevent type checking during build to avoid issues on Render
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -19,27 +18,34 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Aumentar timeout para geração de páginas estáticas
+  // Increase timeout for builds
   staticPageGenerationTimeout: 300,
   
-  // Configurar webpack
+  // Configure webpack for compatibility
   webpack: (config) => {
-    // Configuração para resolver path aliases
+    // Explicitly set alias for @ to point to src
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src'),
     };
     
-    // Otimizar para build na nuvem
-    config.optimization = {
-      ...config.optimization,
-      minimize: true,
-    };
+    // Optimize for production
+    if (process.env.NODE_ENV === 'production') {
+      config.optimization = {
+        ...config.optimization,
+        minimize: true,
+      };
+    }
+    
+    // Add additional resolve extensions for TypeScript files
+    config.resolve.extensions = [
+      '.js', '.jsx', '.ts', '.tsx', '.json', ...config.resolve.extensions || []
+    ];
     
     return config;
   },
   
-  // Redirecionamento padrão
+  // Redirecionamento padrão para página de pedidos
   async redirects() {
     return [
       {
@@ -48,6 +54,11 @@ const nextConfig = {
         permanent: true,
       },
     ];
+  },
+  
+  // Add environment variables for build time
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
 };
 
