@@ -33,52 +33,104 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const logout = useCallback(() => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+    }
     setUsuario(null);
     setIsAuthenticated(false);
     router.push('/login');
-    router.refresh(); // Força uma atualização completa da navegação
   }, [router]);
+
+  // Verifica se o token é válido (não expirado)
+  const isTokenValid = useCallback((token: string): boolean => {
+    try {
+      // Decodificar payload do JWT (segunda parte do token)
+      const base64Url = token.split('.')[1];
+      if (!base64Url) return false;
+      
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(window.atob(base64));
+      
+      // Verificar expiração
+      if (!payload.exp) return false;
+      
+      // Comparar com o tempo atual (em segundos)
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp > now;
+    } catch (error) {
+      console.error('Erro ao validar token:', error);
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     // Verificar se o usuário está autenticado ao carregar a página
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('userData');
-
-    if (token && userData) {
+    if (typeof window !== 'undefined') {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUsuario(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Erro ao processar dados do usuário:', error);
-        logout();
-      }
-    }
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('userData');
 
-    setLoading(false);
-  }, [logout]);
+        if (token && userData) {
+          // Verificar se o token não está expirado
+          if (isTokenValid(token)) {
+            try {
+              const parsedUser = JSON.parse(userData);
+              setUsuario(parsedUser);
+              setIsAuthenticated(true);
+            } catch (error) {
+              console.error('Erro ao processar dados do usuário:', error);
+              logout();
+            }
+          } else {
+            // Token expirado, fazer logout
+            console.warn('Token expirado ou inválido');
+            logout();
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Não estamos em um ambiente de navegador (SSR)
+      setLoading(false);
+    }
+  }, [logout, isTokenValid]);
 
   useEffect(() => {
-    // Redirecionar para login se não estiver autenticado
-    if (!loading && !isAuthenticated && pathname !== '/login') {
-      router.push('/login');
-    }
+    // Só aplicar redirecionamentos se não estivermos carregando
+    if (!loading) {
+      // Redirecionar para login se não estiver autenticado
+      if (!isAuthenticated && pathname !== '/login') {
+        router.push('/login');
+      }
 
-    // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
-    if (!loading && isAuthenticated && pathname === '/login') {
-      router.push('/');
+      // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
+      if (isAuthenticated && pathname === '/login') {
+        router.push('/');
+      }
     }
   }, [isAuthenticated, loading, pathname, router]);
 
   const login = (token: string, userData: Usuario) => {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
-    setUsuario(userData);
-    setIsAuthenticated(true);
-    router.push('/');
-    router.refresh(); // Força uma atualização completa da navegação
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+      }
+      setUsuario(userData);
+      setIsAuthenticated(true);
+      
+      // Usar setTimeout para evitar problemas de race condition na navegação
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
+    } catch (error) {
+      console.error('Erro ao realizar login:', error);
+      alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+    }
   };
 
   const hasPermission = (recurso: string, acao: string): boolean => {

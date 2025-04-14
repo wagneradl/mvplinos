@@ -3,24 +3,66 @@
 import React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Providers } from '@/components/Providers';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
 
 export function LoginContainer({ children }: { children: React.ReactNode }) {
   return (
     <Providers>
       <CssBaseline />
-      <div className="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-gray-900">Lino&apos;s Panificadora</h1>
-            <p className="mt-2 text-sm text-gray-600">Sistema de gerenciamento</p>
-          </div>
-          {children}
-        </div>
-      </div>
+      {/* Substituindo div com classes Tailwind por componentes do MUI para garantir consistência */}
+      <Box 
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          py: 4,
+          px: 2,
+          backgroundColor: 'background.default'
+        }}
+      >
+        <Container maxWidth="sm" sx={{ my: 2 }}>
+          <Box 
+            sx={{ 
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: 4
+            }}
+          >
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box 
+                component="h1" 
+                sx={{ 
+                  fontSize: '1.875rem',
+                  fontWeight: 800,
+                  color: 'text.primary',
+                  mb: 1
+                }}
+              >
+                Lino&apos;s Panificadora
+              </Box>
+              <Box 
+                component="p" 
+                sx={{ 
+                  mt: 1,
+                  fontSize: '0.875rem',
+                  color: 'text.secondary'
+                }}
+              >
+                Sistema de gerenciamento
+              </Box>
+            </Box>
+            {children}
+          </Box>
+        </Container>
+      </Box>
     </Providers>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default LoginContainer;

@@ -9,12 +9,30 @@ export interface ApiErrorResponse {
   error?: string;
 }
 
+const getApiBaseUrl = () => {
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+};
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 segundos de timeout
 });
+
+// Função para obter token do localStorage com segurança
+const getAuthToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    try {
+      return localStorage.getItem('authToken');
+    } catch (error) {
+      console.error('Erro ao acessar localStorage:', error);
+      return null;
+    }
+  }
+  return null;
+};
 
 // Interceptor para logs de requisições
 api.interceptors.request.use(
@@ -22,13 +40,13 @@ api.interceptors.request.use(
     const { method, url, params, data } = config;
     
     // Adicionar token de autenticação se disponível
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-        apiLogger.debug('Token de autenticação adicionado à requisição');
-      }
+    const token = getAuthToken();
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+      apiLogger.debug('Token de autenticação adicionado à requisição');
+    } else {
+      apiLogger.debug('Requisição sem token de autenticação');
     }
     
     // Log detalhado para debug
@@ -77,6 +95,23 @@ api.interceptors.response.use(
       stack: error.stack
     });
 
+    // Tratamento especial para erros de autenticação
+    if (error.response?.status === 401) {
+      // Token expirado ou inválido
+      apiLogger.warn('Token inválido ou expirado, redirecionando para login');
+      
+      // Limpar dados de autenticação
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        
+        // Redirecionar para login, mas apenas se estamos em um navegador e não em SSR
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    }
+
     // Criar um erro mais amigável com informações estruturadas
     const enhancedError: any = new Error();
     enhancedError.isApiError = true;
@@ -106,6 +141,10 @@ api.interceptors.response.use(
       enhancedError.originalError = error;
     }
 
+    // Incluir o endpoint que falhou para facilitar o diagnóstico
+    enhancedError.endpoint = error.config?.url;
+    enhancedError.method = error.config?.method;
+
     return Promise.reject(enhancedError);
   }
 );
@@ -117,6 +156,12 @@ export const extractErrorMessage = (error: any): string => {
     // Erros específicos por código
     if (error.statusCode === 400) {
       return `Dados inválidos: ${error.message}`;
+    }
+    if (error.statusCode === 401) {
+      return `Erro de autenticação: ${error.message}. Por favor, faça login novamente.`;
+    }
+    if (error.statusCode === 403) {
+      return `Acesso negado: ${error.message}. Você não tem permissão para esta ação.`;
     }
     if (error.statusCode === 404) {
       return `Recurso não encontrado: ${error.message}`;
@@ -152,6 +197,18 @@ export const getErrorSuggestions = (error: any): string[] => {
     if (error.statusCode === 400) {
       suggestions.push('Verifique se todos os campos foram preenchidos corretamente.');
       suggestions.push('Certifique-se de que os formatos de dados estão corretos (ex: CNPJ, data, etc).');
+    }
+    
+    // Erro 401 - Unauthorized
+    else if (error.statusCode === 401) {
+      suggestions.push('Sua sessão pode ter expirado. Tente fazer login novamente.');
+      suggestions.push('Verifique suas credenciais de acesso.');
+    }
+    
+    // Erro 403 - Forbidden
+    else if (error.statusCode === 403) {
+      suggestions.push('Você não tem permissão para acessar este recurso.');
+      suggestions.push('Contate o administrador do sistema para solicitar acesso.');
     }
     
     // Erro 404 - Not Found
@@ -192,6 +249,7 @@ export const getErrorSuggestions = (error: any): string[] => {
     else if (error.errorType === 'NETWORK_ERROR') {
       suggestions.push('Verifique sua conexão com a internet.');
       suggestions.push('Certifique-se de que o servidor está disponível.');
+      suggestions.push('Tente recarregar a página após alguns segundos.');
     }
   }
   
@@ -206,28 +264,29 @@ export const getErrorSuggestions = (error: any): string[] => {
 
 // Função para extrair detalhes técnicos de erro para logs ou debug
 export const getErrorDetails = (error: any): string => {
-  const details: string[] = [];
+  let details = '';
   
-  // Se for erro aprimorado da API
   if (error.isApiError) {
-    details.push(`Código: ${error.statusCode}`);
-    details.push(`Tipo: ${error.errorType}`);
+    details += `Status: ${error.statusCode || 'Desconhecido'}\n`;
+    details += `Tipo: ${error.errorType || 'Desconhecido'}\n`;
+    details += `Mensagem: ${error.message || 'Nenhuma mensagem disponível'}\n`;
+    details += `Endpoint: ${error.endpoint || 'Desconhecido'}\n`;
     
-    if (Array.isArray(error.messages)) {
-      details.push(`Mensagens: ${error.messages.join(', ')}`);
+    if (error.messages && error.messages.length > 1) {
+      details += 'Detalhes:\n';
+      error.messages.forEach((msg: string, idx: number) => {
+        details += `  ${idx + 1}. ${msg}\n`;
+      });
     }
-    
-    if (error.originalError?.config) {
-      const { method, url } = error.originalError.config;
-      details.push(`Request: ${method?.toUpperCase()} ${url}`);
+  } else if (error instanceof Error) {
+    details += `Erro: ${error.name}\n`;
+    details += `Mensagem: ${error.message}\n`;
+    if (error.stack) {
+      details += `Stack: ${error.stack}\n`;
     }
+  } else {
+    details += `Erro desconhecido: ${JSON.stringify(error)}`;
   }
   
-  // Se for erro padrão
-  if (error instanceof Error) {
-    details.push(`Nome: ${error.name}`);
-    details.push(`Stack: ${error.stack}`);
-  }
-  
-  return details.join('\n');
+  return details;
 };

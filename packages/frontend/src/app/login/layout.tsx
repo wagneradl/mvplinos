@@ -14,9 +14,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
