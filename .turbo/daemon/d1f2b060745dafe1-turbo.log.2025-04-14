@@ -2,3 +2,7 @@
 2025-04-14T14:56:06.316823Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2025-04-14T15:04:15.818380Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/frontend/src/app/layout.tsx")}
 2025-04-14T15:04:15.818435Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/frontend"), path: AnchoredSystemPathBuf("packages/frontend") }}))
+2025-04-14T15:15:00.423902Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/frontend/src/components/Navigation.tsx")}
+2025-04-14T15:15:00.425126Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/frontend"), path: AnchoredSystemPathBuf("packages/frontend") }}))
+2025-04-14T15:15:29.014421Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/frontend/src/app/layout.tsx")}
+2025-04-14T15:15:29.014442Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@linos/frontend"), path: AnchoredSystemPathBuf("packages/frontend") }}))

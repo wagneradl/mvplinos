@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Inter } from 'next/font/google';
-import { Box, Container, CircularProgress, Toolbar } from '@mui/material';
+import { Box, Container, CircularProgress } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Providers } from '@/components/Providers';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import LoginPage from './login/page';
 
 const inter = Inter({ subsets: ['latin'] });
+
+const DRAWER_WIDTH = 240; // Deve ser o mesmo valor definido no componente Navigation
 
 export default function RootLayout({
   children,
@@ -60,7 +62,6 @@ export default function RootLayout({
 // Componente interno que será renderizado apenas quando o contexto de autenticação estiver pronto
 function AppContent({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
   
@@ -108,31 +109,31 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // Mostrar layout completo com navegação apenas quando autenticado (aqui já sabemos que está autenticado)
+  // Mostrar layout completo com navegação apenas quando autenticado
   return (
     <>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <Navigation />
-        {/* Ajuste do box do conteúdo principal para garantir que não fique sob a navbar */}
         <Box 
           component="main" 
           sx={{ 
             flexGrow: 1,
-            pt: { xs: 8, sm: 9 }, // Padding top aumentado para evitar sobreposição
-            px: 3,
+            // No desktop (sm e acima), não precisamos de padding-top, pois a navbar não existe
+            // No mobile (xs), precisamos de padding-top para ficar abaixo da navbar
+            pt: { xs: 7, sm: 0 },
+            px: { xs: 2, sm: 3 },
             pb: 4,
-            width: '100%',
-            overflow: 'auto',
-            position: 'relative' // Para garantir posicionamento correto
+            width: { xs: '100%', sm: `calc(100% - ${DRAWER_WIDTH}px)` },
+            ml: { sm: `${DRAWER_WIDTH}px` }, // margem à esquerda apenas em desktop
+            overflow: 'auto'
           }}
         >
-          {/* Toolbar removida pois estamos usando padding-top específico acima */}
           <Container 
             maxWidth="lg" 
             sx={{ 
-              mt: 2, 
-              mb: 4
+              my: 2,
+              height: '100%'
             }}
           >
             {children}

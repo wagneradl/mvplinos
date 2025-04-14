@@ -86,8 +86,49 @@ export function Navigation() {
     logout();
   };
 
+  // Componente do menu de usuário
+  const UserMenu = () => (
+    <>
+      {isAuthenticated && usuario && (
+        <Box sx={{ 
+          p: 2, 
+          borderTop: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar 
+              sx={{ 
+                bgcolor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                mr: 1.5
+              }}
+            >
+              {usuario.nome.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                {usuario.nome}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {usuario.papel.nome}
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Tooltip title="Sair">
+            <IconButton onClick={handleLogout} size="small">
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+    </>
+  );
+
   const drawer = (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo e nome da empresa */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, pb: 2, mb: 1 }}>
         <Box 
@@ -118,174 +159,182 @@ export function Navigation() {
       
       <Divider sx={{ mb: 2, width: '85%', mx: 'auto', opacity: 0.6 }} />
 
-      <List>
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isSelected = pathname === item.href || 
-                           (item.subItems && item.subItems.some(sub => sub.href === pathname));
-          const isExpanded = expandedItem === item.text;
-          
-          // Se o item do menu atual tem subitens e o caminho atual corresponde a algum subitem
-          const currentSubItem = item.subItems?.find(sub => sub.href === pathname);
+      {/* Menu principal - ocupa o espaço flexível */}
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        <List>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isSelected = pathname === item.href || 
+                            (item.subItems && item.subItems.some(sub => sub.href === pathname));
+            const isExpanded = expandedItem === item.text;
+            
+            // Se o item do menu atual tem subitens e o caminho atual corresponde a algum subitem
+            const currentSubItem = item.subItems?.find(sub => sub.href === pathname);
 
-          return (
-            <React.Fragment key={item.href}>
-              <ListItem disablePadding sx={{ display: 'block', mb: 0.75 }}>
-                <ListItemButton
-                  component={item.subItems ? 'div' : Link}
-                  href={item.subItems ? undefined : item.href}
-                  selected={isSelected}
-                  onClick={() => item.subItems ? handleExpandClick(item.text) : null}
-                  sx={{
-                    minHeight: 52,
-                    px: 3,
-                    borderRadius: '12px',
-                    mx: 1.5,
-                    transition: 'all 0.2s ease',
-                    '&.Mui-selected': {
-                      backgroundColor: `${theme.palette.primary.main}E6`, // Com 90% de opacidade
-                      color: theme.palette.primary.contrastText,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.main,
-                      },
-                      '& .MuiListItemIcon-root': {
+            return (
+              <React.Fragment key={item.href}>
+                <ListItem disablePadding sx={{ display: 'block', mb: 0.75 }}>
+                  <ListItemButton
+                    component={item.subItems ? 'div' : Link}
+                    href={item.subItems ? undefined : item.href}
+                    selected={isSelected}
+                    onClick={() => item.subItems ? handleExpandClick(item.text) : null}
+                    sx={{
+                      minHeight: 52,
+                      px: 3,
+                      borderRadius: '12px',
+                      mx: 1.5,
+                      transition: 'all 0.2s ease',
+                      '&.Mui-selected': {
+                        backgroundColor: `${theme.palette.primary.main}E6`, // Com 90% de opacidade
                         color: theme.palette.primary.contrastText,
+                        '&:hover': {
+                          backgroundColor: theme.palette.primary.main,
+                        },
+                        '& .MuiListItemIcon-root': {
+                          color: theme.palette.primary.contrastText,
+                        },
                       },
-                    },
-                    '&:hover': {
-                      backgroundColor: `${theme.palette.primary.main}14`, // Com 8% de opacidade
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <Icon color={isSelected ? 'inherit' : 'action'} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.text} 
-                    primaryTypographyProps={{
-                      fontWeight: isSelected ? 600 : 500,
-                      fontSize: '0.95rem'
+                      '&:hover': {
+                        backgroundColor: `${theme.palette.primary.main}14`, // Com 8% de opacidade
+                      },
                     }}
-                  />
-                  {item.subItems && (
-                    <IconButton 
-                      edge="end" 
-                      aria-label="expandir" 
-                      sx={{ 
-                        mr: -1, 
-                        color: isSelected ? 'white' : 'inherit'
-                      }} 
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExpandClick(item.text);
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <Icon color={isSelected ? 'inherit' : 'action'} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={item.text} 
+                      primaryTypographyProps={{
+                        fontWeight: isSelected ? 600 : 500,
+                        fontSize: '0.95rem'
                       }}
-                    >
-                      {isExpanded ? (
-                        <Box 
-                          component="span" 
-                          sx={{ 
-                            transform: 'rotate(180deg)', 
-                            transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                            color: isSelected ? 'white' : 'inherit'
-                          }}
-                        >
-                          <span style={{ fontSize: '18px' }}>⌄</span> {/* Utilização do caractere Unicode para chevron */}
-                        </Box>
-                      ) : (
-                        <Box 
-                          component="span" 
-                          sx={{ 
-                            transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                            color: isSelected ? 'white' : 'inherit'
-                          }}
-                        >
-                          <span style={{ fontSize: '18px' }}>⌄</span> {/* Utilização do caractere Unicode para chevron */}
-                        </Box>
-                      )}
-                    </IconButton>
-                  )}
-                </ListItemButton>
-              </ListItem>
-
-              {/* Sub-itens para Pedidos */}
-              {item.subItems && (
-                <Box 
-                  sx={{ 
-                    pl: 4,
-                    maxHeight: isExpanded ? '500px' : 0,
-                    overflow: 'hidden',
-                    opacity: isExpanded ? 1 : 0,
-                    transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
-                  }}
-                >
-                  {item.subItems.map((subItem) => {
-                    const SubIcon = subItem.icon;
-                    const isSubSelected = pathname === subItem.href;
-                    
-                    return (
-                      <ListItem key={subItem.href} disablePadding sx={{ mb: 0.75 }}>
-                        <ListItemButton
-                          component={Link}
-                          href={subItem.href}
-                          selected={isSubSelected}
-                          sx={{
-                            minHeight: 44,
-                            px: 3,
-                            borderRadius: '12px',
-                            mx: 1,
-                            transition: 'all 0.2s ease',
-                            '&.Mui-selected': {
-                              backgroundColor: `${theme.palette.primary.main}E6`, // Com 90% de opacidade
-                              color: theme.palette.primary.contrastText,
-                              '&:hover': {
-                                backgroundColor: theme.palette.primary.main,
-                              },
-                              '& .MuiListItemIcon-root': {
-                                color: theme.palette.primary.contrastText,
-                              },
-                            },
-                            '&:hover': {
-                              backgroundColor: `${theme.palette.primary.main}14`, // Com 8% de opacidade
-                            },
-                          }}
-                        >
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            <SubIcon 
-                              fontSize="small" 
-                              color={isSubSelected ? 'inherit' : 'action'}
-                            />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={subItem.text}
-                            primaryTypographyProps={{
-                              variant: 'body2',
-                              fontWeight: isSubSelected ? 600 : 500,
-                              fontSize: '0.9rem'
+                    />
+                    {item.subItems && (
+                      <IconButton 
+                        edge="end" 
+                        aria-label="expandir" 
+                        sx={{ 
+                          mr: -1, 
+                          color: isSelected ? 'white' : 'inherit'
+                        }} 
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExpandClick(item.text);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <Box 
+                            component="span" 
+                            sx={{ 
+                              transform: 'rotate(180deg)', 
+                              transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                              color: isSelected ? 'white' : 'inherit'
                             }}
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                    );
-                  })}
-                </Box>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </List>
+                          >
+                            <span style={{ fontSize: '18px' }}>⌄</span> {/* Utilização do caractere Unicode para chevron */}
+                          </Box>
+                        ) : (
+                          <Box 
+                            component="span" 
+                            sx={{ 
+                              transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                              color: isSelected ? 'white' : 'inherit'
+                            }}
+                          >
+                            <span style={{ fontSize: '18px' }}>⌄</span> {/* Utilização do caractere Unicode para chevron */}
+                          </Box>
+                        )}
+                      </IconButton>
+                    )}
+                  </ListItemButton>
+                </ListItem>
+
+                {/* Sub-itens para Pedidos */}
+                {item.subItems && (
+                  <Box 
+                    sx={{ 
+                      pl: 4,
+                      maxHeight: isExpanded ? '500px' : 0,
+                      overflow: 'hidden',
+                      opacity: isExpanded ? 1 : 0,
+                      transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                    }}
+                  >
+                    {item.subItems.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubSelected = pathname === subItem.href;
+                      
+                      return (
+                        <ListItem key={subItem.href} disablePadding sx={{ mb: 0.75 }}>
+                          <ListItemButton
+                            component={Link}
+                            href={subItem.href}
+                            selected={isSubSelected}
+                            sx={{
+                              minHeight: 44,
+                              px: 3,
+                              borderRadius: '12px',
+                              mx: 1,
+                              transition: 'all 0.2s ease',
+                              '&.Mui-selected': {
+                                backgroundColor: `${theme.palette.primary.main}E6`, // Com 90% de opacidade
+                                color: theme.palette.primary.contrastText,
+                                '&:hover': {
+                                  backgroundColor: theme.palette.primary.main,
+                                },
+                                '& .MuiListItemIcon-root': {
+                                  color: theme.palette.primary.contrastText,
+                                },
+                              },
+                              '&:hover': {
+                                backgroundColor: `${theme.palette.primary.main}14`, // Com 8% de opacidade
+                              },
+                            }}
+                          >
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <SubIcon 
+                                fontSize="small" 
+                                color={isSubSelected ? 'inherit' : 'action'}
+                              />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={subItem.text}
+                              primaryTypographyProps={{
+                                variant: 'body2',
+                                fontWeight: isSubSelected ? 600 : 500,
+                                fontSize: '0.9rem'
+                              }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </Box>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </List>
+      </Box>
+
+      {/* Menu de usuário no rodapé do drawer */}
+      <UserMenu />
     </Box>
   );
 
   return (
     <>
+      {/* AppBar apenas para dispositivos móveis */}
       <AppBar 
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
           boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
           bgcolor: 'background.paper', // Cor de fundo clara
-          color: 'text.primary' // Cor do texto escura
+          color: 'text.primary', // Cor do texto escura
+          display: { xs: 'block', sm: 'none' } // Mostrar apenas em dispositivos móveis
         }}
       >
         <Toolbar>
@@ -294,15 +343,15 @@ export function Navigation() {
             aria-label="abrir menu"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
           
-          {/* Logo na AppBar para telas maiores */}
+          {/* Logo na AppBar para telas mobile */}
           <Box 
             sx={{ 
-              display: { xs: 'none', sm: 'flex' },
+              display: 'flex',
               alignItems: 'center',
               mr: 2
             }}
@@ -321,60 +370,10 @@ export function Navigation() {
             variant="h6"
             noWrap
             component="div"
-            sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 'bold', color: theme.palette.primary.main }}
+            sx={{ display: 'block', fontWeight: 'bold', color: theme.palette.primary.main }}
           >
             Lino's Panificadora
           </Typography>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          {isAuthenticated && usuario && (
-            <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ mr: 2, textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                  {usuario.nome}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {usuario.papel.nome}
-                </Typography>
-              </Box>
-              <Tooltip title="Opções de perfil">
-                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar 
-                    sx={{ 
-                      bgcolor: theme.palette.primary.main,
-                      color: theme.palette.primary.contrastText
-                    }}
-                  >
-                    {usuario.nome.charAt(0).toUpperCase()}
-                  </Avatar>
-                </IconButton>
-              </Tooltip>
-              <Menu
-                sx={{ mt: '45px' }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Sair</ListItemText>
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
         </Toolbar>
       </AppBar>
 
@@ -383,6 +382,7 @@ export function Navigation() {
         component="nav"
         sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}
       >
+        {/* Versão móvel */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -400,6 +400,8 @@ export function Navigation() {
         >
           {drawer}
         </Drawer>
+        
+        {/* Versão desktop */}
         <Drawer
           variant="permanent"
           sx={{
@@ -417,7 +419,6 @@ export function Navigation() {
     </>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default Navigation;
