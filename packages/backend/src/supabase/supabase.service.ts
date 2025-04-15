@@ -22,18 +22,18 @@ export class SupabaseService {
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
-    // Prioriza service role key para produção
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_API_KEY;
+    // Usa exclusivamente a SUPABASE_SERVICE_ROLE_KEY
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const bucketName = process.env.SUPABASE_BUCKET || 'pedidos-pdfs';
 
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error(
-        'Supabase URL or API key is missing. Configure environment variables SUPABASE_URL and SUPABASE_API_KEY or SUPABASE_SERVICE_ROLE_KEY',
+        'Supabase URL or SERVICE_ROLE_KEY is missing. Configure environment variables SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY',
       );
     } else {
       this.supabase = createClient(supabaseUrl, supabaseKey);
       this.logger.log(`Supabase client initialized for URL: ${supabaseUrl}`);
-      this.logger.log(`[SUPABASE] Usando key: ${supabaseKey === process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'API_KEY/PUBLIC'}`);
+      this.logger.log(`[SUPABASE] Usando key: SERVICE_ROLE`);
       // Adiciona log para depuração da sessão
       if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
         this.supabase.auth.getSession().then(sess => {
