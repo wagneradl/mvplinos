@@ -4,6 +4,8 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum PedidoStatus {
   ATIVO = 'ATIVO',
   CANCELADO = 'CANCELADO',
+  PENDENTE = 'PENDENTE',
+  ATUALIZADO = 'ATUALIZADO',
 }
 
 export class UpdatePedidoDto {

@@ -22,23 +22,22 @@ export class SupabaseService {
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_API_KEY;
+    // Prioriza service role key para produção
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_API_KEY;
     const bucketName = process.env.SUPABASE_BUCKET || 'pedidos-pdfs';
 
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error(
-        'Supabase URL or API key is missing. Configure environment variables SUPABASE_URL and SUPABASE_API_KEY',
+        'Supabase URL or API key is missing. Configure environment variables SUPABASE_URL and SUPABASE_API_KEY or SUPABASE_SERVICE_ROLE_KEY',
       );
     } else {
       this.supabase = createClient(supabaseUrl, supabaseKey);
       this.logger.log(`Supabase client initialized for URL: ${supabaseUrl}`);
-      
       // Tentar criar o bucket se ele não existir, usando políticas públicas
       this.initializeBucket(bucketName).catch(error => {
         this.logger.warn(`Failed to initialize bucket: ${error.message}`);
       });
     }
-
     this.bucketName = bucketName;
     this.logger.log(`Using bucket: ${this.bucketName}`);
   }
@@ -128,7 +127,6 @@ export class SupabaseService {
           // Extrair o nome do arquivo do caminho
           const fileName = filePath.split('/').pop() || 'unknownfile';
           
-          // IMPORTANTE: Salvar o arquivo localmente no caminho correto para o Express.static
           try {
             // Importar fs para salvar o arquivo
             const fs = require('fs');
@@ -147,16 +145,12 @@ export class SupabaseService {
             const dirPath = dirname(localFilePath);
             await mkdirAsync(dirPath, { recursive: true });
             
-            // Converter para Buffer se for Blob
+            // Corrigido: só aceita Buffer!
             let dataToWrite: Buffer;
             if (Buffer.isBuffer(fileData)) {
               dataToWrite = fileData;
-            } else if (typeof fileData === 'object' && fileData !== null) {
-              // Blob ou outro objeto
-              const arrayBuffer = await (fileData as Blob).arrayBuffer();
-              dataToWrite = Buffer.from(arrayBuffer);
             } else {
-              throw new Error('Invalid file data format');
+              throw new Error('Fallback local só aceita Buffer como fileData');
             }
             
             // Salvar o arquivo no caminho local correspondente ao esperado pelo Express
