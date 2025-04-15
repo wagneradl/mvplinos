@@ -3,6 +3,16 @@ set -e  # Exit immediately if a command exits with a non-zero status
 
 echo "🧪 Iniciando simulação de ambiente Render..."
 
+# Verificar se o yarn.lock está atualizado
+echo "🔍 Verificando consistência do yarn.lock..."
+cd ../../
+yarn install --check-files || { 
+  echo "❌ yarn.lock desatualizado! Execute 'yarn install' na raiz do projeto antes do deploy."; 
+  exit 1; 
+}
+echo "✅ yarn.lock está atualizado e consistente"
+cd packages/backend
+
 # Limpar diretórios anteriores
 rm -rf node_modules dist
 
