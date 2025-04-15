@@ -259,19 +259,59 @@ export default function NovoPedidoPage() {
       // Logar o objeto final para inspeção
       console.log('Objeto pedidoFinal a ser enviado:', JSON.stringify(pedidoFinal, null, 2));
       
-      console.log('Enviando pedido para criação:', pedidoFinal);
-      
-      // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância 
-      // entre o tipo Pedido no frontend (que espera itensPedido) e o que a API realmente aceita (itens)
-      await criarPedido(pedidoFinal as any);
-      console.log('Pedido criado com sucesso');
-      
-      enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
-      
-      // Aguardar um pouco para garantir que o backend processou o pedido
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      router.push('/pedidos');
+      try {
+        // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância 
+        // entre o tipo Pedido no frontend (que espera itensPedido) e o que a API realmente aceita (itens)
+        const novoPedido = await criarPedido(pedidoFinal as any);
+        console.log('Pedido criado com sucesso:', novoPedido);
+        
+        enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
+        router.push('/pedidos');
+      } catch (error: any) {
+        console.error('Erro ao criar pedido:', error);
+        
+        // Tratamento específico para erros comuns do backend
+        let mensagemErro = 'Erro ao criar pedido. Por favor, tente novamente.';
+        
+        if (error.response) {
+          // Erro com resposta do servidor
+          const status = error.response.status;
+          const data = error.response.data;
+          
+          console.log('Detalhes do erro:', { status, data });
+          
+          // Tratamento específico por status HTTP
+          if (status === 400) {
+            // Bad Request - validações específicas
+            if (data.message) {
+              if (typeof data.message === 'string') {
+                mensagemErro = data.message;
+              } else if (Array.isArray(data.message)) {
+                mensagemErro = data.message.join(', ');
+              }
+            }
+          } else if (status === 404) {
+            // Not Found - cliente ou produto não encontrado
+            if (data.message && data.message.includes('Cliente')) {
+              mensagemErro = 'Cliente não encontrado ou inativo.';
+            } else if (data.message && data.message.includes('Produto')) {
+              mensagemErro = 'Um ou mais produtos não foram encontrados ou estão inativos.';
+            } else {
+              mensagemErro = data.message || 'Recurso não encontrado.';
+            }
+          } else if (status === 500) {
+            // Internal Server Error - problemas de processamento
+            mensagemErro = 'Erro interno no servidor. Verifique se o cliente e produtos estão ativos e tente novamente.';
+            
+            // Se tivermos uma mensagem de erro específica do servidor, usamos ela
+            if (data && data.message) {
+              mensagemErro = data.message;
+            }
+          }
+        }
+        
+        enqueueSnackbar(mensagemErro, { variant: 'error' });
+      }
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
       enqueueSnackbar('Erro ao criar pedido', { variant: 'error' });
