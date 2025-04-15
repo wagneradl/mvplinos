@@ -33,6 +33,15 @@ export class SupabaseService {
     } else {
       this.supabase = createClient(supabaseUrl, supabaseKey);
       this.logger.log(`Supabase client initialized for URL: ${supabaseUrl}`);
+      this.logger.log(`[SUPABASE] Usando key: ${supabaseKey === process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'API_KEY/PUBLIC'}`);
+      // Adiciona log para depuração da sessão
+      if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
+        this.supabase.auth.getSession().then(sess => {
+          this.logger.log(`[SUPABASE] Sessão atual:`, sess);
+        }).catch(e => {
+          this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
+        });
+      }
       // Tentar criar o bucket se ele não existir, usando políticas públicas
       this.initializeBucket(bucketName).catch(error => {
         this.logger.warn(`Failed to initialize bucket: ${error.message}`);
