@@ -99,7 +99,7 @@ export class PedidosController {
         }
       });
     } catch (error) {
-      console.error('Erro ao gerar PDF do relatório:', error);
+      console.error('Erro ao gerar PDF do relatório:', error instanceof Error ? error.message : error);
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -209,7 +209,7 @@ export class PedidosController {
             throw new Error('Supabase não disponível, tentando fallback local');
           }
         } catch (supabaseError) {
-          console.warn(`Fallback para PDF local: ${supabaseError.message}`);
+          console.warn(`Fallback para PDF local: ${supabaseError instanceof Error ? supabaseError.message : 'Erro desconhecido'}`);
           
           // Se falhar o download do Supabase, tentar o caminho local
           if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
@@ -258,13 +258,13 @@ export class PedidosController {
         throw new NotFoundException('PDF não disponível para este pedido');
       }
     } catch (error) {
-      console.error('Erro ao fazer download do PDF:', error);
+      console.error('Erro ao fazer download do PDF:', error instanceof Error ? error.message : error);
       
       if (error instanceof NotFoundException) {
         throw error;
       }
       
-      throw new InternalServerErrorException(`Erro ao processar PDF do pedido: ${error.message}`);
+      throw new InternalServerErrorException(`Erro ao processar PDF do pedido: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 

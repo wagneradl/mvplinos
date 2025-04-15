@@ -74,7 +74,7 @@ export class SupabaseService {
         this.logger.warn(`You may need to configure this in the Supabase dashboard manually`);
       }
     } catch (error: any) {
-      this.logger.error(`Error initializing bucket: ${error?.message || 'Unknown error'}`, error);
+      this.logger.error(`Error initializing bucket: ${error instanceof Error ? error.message : 'Unknown error'}`, error);
       // Não lançamos o erro para evitar que o serviço falhe durante a inicialização
     }
   }
@@ -113,13 +113,13 @@ export class SupabaseService {
       // Se houver erro, lançar exceção
       if (error) {
         const customError: SupabaseServiceError = new Error(
-          `Failed to upload file: ${error.message}`,
+          `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
         // Modificando para acessar a propriedade de código de forma segura
         customError.code = (error as any).code || 'UNKNOWN_ERROR';
         customError.originalError = error;
         
-        this.logger.error(`Error uploading file to Supabase: ${error.message}`, error);
+        this.logger.error(`Error uploading file to Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`, error);
 
         // Modo de desenvolvimento/teste: gerar URL local temporária
         if (process.env.NODE_ENV !== 'production') {
@@ -203,7 +203,7 @@ export class SupabaseService {
 
       // Erro não esperado
       this.logger.error(
-        `Storage service error: ${(error as any)?.message || 'Unknown error'}`,
+        `Storage service error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error
       );
 
@@ -222,9 +222,7 @@ export class SupabaseService {
       }
 
       throw new InternalServerErrorException(
-        `Failed to upload file to storage: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
+        `Failed to upload file to storage: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
@@ -297,8 +295,8 @@ export class SupabaseService {
         .createSignedUrl(filePath, expiresIn);
 
       if (error) {
-        this.logger.error(`Error creating signed URL: ${error.message}`);
-        throw new Error(`Failed to create signed URL: ${error.message}`);
+        this.logger.error(`Error creating signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(`Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
 
       if (!data || !data.signedUrl) {
