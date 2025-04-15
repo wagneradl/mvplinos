@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: >
-      yarn install --frozen-lockfile &&
+      yarn install --check-files &&
       node scripts/render-postinstall.js &&
       cd packages/backend &&
       yarn prisma generate &&

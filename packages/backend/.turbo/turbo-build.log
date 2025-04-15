@@ -1,1 +1,126 @@
-[2K[1G[2m$ nest build[22m
+[2K[1G[2m$ tsc -p tsconfig.build.json && yarn nest build[22m
+[96msrc/auth/auth.service.ts[0m:[93m15[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m15[0m     const usuario = await this.prisma.usuario.findUnique({
+[7m  [0m [91m                                      ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m175[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m175[0m       if (!pedido.pdf_path && !pedido.pdf_url) {
+[7m   [0m [91m                                      ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m215[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m215[0m           if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
+[7m   [0m [91m                     ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m215[0m:[93m40[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m215[0m           if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
+[7m   [0m [91m                                       ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m217[0m:[93m43[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m217[0m             const urlObj = new URL(pedido.pdf_url);
+[7m   [0m [91m                                          ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m235[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m235[0m       } else if (pedido.pdf_url) {
+[7m   [0m [91m                        ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m237[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m237[0m         if (pedido.pdf_url.includes('localhost')) {
+[7m   [0m [91m                   ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m239[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m239[0m           const urlObj = new URL(pedido.pdf_url);
+[7m   [0m [91m                                        ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.controller.ts[0m:[93m255[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ cliente: { status: string; deleted_at: Date; id: number; cnpj: string; razao_social: string; nome_fantasia: string; telefone: string; email: string; }; itensPedido: ({ produto: { status: string; ... 4 more ...; id: number; }; } & { ...; })[]; } & { ...; }'.
+
+[7m255[0m           return res.redirect(pedido.pdf_url);
+[7m   [0m [91m                                     ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.service.ts[0m:[93m632[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ status: string; deleted_at: Date; id: number; cliente_id: number; data_pedido: Date; valor_total: number; pdf_path: string; }'.
+
+[7m632[0m       pdfUrl: pedido.pdf_url || null,
+[7m   [0m [91m                     ~~~~~~~[0m
+
+[96msrc/pedidos/pedidos.service.ts[0m:[93m633[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'pdf_url' does not exist on type '{ status: string; deleted_at: Date; id: number; cliente_id: number; data_pedido: Date; valor_total: number; pdf_path: string; }'.
+
+[7m633[0m       hasUrl: Boolean(pedido.pdf_url),
+[7m   [0m [91m                             ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m12[0m:[93m46[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m12[0m     const emailExistente = await this.prisma.usuario.findUnique({
+[7m  [0m [91m                                             ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m21[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'papel' does not exist on type 'PrismaService'.
+
+[7m21[0m     const papel = await this.prisma.papel.findUnique({
+[7m  [0m [91m                                    ~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m33[0m:[93m45[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m33[0m     const usuarioCriado = await this.prisma.usuario.create({
+[7m  [0m [91m                                            ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m58[0m:[93m40[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m58[0m     const usuarios = await this.prisma.usuario.findMany({
+[7m  [0m [91m                                       ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m83[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m83[0m     const usuario = await this.prisma.usuario.findUnique({
+[7m  [0m [91m                                      ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m110[0m:[93m48[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m110[0m     const usuarioExistente = await this.prisma.usuario.findUnique({
+[7m   [0m [91m                                               ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m120[0m:[93m48[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m120[0m       const emailExistente = await this.prisma.usuario.findUnique({
+[7m   [0m [91m                                               ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m131[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'papel' does not exist on type 'PrismaService'.
+
+[7m131[0m       const papel = await this.prisma.papel.findUnique({
+[7m   [0m [91m                                      ~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m149[0m:[93m49[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m149[0m     const usuarioAtualizado = await this.prisma.usuario.update({
+[7m   [0m [91m                                                ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m173[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m173[0m     const usuario = await this.prisma.usuario.findUnique({
+[7m   [0m [91m                                      ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m182[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'usuario' does not exist on type 'PrismaService'.
+
+[7m182[0m     return this.prisma.usuario.update({
+[7m   [0m [91m                       ~~~~~~~[0m
+
+[96msrc/usuarios/usuarios.service.ts[0m:[93m192[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'papel' does not exist on type 'PrismaService'.
+
+[7m192[0m     const papeis = await this.prisma.papel.findMany();
+[7m   [0m [91m                                     ~~~~~[0m
+
+
+Found 23 errors in 4 files.
+
+Errors  Files
+     1  src/auth/auth.service.ts[90m:15[0m
+     8  src/pedidos/pedidos.controller.ts[90m:175[0m
+     2  src/pedidos/pedidos.service.ts[90m:632[0m
+    12  src/usuarios/usuarios.service.ts[90m:12[0m
+[2K[1G[31merror[39m Command failed with exit code 2.
+[2K[1G[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.
