@@ -246,23 +246,24 @@ export default function NovoPedidoPage() {
         }))
       };
       
-      // Remover os campos que não devem ser enviados ao backend
-      const { status, created_at, updated_at, data_pedido, valor_total, itensPedido, ...pedido } = pedidoData;
-      
-      // Limpar os campos não aceitos de cada item
-      // Removendo campos que causaram erros anteriores: preco_unitario e valor_total_item
-      const itensLimpos = itensPedido.map(({ preco_unitario, valor_total_item, ...item }) => item);
-      
-      // Preparar objeto para envio ao backend - garantindo que contém apenas campos esperados
-      // Estrutura esperada pelo backend de acordo com o tipo Pedido:
-      // { cliente_id: number, itensPedido: Array<{ produto_id: number, quantidade: number }> }
+      // Reconstruir o objeto explicitamente para garantir que apenas os campos necessários sejam enviados
+      // Evitando qualquer vazamento de propriedades através do spread operator
       const pedidoFinal = {
-        ...pedido, // Contém apenas cliente_id neste ponto
-        itensPedido: itensLimpos // Usar o nome itensPedido conforme definido no tipo Pedido
+        cliente_id: pedidoData.cliente_id,
+        itens: pedidoData.itensPedido.map(({ produto_id, quantidade }) => ({
+          produto_id,
+          quantidade
+        }))
       };
       
+      // Logar o objeto final para inspeção
+      console.log('Objeto pedidoFinal a ser enviado:', JSON.stringify(pedidoFinal, null, 2));
+      
       console.log('Enviando pedido para criação:', pedidoFinal);
-      await criarPedido(pedidoFinal);
+      
+      // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância 
+      // entre o tipo Pedido no frontend (que espera itensPedido) e o que a API realmente aceita (itens)
+      await criarPedido(pedidoFinal as any);
       console.log('Pedido criado com sucesso');
       
       enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
