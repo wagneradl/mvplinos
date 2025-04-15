@@ -6,6 +6,14 @@ services:
     region: oregon
     plan: starter
     buildCommand: >
+      apt-get update &&
+      apt-get install -y wget gnupg &&
+      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&
+      sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' &&
+      apt-get update &&
+      apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 &&
+      mkdir -p /var/data/pdfs /var/data/uploads/pdfs /var/data/uploads/static &&
+      chmod -R 777 /var/data &&
       yarn install --frozen-lockfile &&
       node scripts/render-postinstall.js &&
       cd packages/backend &&
@@ -48,7 +56,6 @@ services:
     buildFilter:
       paths:
         - packages/backend/**/*
-    initialDeploy: true
     autoDeploy: true
 
   # Frontend Service
@@ -79,7 +86,6 @@ services:
     buildFilter:
       paths:
         - packages/frontend/**/*
-    initialDeploy: true
     autoDeploy: true
 
 envVarGroups:
@@ -91,18 +97,3 @@ envVarGroups:
         sync: false
       - key: SUPABASE_API_KEY
         sync: false
-
-# Configuração de daemons para tarefas em segundo plano
-preRun:
-  # Instala o Chrome necessário para o Puppeteer gerar PDFs
-  - name: install-chrome
-    service: linos-backend
-    command: >
-      apt-get update &&
-      apt-get install -y wget gnupg &&
-      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&
-      sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' &&
-      apt-get update &&
-      apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 &&
-      mkdir -p /var/data/pdfs /var/data/uploads/pdfs /var/data/uploads/static &&
-      chmod -R 777 /var/data
