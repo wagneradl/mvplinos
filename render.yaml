@@ -5,8 +5,16 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: yarn install --ignore-scripts && node scripts/render-postinstall.js && node scripts/render-backend-build.js
-    startCommand: cd packages/backend && npx prisma migrate deploy && npx prisma generate && npx ts-node prisma/seed.ts && node dist/main
+    buildCommand: >
+      yarn install --frozen-lockfile &&
+      node scripts/render-postinstall.js &&
+      cd packages/backend &&
+      yarn prisma generate &&
+      yarn build
+    startCommand: >
+      cd packages/backend &&
+      npx prisma migrate deploy &&
+      NODE_ENV=production node dist/main.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -18,12 +26,30 @@ services:
       - key: PDF_STORAGE_PATH
         value: /var/data/pdfs
       - key: UPLOADS_PATH
-        value: /var/data
+        value: /var/data/uploads
+      # Supabase configuração
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_API_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: pedidos-pdfs
+      # Configurações do Puppeteer para PDF
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/google-chrome-stable
       - fromGroup: linos-secrets
     disk:
       name: data
       mountPath: /var/data
-      sizeGB: 1
+      sizeGB: 2
+    # Configuração para instalar Chrome no sistema Linux para PDF
+    buildFilter:
+      paths:
+        - packages/backend/**/*
+    initialDeploy: true
+    autoDeploy: true
 
   # Frontend Service
   - type: web
@@ -32,11 +58,9 @@ services:
     region: oregon
     plan: starter
     buildCommand: >
-      yarn install --ignore-scripts &&
+      yarn install --frozen-lockfile &&
       cd packages/frontend &&
-      yarn add --dev typescript@5.0.4 @types/react@18.2.12 @types/react-dom@18.2.5 &&
-      cd ../.. &&
-      node scripts/render-advanced-fix.js
+      yarn build
     startCommand: cd packages/frontend && yarn start
     healthCheckPath: /api/health
     envVars:
@@ -52,9 +76,33 @@ services:
         value: "--max_old_space_size=4096"
       - key: TSC_COMPILE_ON_ERROR
         value: "true"
+    buildFilter:
+      paths:
+        - packages/frontend/**/*
+    initialDeploy: true
+    autoDeploy: true
 
 envVarGroups:
   - name: linos-secrets
     envVars:
       - key: JWT_SECRET
         generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_API_KEY
+        sync: false
+
+# Configuração de daemons para tarefas em segundo plano
+preRun:
+  # Instala o Chrome necessário para o Puppeteer gerar PDFs
+  - name: install-chrome
+    service: linos-backend
+    command: >
+      apt-get update &&
+      apt-get install -y wget gnupg &&
+      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&
+      sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' &&
+      apt-get update &&
+      apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 &&
+      mkdir -p /var/data/pdfs /var/data/uploads/pdfs /var/data/uploads/static &&
+      chmod -R 777 /var/data

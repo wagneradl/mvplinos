@@ -9,6 +9,9 @@ import {
   Query,
   Res,
   BadRequestException,
+  NotFoundException,
+  InternalServerErrorException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PedidosService } from './pedidos.service';
@@ -19,11 +22,19 @@ import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Response } from 'express';
 import { ParseIntPipe, ParseFloatPipe } from '@nestjs/common';
 import { existsSync } from 'fs';
+import { join } from 'path';
+import { SupabaseService } from '../supabase/supabase.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('pedidos')
 @Controller('pedidos')
 export class PedidosController {
-  constructor(private readonly pedidosService: PedidosService) {}
+  constructor(
+    private readonly pedidosService: PedidosService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Criar novo pedido' })
@@ -145,35 +156,116 @@ export class PedidosController {
   }
 
   @Get(':id/pdf')
-  @ApiOperation({
-    summary: 'Download do PDF do pedido',
-    description: 'Faz o download do arquivo PDF associado ao pedido especificado.'
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID do pedido',
-    type: 'number',
-    required: true
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'PDF do pedido retornado com sucesso',
-    content: {
-      'application/pdf': {
-        schema: {
-          type: 'string',
-          format: 'binary'
-        }
-      }
-    }
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Pedido não encontrado ou PDF não disponível'
-  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'operador')
+  @ApiOperation({ summary: 'Download do PDF de um pedido' })
+  @ApiResponse({ status: 200, description: 'Retorna o arquivo PDF' })
+  @ApiResponse({ status: 400, description: 'Pedido inválido ou PDF não disponível' })
+  @ApiParam({ name: 'id', description: 'ID do pedido' })
   async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    const pdfPath = await this.pedidosService.getPdfPath(id);
-    return res.sendFile(pdfPath);
+    try {
+      // Buscar pedido pelo ID para obter o caminho ou URL do PDF
+      const pedido = await this.pedidosService.findOne(id);
+      
+      if (!pedido) {
+        throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+      
+      // Verificar se o pedido tem PDF
+      if (!pedido.pdf_path && !pedido.pdf_url) {
+        throw new NotFoundException(`PDF não encontrado para o pedido ${id}`);
+      }
+      
+      // Configurar headers comuns para ambos os tipos de resposta
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="pedido-${id}.pdf"`);
+      
+      // Verificar se é um caminho no Supabase Storage ou local
+      if (pedido.pdf_path && pedido.pdf_path.startsWith('pedidos/')) {
+        try {
+          // Verificar se o Supabase está disponível
+          if (this.supabaseService.isAvailable()) {
+            // Download do PDF do Supabase Storage
+            const { data, error } = await this.supabaseService.getClient()
+              .storage
+              .from(this.supabaseService.getBucketName())
+              .download(pedido.pdf_path);
+              
+            if (error) {
+              console.error(`Erro ao baixar PDF do Supabase: ${error.message}`);
+              throw new Error(`Erro ao baixar PDF do Supabase: ${error.message}`);
+            }
+            
+            if (!data) {
+              throw new Error('Arquivo PDF não encontrado no Supabase');
+            }
+            
+            // Converter Blob para Buffer e enviar
+            const arrayBuffer = await data.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            return res.send(buffer);
+          } else {
+            // Fallback para URL local se Supabase não estiver disponível
+            throw new Error('Supabase não disponível, tentando fallback local');
+          }
+        } catch (supabaseError) {
+          console.warn(`Fallback para PDF local: ${supabaseError.message}`);
+          
+          // Se falhar o download do Supabase, tentar o caminho local
+          if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
+            // Extrair o caminho relativo da URL
+            const urlObj = new URL(pedido.pdf_url);
+            const relativePath = urlObj.pathname.startsWith('/') 
+              ? urlObj.pathname.substring(1) 
+              : urlObj.pathname;
+            
+            // Converter para caminho absoluto
+            const absolutePath = join(process.cwd(), relativePath);
+            
+            console.log(`Tentando fallback para arquivo local: ${absolutePath}`);
+            
+            // Verificar se o arquivo existe
+            if (existsSync(absolutePath)) {
+              return res.sendFile(absolutePath);
+            } else {
+              throw new NotFoundException(`Arquivo PDF não encontrado no caminho local: ${absolutePath}`);
+            }
+          }
+        }
+      } else if (pedido.pdf_url) {
+        // Verificar se é uma URL local
+        if (pedido.pdf_url.includes('localhost')) {
+          // Extrair o caminho relativo da URL
+          const urlObj = new URL(pedido.pdf_url);
+          const relativePath = urlObj.pathname.startsWith('/') 
+            ? urlObj.pathname.substring(1) 
+            : urlObj.pathname;
+          
+          // Converter para caminho absoluto
+          const absolutePath = join(process.cwd(), relativePath);
+          
+          // Verificar se o arquivo existe
+          if (existsSync(absolutePath)) {
+            return res.sendFile(absolutePath);
+          } else {
+            throw new NotFoundException(`Arquivo PDF não encontrado no caminho local: ${absolutePath}`);
+          }
+        } else {
+          // Para URLs externas (como URLs públicas do Supabase na versão antiga)
+          return res.redirect(pedido.pdf_url);
+        }
+      } else {
+        throw new NotFoundException('PDF não disponível para este pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer download do PDF:', error);
+      
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      
+      throw new InternalServerErrorException(`Erro ao processar PDF do pedido: ${error.message}`);
+    }
   }
 
   @Patch(':id/itens/:itemId')

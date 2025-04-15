@@ -66,6 +66,7 @@ model Pedido {
   valor_total  Float
   status       String       @default("PENDENTE")
   pdf_path     String?
+  pdf_url      String?      // URL do arquivo PDF no Supabase Storage
   created_at   DateTime     @default(now())
   updated_at   DateTime     @updatedAt
   deleted_at   DateTime?

@@ -23,7 +23,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Obter informações do usuário logado' })
   @ApiResponse({ status: 200, description: 'Informações do usuário retornadas com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  async me(@Req() req: Request) {
+  async me(@Req() req: Request & { user: any }) {
     // O usuário já estará disponível no request após passar pelo guard
     return req.user;
   }

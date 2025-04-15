@@ -130,28 +130,39 @@ export class PedidosService {
           }
         });
 
-        // SOLUÇÃO TEMPORÁRIA: Desativar geração de PDF para testar
-        // Comentando a linha abaixo que pode estar causando o erro 500
-        // const pdfPath = await this.pdfService.generatePedidoPdf(pedido);
+        // Gerar PDF do pedido usando o serviço PDF
+        // Dependendo da configuração, pode gerar o PDF localmente ou no Supabase
+        const pdfResult = await this.pdfService.generatePedidoPdf(pedido);
         
-        // Usar um caminho fixo temporário para teste
-        const timestamp = new Date().getTime();
-        const pdfPath = `uploads/pdfs/temp-pedido-${pedido.id}-${timestamp}.pdf`;
+        // Preparar os dados para atualização do pedido
+        const updateData: {
+          pdf_path?: string;
+          pdf_url?: string;
+        } = {};
         
-        console.log('TESTE: Usando caminho de PDF fixo:', pdfPath);
+        if (typeof pdfResult === 'string') {
+          // Formato antigo: apenas caminho local
+          updateData.pdf_path = pdfResult;
+          console.log('PDF gerado localmente:', pdfResult);
+        } else {
+          // Novo formato: objeto com caminho e URL do Supabase
+          updateData.pdf_path = pdfResult.path;
+          updateData.pdf_url = pdfResult.url;
+          console.log('PDF enviado para Supabase:', pdfResult.url);
+        }
         
-        // Atualizar o pedido com o caminho do PDF
+        // Atualizar o pedido com as informações do PDF
         return await tx.pedido.update({
           where: { id: pedido.id },
-          data: { pdf_path: pdfPath },
+          data: updateData,
           include: {
             cliente: true,
             itensPedido: {
               include: {
-                produto: true,
-              },
-            },
-          },
+                produto: true
+              }
+            }
+          }
         });
       });
     } catch (error) {
@@ -322,7 +333,7 @@ export class PedidosService {
     }
   }
 
-  async update(id: number, updatePedidoDto: UpdatePedidoDto) {
+  async update(id: number, updatePedidoDto: UpdatePedidoDto, regenerarPdf: boolean = false) {
     try {
       const pedido = await this.prisma.pedido.findFirst({
         where: { id }, 
@@ -363,18 +374,40 @@ export class PedidosService {
         },
       });
 
-      // Gerar novo PDF se o status foi alterado
-      if (updatePedidoDto.status && updatePedidoDto.status !== pedido.status) {
-        const timestamp = Date.now();
-        const pdfPath = await this.pdfService.generatePedidoPdf({
+      // Se o pedido for atualizado com sucesso e regenerarPdf for true, gerar um novo PDF
+      if (regenerarPdf) {
+        console.log('Regenerando PDF para pedido atualizado:', pedidoAtualizado.id);
+        
+        // Gerar um timestamp para evitar cache do navegador
+        const timestamp = new Date().getTime();
+        
+        // Gerar o PDF do pedido atualizado
+        const pdfResult = await this.pdfService.generatePedidoPdf({
           ...pedidoAtualizado,
           id: `${pedidoAtualizado.id}-${timestamp}` // Gerar um ID único para o PDF
         });
         
+        // Preparar os dados para atualização do pedido
+        const updateData: {
+          pdf_path?: string;
+          pdf_url?: string;
+        } = {};
+        
+        if (typeof pdfResult === 'string') {
+          // Formato antigo: apenas caminho local
+          updateData.pdf_path = pdfResult;
+          console.log('PDF regenerado localmente:', pdfResult);
+        } else {
+          // Novo formato: objeto com caminho e URL do Supabase
+          updateData.pdf_path = pdfResult.path;
+          updateData.pdf_url = pdfResult.url;
+          console.log('PDF regenerado e enviado para Supabase:', pdfResult.url);
+        }
+        
         // Atualizar o pedido com o caminho do PDF
         return await this.prisma.pedido.update({
           where: { id },
-          data: { pdf_path: pdfPath },
+          data: updateData,
           include: {
             cliente: true,
             itensPedido: {
@@ -553,9 +586,15 @@ export class PedidosService {
     }
   }
 
+  /**
+   * Obtém o caminho do arquivo PDF para um pedido
+   * @param id ID do pedido
+   * @returns Caminho do arquivo PDF
+   * @deprecated Use getPdfInfo em seu lugar
+   */
   async getPdfPath(id: number): Promise<string> {
-    const pedido = await this.prisma.pedido.findFirst({
-      where: { id }
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id },
     });
 
     if (!pedido) {
@@ -563,15 +602,42 @@ export class PedidosService {
     }
 
     if (!pedido.pdf_path) {
-      throw new NotFoundException(`PDF do pedido com ID ${id} não encontrado`);
+      throw new BadRequestException(`O pedido #${id} não tem PDF disponível`);
     }
 
-    const fullPath = join(process.cwd(), pedido.pdf_path);
-    if (!existsSync(fullPath)) {
-      throw new NotFoundException(`Arquivo PDF do pedido com ID ${id} não encontrado no sistema`);
+    return pedido.pdf_path;
+  }
+
+  /**
+   * Obtém as informações do PDF para um pedido (caminho e URL)
+   * @param id ID do pedido
+   * @returns Objeto com informações do PDF (caminho e URL)
+   */
+  async getPdfInfo(id: number): Promise<{
+    pdfPath: string | null;
+    pdfUrl: string | null;
+    hasUrl: boolean;
+  }> {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id },
+    });
+
+    if (!pedido) {
+      throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
     }
 
-    return fullPath;
+    // Verificar se temos informações do PDF
+    const result = {
+      pdfPath: pedido.pdf_path || null,
+      pdfUrl: pedido.pdf_url || null,
+      hasUrl: Boolean(pedido.pdf_url),
+    };
+
+    if (!result.pdfPath && !result.pdfUrl) {
+      throw new BadRequestException(`O pedido #${id} não tem PDF disponível`);
+    }
+
+    return result;
   }
 
   async generateReportPdf(reportDto: ReportPedidoDto): Promise<string> {
