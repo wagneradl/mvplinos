@@ -254,11 +254,11 @@ export default function NovoPedidoPage() {
       const itensLimpos = itensPedido.map(({ preco_unitario, valor_total_item, ...item }) => item);
       
       // Preparar objeto para envio ao backend - garantindo que contém apenas campos esperados
-      // Estrutura esperada pelo backend:
-      // { cliente_id: number, itens: Array<{ produto_id: number, quantidade: number }> }
+      // Estrutura esperada pelo backend de acordo com o tipo Pedido:
+      // { cliente_id: number, itensPedido: Array<{ produto_id: number, quantidade: number }> }
       const pedidoFinal = {
         ...pedido, // Contém apenas cliente_id neste ponto
-        itens: itensLimpos // Contém apenas produto_id e quantidade em cada item
+        itensPedido: itensLimpos // Usar o nome itensPedido conforme definido no tipo Pedido
       };
       
       console.log('Enviando pedido para criação:', pedidoFinal);
