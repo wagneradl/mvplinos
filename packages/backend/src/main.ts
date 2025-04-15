@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import * as express from 'express';
+import { ensureAdminUser } from './bootstrap/ensure-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -41,6 +42,9 @@ async function bootstrap() {
   
   await app.listen(port);
   
+  // Garante admin após o app estar pronto
+  ensureAdminUser().catch(console.error);
+
   console.log(`Servidor rodando na porta ${port}`);
   console.log(`Documentação Swagger disponível em: http://localhost:${port}/api`);
   console.log(`Variáveis de ambiente: NODE_ENV=${process.env.NODE_ENV}`);
