@@ -130,8 +130,15 @@ export class PedidosService {
           }
         });
 
-        // Gerar PDF do pedido
-        const pdfPath = await this.pdfService.generatePedidoPdf(pedido);
+        // SOLUÇÃO TEMPORÁRIA: Desativar geração de PDF para testar
+        // Comentando a linha abaixo que pode estar causando o erro 500
+        // const pdfPath = await this.pdfService.generatePedidoPdf(pedido);
+        
+        // Usar um caminho fixo temporário para teste
+        const timestamp = new Date().getTime();
+        const pdfPath = `uploads/pdfs/temp-pedido-${pedido.id}-${timestamp}.pdf`;
+        
+        console.log('TESTE: Usando caminho de PDF fixo:', pdfPath);
         
         // Atualizar o pedido com o caminho do PDF
         return await tx.pedido.update({
@@ -141,10 +148,10 @@ export class PedidosService {
             cliente: true,
             itensPedido: {
               include: {
-                produto: true
-              }
-            }
-          }
+                produto: true,
+              },
+            },
+          },
         });
       });
     } catch (error) {
