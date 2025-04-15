@@ -38,6 +38,8 @@
   },
   "packageManager": "yarn@1.22.19",
   "dependencies": {
-    "glob": "^11.0.1"
+    "glob": "^11.0.1",
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0"
   }
 }
