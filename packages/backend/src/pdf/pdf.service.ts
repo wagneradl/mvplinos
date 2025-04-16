@@ -101,7 +101,8 @@ export class PdfService implements OnModuleInit {
       
       browser = await puppeteer.launch({ 
         headless: true,
-        args: ['--no-sandbox']
+        args: ['--no-sandbox'],
+        executablePath: process.env.NODE_ENV === 'production' ? '/usr/bin/chromium' : undefined,
       });
       
       const page = await browser.newPage();
@@ -502,7 +503,8 @@ export class PdfService implements OnModuleInit {
       
       browser = await puppeteer.launch({ 
         headless: true,
-        args: ['--no-sandbox'] 
+        args: ['--no-sandbox'],
+        executablePath: process.env.NODE_ENV === 'production' ? '/usr/bin/chromium' : undefined,
       });
       
       const page = await browser.newPage();

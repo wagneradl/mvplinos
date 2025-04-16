@@ -6,10 +6,12 @@ services:
     region: oregon
     plan: starter
     buildCommand: >
-      yarn install --check-files &&
-      node scripts/render-postinstall.js &&
-      cd packages/backend &&
-      yarn prisma generate &&
+      apt-get update && \
+      apt-get install -y chromium && \
+      yarn install --check-files && \
+      node scripts/render-postinstall.js && \
+      cd packages/backend && \
+      yarn prisma generate && \
       yarn build
     startCommand: >
       cd packages/backend &&
@@ -34,6 +36,8 @@ services:
         sync: false
       - key: SUPABASE_BUCKET
         value: pedidos-pdfs
+      - key: PUPPETEER_SKIP_DOWNLOAD
+        value: "true"
       - fromGroup: linos-secrets
     disk:
       name: data
