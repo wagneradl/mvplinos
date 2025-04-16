@@ -6,8 +6,6 @@ services:
     region: oregon
     plan: starter
     buildCommand: >
-      apt-get update && \
-      apt-get install -y chromium && \
       yarn install --check-files && \
       node scripts/render-postinstall.js && \
       cd packages/backend && \
