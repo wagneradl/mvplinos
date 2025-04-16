@@ -5,11 +5,11 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: >
-      yarn install --check-files && \
-      node scripts/render-postinstall.js && \
-      cd packages/backend && \
-      yarn prisma generate && \
+    buildCommand: |
+      yarn install --check-files
+      node scripts/render-postinstall.js
+      cd packages/backend
+      yarn prisma generate
       yarn build
     startCommand: >
       cd packages/backend &&
