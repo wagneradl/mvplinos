@@ -112,6 +112,8 @@ export class PdfService implements OnModuleInit {
         const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
         this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
+        // Logar o início do base64 para debug
+        this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         this.logger.error(`Erro ao carregar logo: ${errorMessage}`);
@@ -512,6 +514,9 @@ export class PdfService implements OnModuleInit {
       try {
         const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+        this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
+        // Logar o início do base64 para debug
+        this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
         this.logger.error(`Erro ao carregar logo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
