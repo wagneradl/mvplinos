@@ -4,17 +4,28 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import * as express from 'express';
+import * as cors from 'cors';
 import { ensureAdminUser } from './bootstrap/ensure-admin';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  
-  // Habilitando CORS
-  app.enableCors({
-    origin: 'https://linos-frontend-6wef.onrender.com',
-    credentials: true,
-  });
-  
+  const server = express();
+
+  // CORS via Express
+  server.use(
+    cors({
+      origin: 'https://linos-frontend-6wef.onrender.com',
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+  );
+
+  // Preflight (OPTIONS) handler
+  server.options('*', cors());
+
+  const app = await NestFactory.create(AppModule, { bodyParser: true, rawBody: false, cors: false });
+  app.use(server);
+
   // Configurando validação global
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
