@@ -23,29 +23,37 @@ async function bootstrap() {
   }));
 
   // Configurando acesso a arquivos estáticos
-  // Determinar o caminho correto com base nas variáveis de ambiente
   const uploadsPath = process.env.UPLOADS_PATH 
     ? join(process.env.UPLOADS_PATH) 
     : join(process.cwd(), 'uploads');
 
   app.use('/uploads', express.static(uploadsPath));
-  
+
+  // Tratamento global para OPTIONS (CORS preflight)
+  app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', 'https://linos-frontend-6wef.onrender.com');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.sendStatus(204);
+    }
+    next();
+  });
+
   // Configurando Swagger para documentação da API
   const config = new DocumentBuilder()
-    .setTitle('Lino\'s Panificadora API')
-    .setDescription('API para gestão da padaria Lino\'s')
+    .setTitle("Lino's Panificadora API")
+    .setDescription("API para gestão da padaria Lino's")
     .setVersion('1.0')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Porta a ser usada pelo servidor
   const port = process.env.PORT || 3001;
-  
   await app.listen(port);
-  
-  // Garante admin após o app estar pronto
+
   ensureAdminUser().catch(console.error);
 
   console.log(`Servidor rodando na porta ${port}`);
