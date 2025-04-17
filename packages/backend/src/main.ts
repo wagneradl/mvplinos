@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
-import * as express from 'express';
+import express from 'express';
 import * as cors from 'cors';
 import { ensureAdminUser } from './bootstrap/ensure-admin';
 
