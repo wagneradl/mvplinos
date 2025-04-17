@@ -43,4 +43,4 @@ uploads/*
 !.vscode/launch.json
 
 # Cache
-.cache
+.cache/
