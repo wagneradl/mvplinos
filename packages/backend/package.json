@@ -56,7 +56,7 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.13.3",
     "prisma": "5.22.0",
-    "puppeteer": "^21.3.8",
+    "puppeteer": "^22.8.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
