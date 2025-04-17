@@ -10,21 +10,22 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS
-  app.enableCors({
-    origin: 'https://linos-frontend-6wef.onrender.com',
-    credentials: true,
-  });
+  const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? ['https://linos-frontend.onrender.com']
+    : ['http://localhost:3000', 'https://linos-frontend-6wef.onrender.com'];
 
-  // OPTIONS handler para o preflight (sem exagerar permissões)
-  app.use((req, res, next) => {
-    if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Origin', 'https://linos-frontend-6wef.onrender.com');
-      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      return res.sendStatus(204);
-    }
-    next();
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS not allowed'), false);
+      }
+    },
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+    optionsSuccessStatus: 204,
   });
 
   // Pipes globais
