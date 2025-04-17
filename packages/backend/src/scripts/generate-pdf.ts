@@ -8,11 +8,14 @@ async function generatePdf() {
     const app = await NestFactory.createApplicationContext(AppModule);
     const pedidosService = app.get(PedidosService);
 
-    // Buscar o pedido com ID 1 e gerar o PDF
-    const pedido = await pedidosService.findOne(1);
-    await pedidosService.update(1, { status: PedidoStatus.ATIVO });
+    // Buscar o pedido mais recente usando a paginação padrão
+    const { data: pedidos } = await pedidosService.findAll({ page: 1, limit: 1 });
+    const pedido = pedidos[0];
+    if (!pedido) throw new Error('Nenhum pedido encontrado para gerar PDF.');
 
-    console.log('PDF gerado com sucesso para o pedido:', pedido);
+    // Atualizar status e gerar PDF
+    await pedidosService.update(pedido.id, { status: PedidoStatus.ATIVO });
+    console.log('PDF gerado com sucesso para o pedido:', pedido.id);
     await app.close();
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
