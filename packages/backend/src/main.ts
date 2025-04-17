@@ -3,14 +3,19 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import express from 'express';
-
 import { AppModule } from './app.module';
 import { ensureAdminUser } from './bootstrap/ensure-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Middleware para responder pré-flights (OPTIONS)
+  // CORS
+  app.enableCors({
+    origin: 'https://linos-frontend-6wef.onrender.com',
+    credentials: true,
+  });
+
+  // OPTIONS handler para o preflight (sem exagerar permissões)
   app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', 'https://linos-frontend-6wef.onrender.com');
@@ -22,26 +27,21 @@ async function bootstrap() {
     next();
   });
 
-  // CORS para produção
-  app.enableCors({
-    origin: 'https://linos-frontend-6wef.onrender.com',
-    credentials: true,
-  });
+  // Pipes globais
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  }));
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    })
-  );
-
+  // Static uploads
   const uploadsPath = process.env.UPLOADS_PATH
     ? join(process.env.UPLOADS_PATH)
     : join(process.cwd(), 'uploads');
 
   app.use('/uploads', express.static(uploadsPath));
 
+  // Swagger
   const config = new DocumentBuilder()
     .setTitle("Lino's Panificadora API")
     .setDescription("API para gestão da padaria Lino's")
@@ -57,7 +57,7 @@ async function bootstrap() {
   ensureAdminUser().catch(console.error);
 
   console.log(`Servidor rodando na porta ${port}`);
-  console.log(`Swagger: http://localhost:${port}/api`);
+  console.log(`Documentação Swagger disponível em: http://localhost:${port}/api`);
   console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
   console.log(`Uploads: ${uploadsPath}`);
 }
