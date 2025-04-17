@@ -10,7 +10,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   // Habilitando CORS
-  app.enableCors();
+  app.enableCors({
+    origin: ['https://linos-frontend-6wef.onrender.com'],
+    credentials: true,
+  });
   
   // Configurando validação global
   app.useGlobalPipes(new ValidationPipe({
