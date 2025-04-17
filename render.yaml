@@ -36,6 +36,8 @@ services:
         value: pedidos-pdfs
       - key: PUPPETEER_SKIP_DOWNLOAD
         value: "true"
+      - key: CORS_ORIGINS
+        value: "https://linos-frontend-6wef.onrender.com,https://linos-frontend.onrender.com"
       - fromGroup: linos-secrets
     disk:
       name: data

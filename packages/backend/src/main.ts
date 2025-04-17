@@ -10,9 +10,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? ['https://linos-frontend.onrender.com']
-    : ['http://localhost:3000', 'https://linos-frontend-6wef.onrender.com'];
+  // CORS (origins from CORS_ORIGINS env or fallback list)
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : process.env.NODE_ENV === 'production'
+      ? ['https://linos-frontend-6wef.onrender.com']
+      : ['http://localhost:3000', 'https://linos-frontend-6wef.onrender.com'];
 
   app.enableCors({
     origin: (origin, callback) => {
