@@ -176,94 +176,45 @@ export class PedidosController {
         throw new NotFoundException(`PDF não encontrado para o pedido ${id}`);
       }
       
-      // Configurar headers comuns para ambos os tipos de resposta
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="pedido-${id}.pdf"`);
-      
-      // Verificar se é um caminho no Supabase Storage ou local
-      if (pedido.pdf_path && pedido.pdf_path.startsWith('pedidos/')) {
-        try {
-          // Verificar se o Supabase está disponível
-          if (this.supabaseService.isAvailable()) {
-            // Download do PDF do Supabase Storage
-            const { data, error } = await this.supabaseService.getClient()
-              .storage
-              .from(this.supabaseService.getBucketName())
-              .download(pedido.pdf_path);
-              
-            if (error) {
-              console.error(`Erro ao baixar PDF do Supabase: ${error.message}`);
-              throw new Error(`Erro ao baixar PDF do Supabase: ${error.message}`);
-            }
-            
-            if (!data) {
-              throw new Error('Arquivo PDF não encontrado no Supabase');
-            }
-            
-            // Converter Blob para Buffer e enviar
-            const arrayBuffer = await data.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            return res.send(buffer);
-          } else {
-            // Fallback para URL local se Supabase não estiver disponível
-            throw new Error('Supabase não disponível, tentando fallback local');
-          }
-        } catch (supabaseError) {
-          console.warn(`Fallback para PDF local: ${supabaseError instanceof Error ? supabaseError.message : 'Erro desconhecido'}`);
-          
-          // Se falhar o download do Supabase, tentar o caminho local
-          if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
-            // Extrair o caminho relativo da URL
-            const urlObj = new URL(pedido.pdf_url);
-            const relativePath = urlObj.pathname.startsWith('/') 
-              ? urlObj.pathname.substring(1) 
-              : urlObj.pathname;
-            
-            // Converter para caminho absoluto
-            const absolutePath = join(process.cwd(), relativePath);
-            
-            console.log(`Tentando fallback para arquivo local: ${absolutePath}`);
-            
-            // Verificar se o arquivo existe
-            if (existsSync(absolutePath)) {
-              return res.sendFile(absolutePath);
-            } else {
-              throw new NotFoundException(`Arquivo PDF não encontrado no caminho local: ${absolutePath}`);
-            }
-          }
-        }
-      } else if (pedido.pdf_url) {
-        // Verificar se é uma URL local
-        if (pedido.pdf_url.includes('localhost')) {
-          // Extrair o caminho relativo da URL
-          const urlObj = new URL(pedido.pdf_url);
-          const relativePath = urlObj.pathname.startsWith('/') 
-            ? urlObj.pathname.substring(1) 
-            : urlObj.pathname;
-          
-          // Converter para caminho absoluto
-          const absolutePath = join(process.cwd(), relativePath);
-          
-          // Verificar se o arquivo existe
-          if (existsSync(absolutePath)) {
-            return res.sendFile(absolutePath);
-          } else {
-            throw new NotFoundException(`Arquivo PDF não encontrado no caminho local: ${absolutePath}`);
-          }
-        } else {
-          // Para URLs externas (como URLs públicas do Supabase na versão antiga)
-          return res.redirect(pedido.pdf_url);
-        }
-      } else {
-        throw new NotFoundException('PDF não disponível para este pedido');
+      // Caso PDF esteja salvo localmente
+      if (pedido.pdf_path && existsSync(pedido.pdf_path)) {
+        return res.sendFile(pedido.pdf_path);
       }
+      // Caso PDF esteja no Supabase
+      if (pedido.pdf_url && pedido.pdf_url.includes('supabase.co')) {
+        try {
+          // Baixar PDF do Supabase usando a service role
+          const supabaseResponse = await this.supabaseService.downloadFile(pedido.pdf_path);
+          if (!supabaseResponse || !supabaseResponse.data) {
+            throw new NotFoundException('PDF não encontrado no Supabase');
+          }
+          const arrayBuffer = await supabaseResponse.data.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          res.setHeader('Content-Type', 'application/pdf');
+          return res.send(buffer);
+        } catch (supabaseError) {
+          throw new NotFoundException('Erro ao baixar PDF do Supabase');
+        }
+      }
+      // Fallback para URL local antiga
+      if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
+        const urlObj = new URL(pedido.pdf_url);
+        const relativePath = urlObj.pathname.startsWith('/') 
+          ? urlObj.pathname.substring(1) 
+          : urlObj.pathname;
+        const absolutePath = join(process.cwd(), relativePath);
+        if (existsSync(absolutePath)) {
+          return res.sendFile(absolutePath);
+        } else {
+          throw new NotFoundException(`Arquivo PDF não encontrado no caminho local: ${absolutePath}`);
+        }
+      }
+      throw new NotFoundException('PDF não disponível para este pedido');
     } catch (error) {
       console.error('Erro ao fazer download do PDF:', error instanceof Error ? error.message : error);
-      
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
       throw new InternalServerErrorException(`Erro ao processar PDF do pedido: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }

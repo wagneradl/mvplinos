@@ -314,4 +314,21 @@ export class SupabaseService {
       );
     }
   }
+
+  /**
+   * Baixa um arquivo do Supabase Storage
+   * @param filePath Caminho do arquivo no bucket
+   * @returns Blob de dados do arquivo
+   */
+  async downloadFile(filePath: string): Promise<{ data: Blob | null, error: any }> {
+    if (!this.supabase) {
+      throw new InternalServerErrorException('Supabase client not initialized');
+    }
+    const { data, error } = await this.supabase.storage.from(this.bucketName).download(filePath);
+    if (error) {
+      this.logger.error(`Erro ao baixar arquivo do Supabase: ${error.message}`);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  }
 }
