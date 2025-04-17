@@ -35,7 +35,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
-    forbidNonWhitelisted: true,
+    // forbidNonWhitelisted: true, // Removido para evitar erro em queries GET
   }));
 
   // Static uploads
@@ -55,10 +55,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  // Seed admin user before starting
+  try {
+    await ensureAdminUser();
+  } catch (err) {
+    console.error('Error during admin seed:', err);
+  }
   const port = process.env.PORT || 3001;
   await app.listen(port);
-
-  ensureAdminUser().catch(console.error);
 
   console.log(`Servidor rodando na porta ${port}`);
   console.log(`Documentação Swagger disponível em: http://localhost:${port}/api`);

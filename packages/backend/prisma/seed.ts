@@ -44,11 +44,12 @@ async function main() {
 
   // Criar usuário admin
   console.log('Criando usuário administrador padrão...');
-  const hashSenha = await bcrypt.hash('admin123', 10);
+  const adminPassword = process.env.ADMIN_PASSWORD || 'L!n0s@Adm!n2025';
+  const hashSenha = await bcrypt.hash(adminPassword, 10);
   const usuarioAdmin = await prisma.usuario.create({
     data: {
       nome: 'Administrador',
-      email: 'admin@linos.com.br',
+      email: process.env.ADMIN_EMAIL || 'admin@linos.com.br',
       senha: hashSenha,
       papel_id: papelAdmin.id,
       status: 'ativo'
@@ -116,7 +117,7 @@ async function main() {
   console.log('Produtos:', produtos);
   console.log('\n===============================================');
   console.log('CREDENCIAIS PARA ACESSO:');
-  console.log('Administrador: admin@linos.com.br / senha: admin123');
+  console.log(`Administrador: ${process.env.ADMIN_EMAIL || 'admin@linos.com.br'} / senha: ${adminPassword}`);
   console.log('Operador: operador@linos.com.br / senha: operador123');
   console.log('===============================================\n');
 }
