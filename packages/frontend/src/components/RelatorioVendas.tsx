@@ -22,16 +22,20 @@ import { formatCurrency } from '@/utils/format';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 interface RelatorioData {
-  data: {
-    date: string;
-    total_orders: number;
-    total_value: number;
-  }[];
-  summary: {
+  resumo: {
     total_orders: number;
     total_value: number;
     average_value: number;
   };
+  detalhes: { pedido: string | number; data: string; valor_total: number }[];
+  colunas: string[];
+  total: number;
+  observacoes?: string;
+  periodo?: {
+    inicio: string;
+    fim: string;
+  };
+  cliente?: any;
 }
 
 interface RelatorioVendasProps {
@@ -59,16 +63,15 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
           </Button>
         )}
       </Box>
-      
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">
-                Total de Pedidos
+              <Typography color="text.secondary" gutterBottom>
+                Pedidos
               </Typography>
               <Typography variant="h4">
-                {data.summary.total_orders}
+                {data.resumo?.total_orders ?? 0}
               </Typography>
             </CardContent>
           </Card>
@@ -76,11 +79,11 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography color="text.secondary" gutterBottom>
                 Valor Total
               </Typography>
               <Typography variant="h4">
-                {formatCurrency(data.summary.total_value)}
+                {formatCurrency(data.resumo?.total_value ?? 0)}
               </Typography>
             </CardContent>
           </Card>
@@ -88,51 +91,56 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography color="text.secondary" gutterBottom>
                 Ticket Médio
               </Typography>
               <Typography variant="h4">
-                {formatCurrency(data.summary.average_value)}
+                {formatCurrency(data.resumo?.average_value ?? 0)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Data</TableCell>
-              <TableCell align="right">Pedidos</TableCell>
-              <TableCell align="right">Valor Total</TableCell>
-              <TableCell align="right">Média por Pedido</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.data.map((row) => (
-              <TableRow key={row.date}>
-                <TableCell>
-                  {format(new Date(row.date), 'dd/MM/yyyy', {
-                    locale: ptBR,
-                  })}
-                </TableCell>
-                <TableCell align="right">{row.total_orders}</TableCell>
-                <TableCell align="right">
-                  {formatCurrency(row.total_value)}
-                </TableCell>
-                <TableCell align="right">
-                  {formatCurrency(row.total_value / row.total_orders)}
-                </TableCell>
+      <Paper sx={{ mb: 3 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Pedido</TableCell>
+                <TableCell>Data</TableCell>
+                <TableCell>Valor Total</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {data.detalhes?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    Nenhum dado encontrado para o período selecionado.
+                  </TableCell>
+                </TableRow>
+              )}
+              {data.detalhes?.map((row, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>{row.pedido}</TableCell>
+                  <TableCell>{row.data}</TableCell>
+                  <TableCell align="right">{formatCurrency(row.valor_total)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {data.observacoes}
+        </Typography>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h6">Total Geral: {formatCurrency(data.total ?? 0)}</Typography>
+      </Box>
     </Box>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default RelatorioVendas;

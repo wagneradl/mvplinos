@@ -82,8 +82,9 @@ describe('PdfService Integration Tests', () => {
       // Gerar PDF
       const pdfPath = await pdfService.generatePedidoPdf(testPedidoData);
       
-      // Verificar se o arquivo foi criado
-      const fullPath = join(process.cwd(), pdfPath);
+      // Suporte para string | PdfResult
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
+      const fullPath = join(process.cwd(), pdfPathString);
       expect(existsSync(fullPath)).toBe(true);
       
       // Em ambiente de teste, não verificamos o conteúdo do PDF
@@ -126,9 +127,10 @@ describe('PdfService Integration Tests', () => {
       
       // Gerar PDF sem a logo
       const pdfPath = await pdfService.generatePedidoPdf(testPedidoData);
-      
+      // Suporte para string | PdfResult
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
       // Verificar se o PDF foi gerado mesmo sem a logo
-      const fullPath = join(process.cwd(), pdfPath);
+      const fullPath = join(process.cwd(), pdfPathString);
       expect(existsSync(fullPath)).toBe(true);
     });
 
@@ -139,13 +141,16 @@ describe('PdfService Integration Tests', () => {
       const path1 = await pdfService.generatePedidoPdf(pedido1);
       const path2 = await pdfService.generatePedidoPdf(pedido2);
       
-      expect(path1).not.toBe(path2);
-      expect(existsSync(join(process.cwd(), path1))).toBe(true);
-      expect(existsSync(join(process.cwd(), path2))).toBe(true);
+      // Suporte para string | PdfResult
+      const path1String = typeof path1 === 'string' ? path1 : path1.path;
+      const path2String = typeof path2 === 'string' ? path2 : path2.path;
+      expect(path1String).not.toBe(path2String);
+      expect(existsSync(join(process.cwd(), path1String))).toBe(true);
+      expect(existsSync(join(process.cwd(), path2String))).toBe(true);
       
       // Limpar arquivos de teste
-      unlinkSync(join(process.cwd(), path1));
-      unlinkSync(join(process.cwd(), path2));
+      unlinkSync(join(process.cwd(), path1String));
+      unlinkSync(join(process.cwd(), path2String));
     });
 
     it('should throw error for invalid pedido data', async () => {

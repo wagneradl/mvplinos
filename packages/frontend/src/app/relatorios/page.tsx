@@ -13,7 +13,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { PageContainer } from '@/components/PageContainer';
 import { RelatorioVendas } from '@/components/RelatorioVendas';
 import { useClientes } from '@/hooks/useClientes';
-import { useRelatorio } from '@/hooks/usePedidos';
+import { useSummaryRelatorio } from '@/hooks/usePedidos';
 import { format } from 'date-fns';
 import { useSnackbar } from 'notistack';
 
@@ -25,14 +25,13 @@ export default function RelatoriosPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
-  const { 
-    data: relatorio, 
+  const {
+    data: relatorio,
     isLoading: isLoadingRelatorio,
-    downloadPdf
-  } = useRelatorio({
-    data_inicio: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-    data_fim: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
-    cliente_id: clienteId ? Number(clienteId) : undefined,
+  } = useSummaryRelatorio({
+    startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+    endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+    clienteId: clienteId ? Number(clienteId) : undefined,
     enabled: showReport,
   });
 
@@ -48,6 +47,24 @@ export default function RelatoriosPage() {
     }
 
     setShowReport(true);
+  };
+
+  // Função para exportar PDF com log dos filtros atuais
+  const handleExportPdf = async () => {
+    const filtros = {
+      data_inicio: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+      data_fim: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+      cliente_id: clienteId ? Number(clienteId) : undefined,
+    };
+    console.log('Exportando PDF com filtros (snake_case):', filtros);
+    try {
+      await import('@/services/pedidos.service').then(({ PedidosService }) =>
+        PedidosService.downloadRelatorioPdf(filtros)
+      );
+    } catch (error) {
+      enqueueSnackbar('Erro ao exportar PDF do relatório', { variant: 'error' });
+      console.error('Erro ao exportar PDF:', error);
+    }
   };
 
   return (
@@ -124,7 +141,7 @@ export default function RelatoriosPage() {
         <RelatorioVendas
           data={relatorio || { data: [], summary: { total_orders: 0, total_value: 0, average_value: 0 } }}
           isLoading={isLoadingRelatorio}
-          onExportPdf={downloadPdf}
+          onExportPdf={handleExportPdf}
         />
       )}
     </PageContainer>

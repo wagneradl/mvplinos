@@ -640,30 +640,30 @@ export class PedidosService {
     return result;
   }
 
-  async generateReportPdf(reportDto: ReportPedidoDto): Promise<string> {
+  /**
+   * Gera o PDF do relatório de pedidos e retorna o caminho local ou a URL do Supabase
+   */
+  async generateReportPdf(reportDto: ReportPedidoDto): Promise<string | { url: string; path: string }> {
     try {
       // Primeiro, gerar os dados do relatório
       const reportData = await this.generateReport(reportDto);
-      
       // Se tiver cliente_id, buscar os dados do cliente
       let clienteData = null;
       if (reportDto.cliente_id && reportData.cliente) {
         clienteData = reportData.cliente;
       }
-      
       // Gerar o PDF do relatório
-      const relativePath = await this.pdfService.generateReportPdf(reportData, clienteData);
-      
-      // Converter para caminho absoluto
-      const fullPath = join(process.cwd(), relativePath);
-      console.log('Caminho completo do PDF:', fullPath);
-      
-      // Verificar se o arquivo existe
-      if (!existsSync(fullPath)) {
-        throw new Error(`Arquivo PDF não encontrado: ${fullPath}`);
+      const pdfResult = await this.pdfService.generateReportPdf(reportData, clienteData);
+      if (typeof pdfResult === 'string') {
+        // Caminho local (modo legacy/desenvolvimento)
+        const fullPath = join(process.cwd(), pdfResult);
+        console.log('Caminho completo do PDF:', fullPath);
+        return fullPath;
+      } else {
+        // Supabase: retorna objeto { path, url }
+        console.log('PDF enviado para Supabase:', pdfResult.url);
+        return pdfResult;
       }
-      
-      return fullPath;
     } catch (error) {
       console.error('Erro ao gerar PDF do relatório:', error);
       if (error instanceof Error) {
@@ -784,9 +784,24 @@ export class PedidosService {
           : 0,
       };
 
+      // Montar colunas para o relatório detalhado
+      const colunas = ['Pedido', 'Data', 'Valor Total'];
+      // Mapear os dados detalhados para as colunas
+      // Cada pedido é uma linha: { pedido, data, valor_total }
+      const detalhes = pedidos.map((pedido) => ({
+        pedido: pedido.id,
+        data: format(new Date(pedido.data_pedido), 'dd/MM/yyyy'),
+        valor_total: pedido.valor_total
+      }));
+      // Observações opcionais
+      const observacoes = pedidos.length === 0 ? 'Nenhum pedido encontrado para o período selecionado.' : '';
+
       return {
-        data,
-        summary,
+        resumo: summary,
+        detalhes,
+        colunas,
+        total: summary.total_value,
+        observacoes,
         periodo: {
           inicio: data_inicio,
           fim: data_fim

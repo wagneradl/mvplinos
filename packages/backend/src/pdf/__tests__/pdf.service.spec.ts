@@ -78,9 +78,10 @@ describe('PdfService', () => {
     it('should generate a PDF file in test environment', async () => {
       process.env.NODE_ENV = 'test';
       const pdfPath = await service.generatePedidoPdf(mockPedidoData);
-      
-      expect(pdfPath).toBe(`uploads/pdfs/pedido-${mockPedidoData.id}.pdf`);
-      expect(existsSync(join(process.cwd(), pdfPath))).toBeTruthy();
+      // Suporte para string | PdfResult
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
+      expect(pdfPathString).toBe(`uploads/pdfs/pedido-${mockPedidoData.id}.pdf`);
+      expect(existsSync(join(process.cwd(), pdfPathString))).toBeTruthy();
     });
 
     it('should throw error if pedido data is invalid', async () => {
@@ -97,8 +98,9 @@ describe('PdfService', () => {
     it('should generate a PDF file in production environment', async () => {
       process.env.NODE_ENV = 'production';
       const pdfPath = await service.generatePedidoPdf(mockPedidoData);
-      
-      expect(pdfPath).toMatch(/uploads\/pdfs\/pedido-1-\d+\.pdf/);
+      // Suporte para string | PdfResult
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
+      expect(pdfPathString).toMatch(/uploads\/pdfs\/pedido-1-\d+\.pdf/);
     });
 
     it('should handle missing logo file', async () => {
@@ -108,7 +110,9 @@ describe('PdfService', () => {
       }
 
       const pdfPath = await service.generatePedidoPdf(mockPedidoData);
-      expect(pdfPath).toMatch(/uploads\/pdfs\/pedido-1-\d+\.pdf/);
+      // Suporte para string | PdfResult
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
+      expect(pdfPathString).toMatch(/uploads\/pdfs\/pedido-1-\d+\.pdf/);
     });
 
     it('should handle puppeteer errors', async () => {

@@ -190,18 +190,26 @@ export function usePedido(id: number) {
 }
 
 export function useRelatorio(filtros: {
-  data_inicio?: string;
-  data_fim?: string;
-  cliente_id?: number;
+  startDate?: string;
+  endDate?: string;
+  clienteId?: number;
   enabled?: boolean;
 }) {
   const { enqueueSnackbar } = useSnackbar();
   
+  // Adapta filtros para camelCase ao chamar o backend
+  const adaptedFiltros = {
+    dataInicio: filtros.startDate,
+    dataFim: filtros.endDate,
+    clienteId: filtros.clienteId,
+    enabled: filtros.enabled,
+  };
+
   const result = useQuery<ReportData, Error>({
-    queryKey: ['relatorio', filtros],
+    queryKey: ['relatorio', adaptedFiltros],
     queryFn: async () => {
       try {
-        return await PedidosService.gerarRelatorio(filtros);
+        return await PedidosService.gerarRelatorio(adaptedFiltros);
       } catch (error) {
         if (error instanceof Error) {
           enqueueSnackbar('Erro ao gerar relatório: ' + error.message, { variant: 'error' });
@@ -217,9 +225,9 @@ export function useRelatorio(filtros: {
   const downloadPdf = async () => {
     try {
       await PedidosService.downloadRelatorioPdf({
-        data_inicio: filtros.data_inicio,
-        data_fim: filtros.data_fim,
-        cliente_id: filtros.cliente_id,
+        dataInicio: filtros.startDate,
+        dataFim: filtros.endDate,
+        clienteId: filtros.clienteId,
       });
       enqueueSnackbar('Relatório PDF gerado com sucesso!', { variant: 'success' });
     } catch (error) {
@@ -232,6 +240,41 @@ export function useRelatorio(filtros: {
     ...result,
     data: result.data,
     downloadPdf,
+  };
+}
+
+export function useSummaryRelatorio(filtros: {
+  startDate?: string;
+  endDate?: string;
+  clienteId?: number;
+  enabled?: boolean;
+}) {
+  const { enqueueSnackbar } = useSnackbar();
+
+  // Adapta filtros para snake_case para o summary
+  const adaptedFiltros = {
+    data_inicio: filtros.startDate,
+    data_fim: filtros.endDate,
+    cliente_id: filtros.clienteId,
+  };
+
+  const result = useQuery<import('@/services/pedidos.service').ReportData, Error>({
+    queryKey: ['summaryRelatorio', adaptedFiltros],
+    queryFn: async () => {
+      try {
+        return await PedidosService.gerarRelatorio(adaptedFiltros);
+      } catch (error) {
+        console.error('Erro ao buscar summary do relatório:', error);
+        enqueueSnackbar('Erro ao buscar resumo do relatório', { variant: 'error' });
+        throw error;
+      }
+    },
+    enabled: filtros.enabled,
+  });
+
+  return {
+    ...result,
+    data: result.data,
   };
 }
 

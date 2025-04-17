@@ -481,50 +481,65 @@ export class PdfService implements OnModuleInit {
    * Gera um relatório em PDF
    * @param reportData Dados do relatório 
    * @param clienteData Dados do cliente (opcional)
-   * @returns Caminho do arquivo gerado
+   * @returns Se usar Supabase: {path, url}, caso contrário: string (caminho)
    */
-  async generateReportPdf(reportData: any, clienteData?: any): Promise<string> {
+  async generateReportPdf(reportData: any, clienteData?: any): Promise<PdfResult | string> {
     let browser;
     try {
       this.logger.log('Iniciando geração de PDF para relatório');
       
+      // Normalizar campos de datas para aceitar snake_case, camelCase e objeto periodo
+      let dataInicioRaw = reportData.dataInicio || reportData.data_inicio;
+      let dataFimRaw = reportData.dataFim || reportData.data_fim;
+      // Se não encontrar nos campos acima, buscar em reportData.periodo
+      if (!dataInicioRaw && reportData.periodo && (reportData.periodo.inicio || reportData.periodo.data_inicio)) {
+        dataInicioRaw = reportData.periodo.inicio || reportData.periodo.data_inicio;
+      }
+      if (!dataFimRaw && reportData.periodo && (reportData.periodo.fim || reportData.periodo.data_fim)) {
+        dataFimRaw = reportData.periodo.fim || reportData.periodo.data_fim;
+      }
+      this.logger.log(`[DEBUG] dataInicioRaw: ${dataInicioRaw}, dataFimRaw: ${dataFimRaw}`);
+
       // Em ambiente de teste, gerar um PDF simples
       if (this.isTest) {
-        const timestamp = Date.now();
-        const pdfPath = join(this.pdfDir, `relatorio-${timestamp}.pdf`);
-        await mkdir(this.pdfDir, { recursive: true });
-        
-        // Criar um PDF vazio
-        const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
-        writeFileSync(pdfPath, emptyPDF);
-        
-        // Retornar caminho relativo
-        return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+        if (this.useSupabase) {
+          // Mock para testes com Supabase
+          return {
+            path: `relatorios/relatorio-${Date.now()}.pdf`,
+            url: `https://example.com/relatorio-${Date.now()}.pdf`
+          };
+        } else {
+          const pdfPath = join(this.pdfDir, `relatorio-${Date.now()}.pdf`);
+          await mkdir(this.pdfDir, { recursive: true });
+          // Criar um PDF vazio
+          const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
+          writeFileSync(pdfPath, emptyPDF);
+          return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+        }
       }
-      
+
       browser = await puppeteer.launch({ 
         headless: true,
         args: ['--no-sandbox'],
       });
-      
       const page = await browser.newPage();
-      
+
       // Carregar a logo como base64
       let logoBase64 = '';
       try {
         const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
         this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
-        // Logar o início do base64 para debug
         this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
         this.logger.error(`Erro ao carregar logo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
-      
+
       // Formatação de datas
-      const dataInicio = reportData.dataInicio ? format(new Date(reportData.dataInicio), 'dd/MM/yyyy', { locale: ptBR }) : '';
-      const dataFim = reportData.dataFim ? format(new Date(reportData.dataFim), 'dd/MM/yyyy', { locale: ptBR }) : '';
-      
+      const dataInicio = dataInicioRaw ? format(new Date(dataInicioRaw), 'dd/MM/yyyy', { locale: ptBR }) : '';
+      const dataFim = dataFimRaw ? format(new Date(dataFimRaw), 'dd/MM/yyyy', { locale: ptBR }) : '';
+      this.logger.log(`[DEBUG] dataInicio formatado: ${dataInicio}, dataFim formatado: ${dataFim}`);
+
       // Gerar HTML do relatório
       const html = `
       <!DOCTYPE html>
@@ -673,12 +688,18 @@ export class PdfService implements OnModuleInit {
             <!-- Resumo -->
             <h3>Resumo</h3>
             <div class="summary-grid">
-              ${reportData.resumo ? Object.entries(reportData.resumo).map(([key, value]) => `
-                <div class="summary-item">
-                  <div class="summary-value">${typeof value === 'number' ? value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : value}</div>
-                  <div class="summary-label">${key}</div>
-                </div>
-              `).join('') : ''}
+              <div class="summary-item">
+                <div class="summary-value">${reportData.resumo && typeof reportData.resumo.total_orders === 'number' ? reportData.resumo.total_orders : '-'}</div>
+                <div class="summary-label">Pedidos</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-value">${reportData.resumo && typeof reportData.resumo.total_value === 'number' ? reportData.resumo.total_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</div>
+                <div class="summary-label">Valor Total</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-value">${reportData.resumo && typeof reportData.resumo.average_value === 'number' ? reportData.resumo.average_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</div>
+                <div class="summary-label">Ticket Médio</div>
+              </div>
             </div>
 
             <!-- Dados Detalhados -->
@@ -693,7 +714,9 @@ export class PdfService implements OnModuleInit {
                 <tbody>
                   ${reportData.detalhes.map(item => `
                     <tr>
-                      ${Object.values(item).map(val => `<td>${val}</td>`).join('')}
+                      <td>${item.pedido}</td>
+                      <td>${item.data}</td>
+                      <td>${typeof item.valor_total === 'number' ? item.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : item.valor_total}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -711,7 +734,7 @@ export class PdfService implements OnModuleInit {
             <!-- Total -->
             ${reportData.total ? `
               <div class="total">
-                <p>Total: R$ ${reportData.total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                <p>Total: ${reportData.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
               </div>
             ` : ''}
 
@@ -726,30 +749,55 @@ export class PdfService implements OnModuleInit {
       `;
 
       await page.setContent(html);
-      
       const timestamp = Date.now();
       const filename = `relatorio-${reportData.tipo || 'geral'}-${timestamp}.pdf`;
-      const pdfPath = join(this.pdfDir, filename);
-      
-      // Garantir que o diretório existe
-      await mkdir(this.pdfDir, { recursive: true });
-      
-      await page.pdf({
-        path: pdfPath,
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '20px',
-          right: '20px',
-          bottom: '20px',
-          left: '20px',
+
+      if (this.useSupabase) {
+        this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
+        try {
+          // Gerar o PDF como buffer (em memória)
+          const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+              top: '20px',
+              right: '20px',
+              bottom: '20px',
+              left: '20px',
+            }
+          });
+          // Upload para Supabase
+          const uploadPath = `relatorios/${filename}`;
+          const uploadResp = await this.supabaseService.uploadFile(uploadPath, pdfBuffer, 'application/pdf');
+          if (uploadResp) {
+            this.logger.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);
+            return { path: uploadPath, url: uploadResp };
+          } else {
+            this.logger.error('Erro ao fazer upload do relatório PDF para Supabase.');
+            throw new InternalServerErrorException('Erro ao fazer upload do relatório PDF para Supabase.');
+          }
+        } catch (e) {
+          this.logger.error('Erro ao gerar/upload PDF no Supabase:', e instanceof Error ? e.stack || e.message : JSON.stringify(e));
+          throw new InternalServerErrorException('Erro ao gerar/upload PDF no Supabase.');
         }
-      });
-      
-      this.logger.log(`Relatório PDF gerado com sucesso: ${pdfPath}`);
-      
-      // Retornar o caminho relativo
-      return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+      } else {
+        // Modo local: salvar arquivo no disco
+        const pdfPath = join(this.pdfDir, filename);
+        await mkdir(this.pdfDir, { recursive: true });
+        await page.pdf({
+          path: pdfPath,
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '20px',
+            right: '20px',
+            bottom: '20px',
+            left: '20px',
+          }
+        });
+        this.logger.log(`Relatório PDF gerado com sucesso: ${pdfPath}`);
+        return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+      }
     } catch (error) {
       this.logger.error(`Erro ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       throw new InternalServerErrorException(`Falha ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);

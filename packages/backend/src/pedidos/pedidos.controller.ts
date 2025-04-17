@@ -79,26 +79,35 @@ export class PedidosController {
     status: 400,
     description: 'Parâmetros inválidos ou erro ao gerar o relatório'
   })
-  async generateReportPdf(@Query() reportDto: ReportPedidoDto, @Res() res: Response) {
+  async generateReportPdf(
+    @Query('data_inicio') data_inicio: string,
+    @Query('data_fim') data_fim: string,
+    @Query('cliente_id') cliente_id: number,
+    @Res() res: Response
+  ) {
     try {
+      const reportDto: ReportPedidoDto = { data_inicio, data_fim, cliente_id };
       console.log('Recebendo requisição para gerar PDF com parâmetros:', reportDto);
-      
-      const pdfPath = await this.pedidosService.generateReportPdf(reportDto);
-      console.log('PDF gerado com sucesso em:', pdfPath);
-      
-      // Verificar se o arquivo existe
-      if (!existsSync(pdfPath)) {
-        console.error(`Arquivo PDF não encontrado: ${pdfPath}`);
-        throw new BadRequestException(`Arquivo PDF não encontrado: ${pdfPath}`);
-      }
-      
-      // Usar método mais direto para enviar o arquivo
-      return res.download(pdfPath, `relatorio-${Date.now()}.pdf`, (err) => {
-        if (err) {
-          console.error('Erro ao enviar arquivo:', err);
-          res.status(500).send('Erro ao enviar arquivo');
+      const pdfResult = await this.pedidosService.generateReportPdf(reportDto);
+      if (typeof pdfResult === 'string') {
+        // Local file path
+        if (!existsSync(pdfResult)) {
+          console.error(`Arquivo PDF não encontrado: ${pdfResult}`);
+          throw new BadRequestException(`Arquivo PDF não encontrado: ${pdfResult}`);
         }
-      });
+        return res.download(pdfResult, `relatorio-${Date.now()}.pdf`, (err) => {
+          if (err) {
+            console.error('Erro ao enviar arquivo:', err);
+            res.status(500).send('Erro ao enviar arquivo');
+          }
+        });
+      } else if (pdfResult && pdfResult.url) {
+        // PDF na nuvem (Supabase)
+        // Redireciona para a URL do Supabase para download direto
+        return res.redirect(pdfResult.url);
+      } else {
+        throw new BadRequestException('Erro inesperado ao gerar PDF do relatório');
+      }
     } catch (error) {
       console.error('Erro ao gerar PDF do relatório:', error instanceof Error ? error.message : error);
       if (error instanceof BadRequestException) {
