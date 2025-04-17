@@ -11,7 +11,7 @@ async function bootstrap() {
   
   // Habilitando CORS
   app.enableCors({
-    origin: ['https://linos-frontend-6wef.onrender.com'],
+    origin: 'https://linos-frontend-6wef.onrender.com',
     credentials: true,
   });
   
