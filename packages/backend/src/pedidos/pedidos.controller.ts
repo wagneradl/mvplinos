@@ -109,9 +109,18 @@ export class PedidosController {
         throw new BadRequestException('Erro inesperado ao gerar PDF do relatório');
       }
     } catch (error) {
+      // Logging detalhado para diagnóstico em produção
       console.error('Erro ao gerar PDF do relatório:', error instanceof Error ? error.message : error);
       if (error instanceof BadRequestException) {
+        // Loga o corpo da exceção se disponível
+        if (error.getResponse) {
+          console.error('BadRequestException response:', error.getResponse());
+        }
         throw error;
+      }
+      // Loga stacktrace para erros desconhecidos
+      if (error instanceof Error && error.stack) {
+        console.error('Stacktrace:', error.stack);
       }
       throw new BadRequestException('Erro ao gerar PDF do relatório');
     }
