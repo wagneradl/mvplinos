@@ -1,5 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+"use strict";
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
@@ -87,13 +88,6 @@ async function main() {
       status: 'ativo',
     },
   });
-
-  // Exibir as credenciais no console
-  console.log('\n===============================================');
-  console.log('CREDENCIAIS PARA PRIMEIRO ACESSO:');
-  console.log(`Administrador: ${adminEmail} / senha: ${adminPassword}`);
-  console.log(`Operador: ${operadorEmail} / senha: ${operadorPassword}`);
-  console.log('===============================================\n');
 }
 
 main()
