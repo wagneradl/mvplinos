@@ -29,8 +29,8 @@ export class PdfService implements OnModuleInit {
     this.pdfDir = pdfStoragePath;
     this.logoPath = join(uploadsPath, 'static', 'logo.png');
     
-    // Verificar se devemos usar o Supabase (baseado na configuração de variáveis de ambiente)
-    this.useSupabase = this.supabaseService.isAvailable();
+    // Sempre usar Supabase, inclusive em ambiente local, se as variáveis estiverem presentes
+    this.useSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_BUCKET);
     
     if (this.useSupabase) {
       this.logger.log('Usando Supabase Storage para armazenamento de PDFs');
@@ -166,6 +166,7 @@ export class PdfService implements OnModuleInit {
           const supabasePath = `pedidos/${filename}`;
           
           // Fazer upload para o Supabase
+          this.logger.log(`(DEBUG) [Pedido] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${supabasePath}', bufferSize=${pdfBuffer.length}`);
           const pdfUrl = await this.supabaseService.uploadFile(
             supabasePath,
             pdfBuffer,
@@ -753,6 +754,7 @@ export class PdfService implements OnModuleInit {
       const filename = `relatorio-${reportData.tipo || 'geral'}-${timestamp}.pdf`;
 
       if (this.useSupabase) {
+        this.logger.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${filename}', bufferSize=${html.length}`);
         this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
         try {
           // Gerar o PDF como buffer (em memória)
@@ -768,6 +770,7 @@ export class PdfService implements OnModuleInit {
           });
           // Upload para Supabase
           const uploadPath = `relatorios/${filename}`;
+          this.logger.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`);
           const uploadResp = await this.supabaseService.uploadFile(uploadPath, pdfBuffer, 'application/pdf');
           if (uploadResp) {
             this.logger.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);

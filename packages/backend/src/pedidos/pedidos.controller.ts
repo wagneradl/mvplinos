@@ -83,7 +83,8 @@ export class PedidosController {
     @Query('data_inicio') data_inicio: string,
     @Query('data_fim') data_fim: string,
     @Query('cliente_id') cliente_id: number,
-    @Res() res: Response
+    @Res() res: Response,
+    @Req() req: any
   ) {
     try {
       const reportDto: ReportPedidoDto = { data_inicio, data_fim, cliente_id };
@@ -93,23 +94,28 @@ export class PedidosController {
         // Local file path
         if (!existsSync(pdfResult)) {
           console.error(`Arquivo PDF não encontrado: ${pdfResult}`);
-          throw new BadRequestException(`Arquivo PDF não encontrado: ${pdfResult}`);
+          throw new NotFoundException('PDF não encontrado');
         }
-        return res.download(pdfResult, `relatorio-${Date.now()}.pdf`, (err) => {
-          if (err) {
-            console.error('Erro ao enviar arquivo:', err);
-            res.status(500).send('Erro ao enviar arquivo');
-          }
-        });
-      } else if (pdfResult && pdfResult.url) {
-        // PDF na nuvem (Supabase)
-        // Redireciona para a URL do Supabase para download direto
-        return res.redirect(pdfResult.url);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.sendFile(pdfResult);
+        return;
       } else {
-        throw new BadRequestException('Erro inesperado ao gerar PDF do relatório');
+        // Supabase: retorna objeto { path, url }
+        // NOVO: gerar signed URL para o relatório
+        console.log(`[DEBUG] (Relatório) pdfResult.path: ${pdfResult.path}`);
+        const signedUrl = await this.supabaseService.getSignedUrl(pdfResult.path, 300); // 5 minutos
+        console.log(`[DEBUG] (Relatório) signedUrl: ${signedUrl}`);
+        if (!signedUrl) {
+          console.error('[DEBUG] (Relatório) Falha ao gerar signed URL!');
+          throw new InternalServerErrorException('Falha ao gerar link seguro para o PDF do relatório');
+        }
+        console.log('[DEBUG] (Relatório) Respondendo JSON com signedUrl');
+        return res.json({
+          url: signedUrl,
+          path: pdfResult.path
+        });
       }
     } catch (error) {
-      // Logging detalhado para diagnóstico em produção
       console.error('Erro ao gerar PDF do relatório:', error instanceof Error ? error.message : error);
       if (error instanceof BadRequestException) {
         // Loga o corpo da exceção se disponível

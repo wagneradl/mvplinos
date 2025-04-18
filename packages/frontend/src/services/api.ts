@@ -10,6 +10,10 @@ export interface ApiErrorResponse {
 }
 
 const getApiBaseUrl = () => {
+  // Força uso do endpoint correto em produção
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    return 'https://linos-backend.onrender.com';
+  }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 };
 
