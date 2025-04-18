@@ -31,7 +31,7 @@ services:
       # Supabase configuração
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_API_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SUPABASE_BUCKET
         value: pedidos-pdfs
@@ -86,5 +86,5 @@ envVarGroups:
         generateValue: true
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_API_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
