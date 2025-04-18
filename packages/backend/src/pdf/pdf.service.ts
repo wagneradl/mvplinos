@@ -18,8 +18,11 @@ export class PdfService implements OnModuleInit {
   private readonly logger = new Logger(PdfService.name);
   private readonly pdfDir: string;
   private readonly logoPath: string;
-  private readonly isTest = process.env.NODE_ENV === 'test';
   private readonly useSupabase: boolean;
+
+  private get isMock(): boolean {
+    return process.env.PDF_MOCK === 'true';
+  }
 
   constructor(private readonly supabaseService: SupabaseService) {
     // Usar variáveis de ambiente para os caminhos ou fallback para os valores padrão
@@ -70,31 +73,26 @@ export class PdfService implements OnModuleInit {
     let browser;
     try {
       this.logger.log(`Iniciando geração de PDF para pedido ${pedidoData.id}`);
-      
-      // Validar dados do pedido
+
+      // Validar dados do pedido (sempre validar, independente do ambiente)
       if (!pedidoData || !pedidoData.cliente || !pedidoData.itensPedido) {
         throw new InternalServerErrorException('Dados do pedido inválidos ou incompletos');
       }
 
       // Em ambiente de teste, gerar um PDF simples
-      if (this.isTest) {
+      if (this.isMock) {
+        const pdfPath = join(this.pdfDir, `pedido-${pedidoData.id}.pdf`);
+        await mkdir(this.pdfDir, { recursive: true });
+        const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
+        writeFileSync(pdfPath, emptyPDF);
+        const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
         if (this.useSupabase) {
-          // Mock para testes com Supabase
+          // Em modo Supabase mock, path deve ser o local real do arquivo
           return {
-            path: `pedidos/pedido-${pedidoData.id}.pdf`,
+            path: relativePath,
             url: `https://example.com/pedido-${pedidoData.id}.pdf`
           };
         } else {
-          // Mock para testes com armazenamento local (comportamento original)
-          const pdfPath = join(this.pdfDir, `pedido-${pedidoData.id}.pdf`);
-          await mkdir(this.pdfDir, { recursive: true });
-          
-          // Criar um PDF vazio
-          const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
-          writeFileSync(pdfPath, emptyPDF);
-          
-          // Retornar caminho relativo compatível com onde o serviço web espera
-          const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
           return relativePath;
         }
       }
@@ -124,6 +122,10 @@ export class PdfService implements OnModuleInit {
       
       // Gerar HTML do pedido
       const html = this.generatePedidoHTML(pedidoData, logoBase64);
+      this.logger.log(`[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
+
+      // LOGAR HTML GERADO PARA DEBUG
+      console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
 
       await page.setContent(html);
       
@@ -136,43 +138,37 @@ export class PdfService implements OnModuleInit {
         
         try {
           // Gerar o PDF como buffer (em memória)
-          const pdfBuffer = await page.pdf({
-            format: 'A4',
-            margin: {
-              top: '20px',
-              right: '20px',
-              bottom: '20px',
-              left: '20px',
-            },
-            printBackground: true
-          });
-          
-          // NOVO: Sempre salvar uma cópia local para garantir que o arquivo existe
-          // independentemente do sucesso do upload para o Supabase
-          const pdfPath = join(this.pdfDir, filename);
+          let pdfBuffer: Buffer;
           try {
-            // Garantir que o diretório existe
-            await mkdir(this.pdfDir, { recursive: true });
-            
-            // Escrever o buffer para o arquivo
-            writeFileSync(pdfPath, pdfBuffer);
-            this.logger.log(`Cópia de segurança do PDF salva localmente em: ${pdfPath}`);
-          } catch (localSaveError) {
-            this.logger.error(`Erro ao salvar cópia local do PDF: ${localSaveError instanceof Error ? localSaveError.message : 'Erro desconhecido'}`);
-            // Continuar mesmo se falhar o salvamento local
+            pdfBuffer = await page.pdf({
+              format: 'A4',
+              margin: {
+                top: '20px',
+                right: '20px',
+                bottom: '20px',
+                left: '20px',
+              },
+              printBackground: true
+            });
+            console.log(`[DEBUG][PDF] Buffer gerado para ${filename}: tamanho = ${pdfBuffer.length} bytes`);
+          } catch (err) {
+            console.error(`[DEBUG][PDF] Erro ao gerar buffer do PDF: ${err instanceof Error ? err.message : err}`);
+            throw err;
           }
+          // (Opcional) Salvar localmente para inspeção manual
+          // writeFileSync(`/tmp/${filename}`, pdfBuffer);
           
-          // Caminho no Supabase Storage
+          // Caminho no Supabase
           const supabasePath = `pedidos/${filename}`;
+          console.log(`[DEBUG][PDF] Enviando para Supabase: ${supabasePath}`);
           
-          // Fazer upload para o Supabase
-          this.logger.log(`(DEBUG) [Pedido] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${supabasePath}', bufferSize=${pdfBuffer.length}`);
+          // === UPLOAD PARA SUPABASE ===
           const pdfUrl = await this.supabaseService.uploadFile(
             supabasePath,
             pdfBuffer,
             'application/pdf'
           );
-          
+          console.log(`[DEBUG][PDF] URL retornada pelo Supabase: ${pdfUrl}`);
           this.logger.log(`PDF enviado para o Supabase: ${pdfUrl}`);
           
           // Retornar caminho e URL
@@ -488,34 +484,51 @@ export class PdfService implements OnModuleInit {
     let browser;
     try {
       this.logger.log('Iniciando geração de PDF para relatório');
-      
-      // Normalizar campos de datas para aceitar snake_case, camelCase e objeto periodo
+
+      // LOG DETALHADO PARA DEBUG DE RELATÓRIO
+      console.log('[DEBUG][PDF][RELATORIO] reportData:', JSON.stringify(reportData, null, 2));
+      console.log('[DEBUG][PDF][RELATORIO] dataInicioRaw:', reportData.dataInicio || reportData.data_inicio);
+      console.log('[DEBUG][PDF][RELATORIO] dataFimRaw:', reportData.dataFim || reportData.data_fim);
+      console.log('[DEBUG][PDF][RELATORIO] reportData.titulo:', reportData?.titulo);
+      console.log('[DEBUG][PDF][RELATORIO] reportData.itens.length:', Array.isArray(reportData?.itens) ? reportData.itens.length : 'NÃO É ARRAY');
+
+      // Validar dados do relatório (sempre validar, independente do ambiente)
       let dataInicioRaw = reportData.dataInicio || reportData.data_inicio;
       let dataFimRaw = reportData.dataFim || reportData.data_fim;
-      // Se não encontrar nos campos acima, buscar em reportData.periodo
       if (!dataInicioRaw && reportData.periodo && (reportData.periodo.inicio || reportData.periodo.data_inicio)) {
         dataInicioRaw = reportData.periodo.inicio || reportData.periodo.data_inicio;
       }
       if (!dataFimRaw && reportData.periodo && (reportData.periodo.fim || reportData.periodo.data_fim)) {
         dataFimRaw = reportData.periodo.fim || reportData.periodo.data_fim;
       }
+      // Validação: título, datas, itens
+      if (!reportData || !reportData.titulo || !dataInicioRaw || !dataFimRaw || !Array.isArray(reportData.itens)) {
+        console.error('[ERRO][PDF][RELATORIO] Dados do relatório inválidos:', JSON.stringify(reportData, null, 2));
+        throw new InternalServerErrorException('Dados do relatório inválidos ou incompletos');
+      }
+      if (reportData.itens.length === 0) {
+        console.warn('[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).');
+      }
       this.logger.log(`[DEBUG] dataInicioRaw: ${dataInicioRaw}, dataFimRaw: ${dataFimRaw}`);
 
       // Em ambiente de teste, gerar um PDF simples
-      if (this.isTest) {
+      if (this.isMock) {
+        // Usar nome de arquivo estático para relatórios em ambiente de teste
+        const relatorioDir = 'relatorios';
+        const relatorioFilename = 'relatorio-geral-mock.pdf';
+        const pdfPath = join(process.cwd(), relatorioDir, relatorioFilename);
+        await mkdir(join(process.cwd(), relatorioDir), { recursive: true });
+        const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
+        writeFileSync(pdfPath, emptyPDF);
+        const relativePath = join(relatorioDir, relatorioFilename);
+        console.log('[DEBUG][PdfService] PDF gerado (mock):', pdfPath, '| relative:', relativePath);
         if (this.useSupabase) {
-          // Mock para testes com Supabase
           return {
-            path: `relatorios/relatorio-${Date.now()}.pdf`,
-            url: `https://example.com/relatorio-${Date.now()}.pdf`
+            path: relativePath,
+            url: `https://example.com/${relatorioFilename}`
           };
         } else {
-          const pdfPath = join(this.pdfDir, `relatorio-${Date.now()}.pdf`);
-          await mkdir(this.pdfDir, { recursive: true });
-          // Criar um PDF vazio
-          const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
-          writeFileSync(pdfPath, emptyPDF);
-          return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
+          return relativePath;
         }
       }
 
@@ -704,7 +717,7 @@ export class PdfService implements OnModuleInit {
             </div>
 
             <!-- Dados Detalhados -->
-            ${reportData.detalhes ? `
+            ${Array.isArray(reportData.detalhes) && reportData.detalhes.length > 0 ? `
               <h3>Dados Detalhados</h3>
               <table>
                 <thead>
@@ -722,7 +735,12 @@ export class PdfService implements OnModuleInit {
                   `).join('')}
                 </tbody>
               </table>
-            ` : ''}
+            ` : `
+              <div class="card" style="text-align:center; margin:40px 0;">
+                <h2 style="color:#8B5A2B; margin-bottom:12px;">Nenhum pedido encontrado</h2>
+                <p>Nenhum pedido foi realizado no período selecionado.</p>
+              </div>
+            `}
 
             <!-- Observações -->
             ${reportData.observacoes ? `
@@ -749,6 +767,15 @@ export class PdfService implements OnModuleInit {
       </html>
       `;
 
+      // LOGAR HTML GERADO PARA DEBUG
+      console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
+      // SALVAR HTML COMPLETO PARA INSPEÇÃO MANUAL DO RELATÓRIO
+      try {
+        require('fs').writeFileSync('/tmp/relatorio-teste.html', html);
+        console.log('[DEBUG][PDF] HTML do relatório salvo em /tmp/relatorio-teste.html');
+      } catch (e) {
+        console.error('[DEBUG][PDF] Falha ao salvar HTML do relatório:', e);
+      }
       await page.setContent(html);
       const timestamp = Date.now();
       const filename = `relatorio-${reportData.tipo || 'geral'}-${timestamp}.pdf`;
@@ -768,12 +795,17 @@ export class PdfService implements OnModuleInit {
               left: '20px',
             }
           });
+          console.log(`[DEBUG] Tamanho do PDF gerado: ${pdfBuffer.length} bytes`);
           // Upload para Supabase
           const uploadPath = `relatorios/${filename}`;
-          this.logger.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`);
-          const uploadResp = await this.supabaseService.uploadFile(uploadPath, pdfBuffer, 'application/pdf');
+          console.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`);
+          const uploadResp = await this.supabaseService.uploadFile(
+            uploadPath,
+            pdfBuffer,
+            'application/pdf'
+          );
           if (uploadResp) {
-            this.logger.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);
+            console.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);
             return { path: uploadPath, url: uploadResp };
           } else {
             this.logger.error('Erro ao fazer upload do relatório PDF para Supabase.');

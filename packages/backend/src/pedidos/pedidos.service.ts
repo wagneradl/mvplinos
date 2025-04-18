@@ -646,7 +646,15 @@ export class PedidosService {
   async generateReportPdf(reportDto: ReportPedidoDto): Promise<string | { url: string; path: string }> {
     try {
       // Primeiro, gerar os dados do relatório
-      const reportData = await this.generateReport(reportDto);
+      const reportDataRaw = await this.generateReport(reportDto);
+      // Adaptar para o formato esperado pelo PDF
+      const reportData = {
+        ...reportDataRaw,
+        titulo: 'Relatório de Vendas',
+        itens: reportDataRaw.detalhes,
+        dataInicio: reportDataRaw.periodo?.inicio,
+        dataFim: reportDataRaw.periodo?.fim,
+      };
       // Se tiver cliente_id, buscar os dados do cliente
       let clienteData = null;
       if (reportDto.cliente_id && reportData.cliente) {
@@ -655,7 +663,7 @@ export class PedidosService {
       // Gerar o PDF do relatório
       const pdfResult = await this.pdfService.generateReportPdf(reportData, clienteData);
       if (typeof pdfResult === 'string') {
-        // Caminho local (modo legacy/desenvolvimento)
+        // Local file path
         const fullPath = join(process.cwd(), pdfResult);
         console.log('Caminho completo do PDF:', fullPath);
         return fullPath;

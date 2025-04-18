@@ -91,12 +91,12 @@ export class SupabaseService {
    * Upload a file to Supabase Storage
    * 
    * Faz upload de um arquivo para o bucket configurado no Supabase Storage
-   * e retorna a URL pública para acesso direto ao arquivo.
+   * e retorna uma URL assinada para acesso direto ao arquivo (funciona para bucket público ou privado).
    * 
    * @param filePath Path with filename to store in Supabase (e.g. 'pedidos/pedido-123.pdf')
    * @param fileData File contents as Buffer or Blob
    * @param contentType MIME type of the file
-   * @returns Public URL of the uploaded file
+   * @returns Signed URL of the uploaded file
    * @throws {InternalServerErrorException} When upload fails
    */
   async uploadFile(
@@ -105,127 +105,49 @@ export class SupabaseService {
     contentType: string,
   ): Promise<string> {
     try {
-      // Verificar se o cliente Supabase foi inicializado
       if (!this.supabase) {
         throw new Error('Supabase client not initialized');
       }
-
-      // Fazer upload do arquivo para o Supabase Storage
-      const { data, error } = await this.supabase.storage
+      // Upload file
+      const { error: uploadError } = await this.supabase.storage
         .from(this.bucketName)
         .upload(filePath, fileData, {
           contentType,
           upsert: true,
         });
-
-      // Se houver erro, lançar exceção
-      if (error) {
-        const customError: SupabaseServiceError = new Error(
-          `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-        // Modificando para acessar a propriedade de código de forma segura
-        customError.code = (error as any).code || 'UNKNOWN_ERROR';
-        customError.originalError = error;
-        
-        this.logger.error(`Error uploading file to Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`, error);
-
-        // Modo de desenvolvimento/teste: gerar URL local temporária
-        if (process.env.NODE_ENV !== 'production') {
-          this.logger.warn('Using local development fallback for file URL due to Supabase error');
-          
-          // Extrair o nome do arquivo do caminho
-          const fileName = filePath.split('/').pop() || 'unknownfile';
-          
-          try {
-            // Importar fs para salvar o arquivo
-            const fs = require('fs');
-            const { promisify } = require('util');
-            const { join, dirname } = require('path');
-            const mkdirAsync = promisify(fs.mkdir);
-            const writeFileAsync = promisify(fs.writeFile);
-            
-            // Se estamos no fallback, vamos garantir que o arquivo seja salvo localmente
-            // Precisamos salvar o arquivo em um local compatível com o Express.static
-            const cwd = process.cwd();
-            const uploadsPath = join(cwd, process.env.UPLOADS_PATH || 'uploads');
-            const localFilePath = join(uploadsPath, 'pdfs', fileName);
-            
-            // Garantir que o diretório existe
-            const dirPath = dirname(localFilePath);
-            await mkdirAsync(dirPath, { recursive: true });
-            
-            // Corrigido: só aceita Buffer!
-            let dataToWrite: Buffer;
-            if (Buffer.isBuffer(fileData)) {
-              dataToWrite = fileData;
-            } else {
-              throw new Error('Fallback local só aceita Buffer como fileData');
-            }
-            
-            // Salvar o arquivo no caminho local correspondente ao esperado pelo Express
-            await writeFileAsync(localFilePath, dataToWrite);
-            this.logger.log(`Saved file locally for fallback at: ${localFilePath}`);
-            
-            // Criar uma URL local temporária (válida apenas para desenvolvimento)
-            // Retornar um caminho relativo compatível com o Express.static
-            const relativePath = localFilePath.replace(cwd, '').replace(/^\/+/, '');
-            this.logger.log(`File saved locally at relative path: ${relativePath}`);
-            
-            // Criar a URL local baseada no caminho relativo
-            const localUrl = `http://localhost:${process.env.PORT || 3001}/${relativePath}`;
-            
-            this.logger.log(`Generated local fallback URL: ${localUrl}`);
-            return localUrl;
-          } catch (saveError) {
-            this.logger.error(`Failed to save local fallback file: ${(saveError as Error).message}`);
-            // Continuamos mesmo se falhar a criação do arquivo local, apenas retornando a URL
-            const localUrl = `http://localhost:${process.env.PORT || 3001}/uploads/pdfs/${fileName}`;
-            return localUrl;
-          }
-        }
-        
-        throw customError;
+      if (uploadError) {
+        this.logger.error(`Error uploading file to Supabase: ${uploadError.message}`);
+        throw new Error(`Failed to upload file: ${uploadError.message}`);
       }
-
-      // Obter a URL pública do arquivo
-      const { data: publicUrl } = this.supabase.storage
+      // Generate signed URL (valid for 1 hour)
+      const { data, error } = await this.supabase.storage
         .from(this.bucketName)
-        .getPublicUrl(filePath);
-
-      if (!publicUrl || !publicUrl.publicUrl) {
-        throw new Error('Failed to get public URL for uploaded file');
+        .createSignedUrl(filePath, 60 * 60);
+      if (error || !data?.signedUrl) {
+        this.logger.error(`Error creating signed URL: ${error?.message || 'Unknown error'}`);
+        throw new Error('Failed to get signed URL for uploaded file');
       }
-
-      this.logger.log(`File uploaded successfully to Supabase Storage: ${publicUrl.publicUrl}`);
-      return publicUrl.publicUrl;
+      this.logger.log(`File uploaded successfully to Supabase Storage: ${data.signedUrl}`);
+      return data.signedUrl;
     } catch (error) {
       // Se for um erro que já tratamos, repassar
       if (error instanceof Error && (error as SupabaseServiceError).code) {
         throw error;
       }
-
       // Erro não esperado
       this.logger.error(
         `Storage service error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error
       );
-
       // Modo de desenvolvimento/teste: gerar URL local temporária
-      if (process.env.NODE_ENV !== 'production' && filePath) {
-        this.logger.warn('Using local development fallback for file URL due to unexpected error');
-        
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.warn('Using local development fallback for file URL due to Supabase error');
         // Extrair o nome do arquivo do caminho
         const fileName = filePath.split('/').pop() || 'unknownfile';
-        
-        // Criar uma URL local temporária (válida apenas para desenvolvimento)
-        const localUrl = `http://localhost:${process.env.PORT || 3001}/uploads/pdfs/${fileName}`;
-        
-        this.logger.log(`Generated local fallback URL: ${localUrl}`);
-        return localUrl;
+        return `/uploads/pdfs/${fileName}`;
       }
-
       throw new InternalServerErrorException(
-        `Failed to upload file to storage: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error instanceof Error ? error.message : 'Unknown error uploading file to Supabase Storage',
       );
     }
   }

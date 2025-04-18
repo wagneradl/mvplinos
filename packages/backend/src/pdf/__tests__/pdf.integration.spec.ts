@@ -9,6 +9,7 @@ const pdfParse = require('pdf-parse');
 
 // Definir ambiente de teste
 process.env.NODE_ENV = 'test';
+process.env.PDF_MOCK = 'true';
 
 describe('PdfService Integration Tests', () => {
   let module: TestingModule;
@@ -22,24 +23,64 @@ describe('PdfService Integration Tests', () => {
     id: 1,
     cliente: {
       razao_social: 'Empresa Teste',
+      nome_fantasia: 'Padaria Teste',
       cnpj: '12345678901234',
       telefone: '11999999999',
-      email: 'teste@teste.com'
+      email: 'teste@teste.com',
+      endereco: {
+        rua: 'Rua das Flores',
+        numero: '100',
+        bairro: 'Centro',
+        cidade: 'São Paulo',
+        estado: 'SP',
+        cep: '01000-000',
+      },
     },
     itensPedido: [
       {
         produto: {
           nome: 'Produto Teste',
-          tipo_medida: 'un'
+          tipo_medida: 'un',
         },
         quantidade: 2,
         preco_unitario: 10.00,
-        valor_total_item: 20.00
+        valor_total_item: 20.00,
       }
     ],
     valor_total: 20.00,
-    data_pedido: new Date(),
-    status: 'PENDENTE'
+    data_pedido: new Date().toISOString(),
+    status: 'PENDENTE',
+    observacoes: 'Pedido gerado para teste de integração.',
+  };
+
+  const testReportData = {
+    titulo: 'Relatório de Vendas',
+    periodo: {
+      inicio: new Date('2025-04-01').toISOString(),
+      fim: new Date('2025-04-18').toISOString(),
+    },
+    dataInicio: new Date('2025-04-01').toISOString(),
+    dataFim: new Date('2025-04-18').toISOString(),
+    usuario: {
+      nome: 'Operador Teste',
+      email: 'operador@linos.com.br',
+    },
+    total: 1500.50,
+    itens: [
+      {
+        descricao: 'Pão Francês',
+        quantidade: 100,
+        valor_unitario: 0.50,
+        valor_total: 50.00,
+      },
+      {
+        descricao: 'Bolo de Chocolate',
+        quantidade: 20,
+        valor_unitario: 20.00,
+        valor_total: 400.00,
+      },
+    ],
+    observacoes: 'Relatório gerado automaticamente para testes.',
   };
 
   beforeAll(async () => {
@@ -160,6 +201,24 @@ describe('PdfService Integration Tests', () => {
       };
       
       await expect(pdfService.generatePedidoPdf(invalidPedido)).rejects.toThrow();
+    });
+  });
+
+  describe('generateReportPdf', () => {
+    it('should generate PDF file with correct report data', async () => {
+      const pdfPath = await pdfService.generateReportPdf(testReportData);
+      // Em modo mock, o nome do arquivo é sempre relatorios/relatorio-geral-mock.pdf
+      const pdfPathString = typeof pdfPath === 'string' ? pdfPath : pdfPath.path;
+      const expectedMockPath = 'relatorios/relatorio-geral-mock.pdf';
+      expect(pdfPathString).toBe(expectedMockPath);
+      const fullPath = join(process.cwd(), pdfPathString);
+      console.log('[DEBUG][TEST] pdfPathString:', pdfPathString, '| fullPath:', fullPath);
+      expect(existsSync(fullPath)).toBe(true);
+    });
+
+    it('should throw error for invalid report data', async () => {
+      const invalidReport = { titulo: 'Relatório Inválido' };
+      await expect(pdfService.generateReportPdf(invalidReport)).rejects.toThrow();
     });
   });
 });
