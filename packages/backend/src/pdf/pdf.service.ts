@@ -759,7 +759,7 @@ export class PdfService implements OnModuleInit {
 
             <div class="footer">
               <p>Lino's Panificadora - Qualidade e Tradição</p>
-              <p>CNPJ: 00.000.000/0000-00</p>
+              <p>CNPJ: 47.096.720/0001-66</p>
               <p>Documento gerado automaticamente em ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
             </div>
           </div>

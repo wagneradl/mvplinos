@@ -4,121 +4,95 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Limpar dados existentes
-  console.log('Limpando dados existentes...');
+  // Limpar dados existentes (exceto usuários e papéis essenciais)
+  console.log('Limpando dados existentes, exceto usuários e papéis essenciais...');
   await prisma.itemPedido.deleteMany();
   await prisma.pedido.deleteMany();
   await prisma.produto.deleteMany();
   await prisma.cliente.deleteMany();
-  await prisma.usuario.deleteMany();
-  await prisma.papel.deleteMany();
 
-  console.log('Criando papéis de usuários...');
-  // Criar papéis (roles)
-  const papelAdmin = await prisma.papel.create({
-    data: {
-      nome: 'Administrador',
-      descricao: 'Acesso completo ao sistema',
-      permissoes: JSON.stringify({
-        clientes: ['read', 'write', 'delete'],
-        produtos: ['read', 'write', 'delete'],
-        pedidos: ['read', 'write', 'delete'],
-        relatorios: ['read'],
-        usuarios: ['read', 'write', 'delete'],
-      }),
-    }
-  });
+  // Garante papéis essenciais
+  let papelAdmin = await prisma.papel.findUnique({ where: { nome: 'Administrador' } });
+  if (!papelAdmin) {
+    papelAdmin = await prisma.papel.create({
+      data: {
+        nome: 'Administrador',
+        descricao: 'Acesso completo ao sistema',
+        permissoes: JSON.stringify({
+          clientes: ['read', 'write', 'delete'],
+          produtos: ['read', 'write', 'delete'],
+          pedidos: ['read', 'write', 'delete'],
+          relatorios: ['read'],
+          usuarios: ['read', 'write', 'delete'],
+        }),
+      },
+    });
+  }
+  let papelOperador = await prisma.papel.findUnique({ where: { nome: 'Operador' } });
+  if (!papelOperador) {
+    papelOperador = await prisma.papel.create({
+      data: {
+        nome: 'Operador',
+        descricao: 'Acesso às operações do dia-a-dia',
+        permissoes: JSON.stringify({
+          clientes: ['read', 'write'],
+          produtos: ['read'],
+          pedidos: ['read', 'write'],
+          relatorios: ['read'],
+        }),
+      },
+    });
+  }
 
-  const papelOperador = await prisma.papel.create({
-    data: {
-      nome: 'Operador',
-      descricao: 'Acesso às operações do dia-a-dia',
-      permissoes: JSON.stringify({
-        clientes: ['read', 'write'],
-        produtos: ['read'],
-        pedidos: ['read', 'write'],
-        relatorios: ['read'],
-      }),
-    }
-  });
+  // Senhas fortes sugeridas
+  const adminPassword = 'A9!pLx7@wQ3#zR2$';
+  const operadorPassword = 'Op3r@dor!2025#Xy';
 
-  // Criar usuário admin
-  console.log('Criando usuário administrador padrão...');
-  const adminPassword = process.env.ADMIN_PASSWORD || 'L!n0s@Adm!n2025';
+  // Sempre sobrescreve/cria usuário admin
+  const adminEmail = 'admin@linos.com';
   const hashSenha = await bcrypt.hash(adminPassword, 10);
-  const usuarioAdmin = await prisma.usuario.create({
-    data: {
+  await prisma.usuario.upsert({
+    where: { email: adminEmail },
+    update: {
       nome: 'Administrador',
-      email: process.env.ADMIN_EMAIL || 'admin@linos.com.br',
       senha: hashSenha,
       papel_id: papelAdmin.id,
-      status: 'ativo'
-    }
+      status: 'ativo',
+    },
+    create: {
+      nome: 'Administrador',
+      email: adminEmail,
+      senha: hashSenha,
+      papel_id: papelAdmin.id,
+      status: 'ativo',
+    },
   });
 
-  // Criar usuário operador para testes
-  console.log('Criando usuário operador para testes...');
-  const hashSenhaOperador = await bcrypt.hash('operador123', 10);
-  const usuarioOperador = await prisma.usuario.create({
-    data: {
-      nome: 'Operador Teste',
-      email: 'operador@linos.com.br',
+  // Sempre sobrescreve/cria usuário operador
+  const operadorEmail = 'operador@linos.com';
+  const hashSenhaOperador = await bcrypt.hash(operadorPassword, 10);
+  await prisma.usuario.upsert({
+    where: { email: operadorEmail },
+    update: {
+      nome: 'Operador',
       senha: hashSenhaOperador,
       papel_id: papelOperador.id,
-      status: 'ativo'
-    }
+      status: 'ativo',
+    },
+    create: {
+      nome: 'Operador',
+      email: operadorEmail,
+      senha: hashSenhaOperador,
+      papel_id: papelOperador.id,
+      status: 'ativo',
+    },
   });
 
-  // Criar cliente de teste
-  console.log('Criando dados de teste para o sistema...');
-  const cliente = await prisma.cliente.create({
-    data: {
-      cnpj: '12345678901234',
-      razao_social: 'Restaurante Exemplo Ltda',
-      nome_fantasia: 'Restaurante Exemplo',
-      telefone: '11999999999',
-      email: 'contato@restauranteexemplo.com',
-      status: 'ativo'
-    }
-  });
-
-  // Criar produtos de teste
-  const produtos = await Promise.all([
-    prisma.produto.create({
-      data: {
-        nome: 'Pão Francês',
-        preco_unitario: 0.50,
-        tipo_medida: 'un',
-        status: 'ativo'
-      }
-    }),
-    prisma.produto.create({
-      data: {
-        nome: 'Pão de Leite',
-        preco_unitario: 0.75,
-        tipo_medida: 'un',
-        status: 'ativo'
-      }
-    }),
-    prisma.produto.create({
-      data: {
-        nome: 'Bolo de Chocolate',
-        preco_unitario: 45.00,
-        tipo_medida: 'un',
-        status: 'ativo'
-      }
-    })
-  ]);
-
-  console.log('Dados de teste criados:');
-  console.log('Papéis:', { admin: papelAdmin, operador: papelOperador });
-  console.log('Usuários:', { admin: usuarioAdmin, operador: usuarioOperador });
-  console.log('Cliente:', cliente);
-  console.log('Produtos:', produtos);
+  // Exibir as credenciais no console
   console.log('\n===============================================');
-  console.log('CREDENCIAIS PARA ACESSO:');
-  console.log(`Administrador: ${process.env.ADMIN_EMAIL || 'admin@linos.com.br'} / senha: ${adminPassword}`);
-  console.log('Operador: operador@linos.com.br / senha: operador123');
+  console.log('CREDENCIAIS PARA PRIMEIRO ACESSO:');
+  console.log(`Administrador: ${adminEmail} / senha: ${adminPassword}`);
+  console.log(`Operador: ${operadorEmail} / senha: ${operadorPassword}`);
   console.log('===============================================\n');
 }
 
