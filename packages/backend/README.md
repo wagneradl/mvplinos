@@ -5,13 +5,13 @@
 Para garantir que a logo apareça corretamente nos PDFs gerados em produção (Render), siga estas instruções:
 
 ### Onde colocar a logo
-- O arquivo da logo deve estar em: `packages/backend/uploads/static/logo.png`
+- O arquivo da logo deve estar em: `/opt/render/project/src/uploads/static/logo.png` (Render) ou `uploads/static/logo.png` (local)
 - Esse arquivo **já está versionado** no repositório. Se precisar trocar a logo, basta substituir o arquivo e fazer commit/push.
 
 ### Como o backend encontra a logo
-- O código busca a logo por padrão em `uploads/static/logo.png` (relativo à raiz do backend).
+- O código busca a logo por padrão em `/opt/render/project/src/uploads/static/logo.png` (Render) ou `uploads/static/logo.png` (local).
 - **Não use variáveis de ambiente com caminhos absolutos** (`UPLOADS_PATH`) no Render, a não ser que saiba exatamente o que está fazendo.
-- Se `UPLOADS_PATH` não estiver setada, o backend já procura no local correto.
+- Se `UPLOADS_PATH` não estiver setada, o backend já procura no local correto (`/opt/render/project/src/uploads` em produção Render).
 
 ### Deploy no Render
 - Após cada deploy, tudo que está versionado no repositório estará disponível (inclusive a logo).
@@ -24,7 +24,7 @@ Para garantir que a logo apareça corretamente nos PDFs gerados em produção (R
 ---
 
 Se a logo não aparecer no PDF:
-- Verifique se `uploads/static/logo.png` existe no ambiente de produção (Render).
+- Verifique se `/opt/render/project/src/uploads/static/logo.png` (Render) ou `uploads/static/logo.png` (local) existe no ambiente de produção (Render).
 - Confira os logs do backend para mensagens sobre "logo não encontrada".
 - Certifique-se de que não há variáveis de ambiente sobrescrevendo o caminho dos uploads.
 

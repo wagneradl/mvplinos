@@ -27,7 +27,7 @@ services:
       - key: PDF_STORAGE_PATH
         value: /var/data/pdfs
       - key: UPLOADS_PATH
-        value: /var/data/uploads
+        value: /opt/render/project/src/uploads
       # Supabase configuração
       - key: SUPABASE_URL
         sync: false

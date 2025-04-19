@@ -27,7 +27,7 @@ export class PdfService implements OnModuleInit {
   constructor(private readonly supabaseService: SupabaseService) {
     // Usar variáveis de ambiente para os caminhos ou fallback para os valores padrão
     const pdfStoragePath = process.env.PDF_STORAGE_PATH || join(process.cwd(), 'uploads', 'pdfs');
-    const uploadsPath = process.env.UPLOADS_PATH || join(process.cwd(), 'uploads');
+    const uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
 
     this.pdfDir = pdfStoragePath;
     this.logoPath = join(uploadsPath, 'static', 'logo.png');
