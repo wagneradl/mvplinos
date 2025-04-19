@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit, InternalServerErrorException } from '
 import * as puppeteer from 'puppeteer';
 import { join, dirname } from 'path';
 import { mkdir } from 'fs/promises';
-import { mkdirSync, existsSync, copyFileSync, readFileSync } from 'fs';
+import { mkdirSync, existsSync, copyFileSync, readFileSync, writeFileSync } from 'fs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SupabaseService } from '../supabase/supabase.service';
