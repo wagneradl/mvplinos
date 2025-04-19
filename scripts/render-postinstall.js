@@ -46,6 +46,7 @@ try {
   
   // O disco persistente pode não estar montado durante a fase de build
   // Vamos criar diretórios temporários que serão usados apenas durante o build
+  // IMPORTANTE: NÃO ALTERAR DATABASE_URL PARA BANCO TEMPORÁRIO!
   if (process.env.UPLOADS_PATH) {
     try {
       const uploadsPath = process.env.UPLOADS_PATH;
@@ -64,8 +65,7 @@ try {
           // Criar diretório temporário para uso durante o build
           const tempUploadsPath = path.join(process.cwd(), 'temp_uploads');
           fs.mkdirSync(tempUploadsPath, { recursive: true });
-          
-          // Sobrescrever a variável de ambiente para usar o diretório temporário
+          // Sobrescrever apenas os paths de upload temporários, mas NÃO o DATABASE_URL
           process.env.UPLOADS_PATH = tempUploadsPath;
           process.env.PDF_STORAGE_PATH = path.join(tempUploadsPath, 'pdfs');
           
@@ -93,7 +93,7 @@ try {
 - ${staticPath}`);
       }
     } catch (err) {
-      console.error('Erro ao configurar diretórios:', err.message);
+      console.error('Erro ao criar diretórios de upload:', err.message);
     }
   } else {
     console.log('UPLOADS_PATH não configurado. Configurando diretório temporário...');
@@ -111,13 +111,8 @@ try {
 - ${path.join(tempUploadsPath, 'static')}`);
   }
   
-  // O DATABASE_URL pode precisar ser ajustado se estivermos usando diretórios temporários
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('/var/data') && !fs.existsSync('/var/data')) {
-    console.log('Ajustando DATABASE_URL temporariamente para o build...');
-    const tempDbPath = path.join(process.cwd(), 'temp_uploads', 'linos-panificadora.db');
-    process.env.DATABASE_URL = `file:${tempDbPath}`;
-    console.log(`DATABASE_URL ajustado para: ${process.env.DATABASE_URL}`);
-  }
+  // Removido: Ajuste do DATABASE_URL para banco temporário durante o build
+  // O seed e as migrations devem rodar SEMPRE no banco de produção
   
   logSection('CONCLUSÃO');
   console.log('Script de pós-instalação concluído com sucesso.');
