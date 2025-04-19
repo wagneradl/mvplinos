@@ -81,7 +81,6 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
   const [statusProduto, setStatusProduto] = useState<'ativo' | 'inativo'>(produto?.status || 'ativo');
   const [errorAlert, setErrorAlert] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [nomeDuplicadoAlerta, setNomeDuplicadoAlerta] = useState(false);
   const { showError, showSuccess, showWarning } = useSnackbar();
 
   const {
@@ -110,49 +109,10 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
     }
   }, [produto, setValue]);
 
-  // Observar o campo nome para validação de duplicidade
-  const nome = watch('nome');
-  
-  // Efeito para validar nome duplicado
-  useEffect(() => {
-    const validarNomeDuplicado = async () => {
-      if (nome && nome.trim().length > 2) { // Só valida se tiver pelo menos 3 caracteres
-        try {
-          const isDuplicado = await ProdutosService.verificarNomeDuplicado(
-            nome, 
-            produto?.id
-          );
-          
-          setNomeDuplicadoAlerta(isDuplicado);
-          
-          if (isDuplicado) {
-            showWarning('Já existe um produto com este nome');
-          }
-        } catch (error) {
-          // Ignora erros de validação - log apenas para diagnóstico
-          console.error('Erro ao verificar nome duplicado:', error);
-        }
-      } else {
-        setNomeDuplicadoAlerta(false);
-      }
-    };
-    
-    // Debounce para não fazer muitas requisições
-    const timeoutId = setTimeout(validarNomeDuplicado, 500);
-    return () => clearTimeout(timeoutId);
-  }, [nome, produto?.id, showWarning]);
-
   const onFormSubmit = handleSubmit(async (data: ProdutoFormData) => {
     try {
       setIsSubmitting(true);
       setErrorAlert(null);
-      
-      // Validação adicional para duplicidade de nome
-      if (nomeDuplicadoAlerta) {
-        setErrorAlert('Já existe um produto com este nome. Por favor, escolha outro nome.');
-        return;
-      }
-      
       // Verificação adicional do preço
       const validacaoPreco = ProdutosService.validarPreco(parseFloat(data.preco_unitario.toString()));
       if (!validacaoPreco.valido) {
@@ -172,11 +132,11 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
       
       console.log('Dados convertidos:', produtoData);
       await submitHandler(produtoData);
-      
+      // Limpa erro após sucesso
+      setErrorAlert(null);
       // O feedback de sucesso já é mostrado pelo hook useProdutos
     } catch (error) {
       console.error('Erro completo:', error);
-      
       // Mostrar erro detalhado
       if (error instanceof Error) {
         setErrorAlert(error.message);
@@ -194,18 +154,15 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
   const formatarPreco = (value: string): string => {
     // Remove tudo que não é dígito ou vírgula
     let precoLimpo = value.replace(/[^\d,]/g, '');
-    
     // Garante que não tenha mais de uma vírgula
     const partes = precoLimpo.split(',');
     if (partes.length > 2) {
       precoLimpo = partes[0] + ',' + partes.slice(1).join('');
     }
-    
     // Limita a 2 casas decimais
     if (partes.length === 2 && partes[1].length > 2) {
       precoLimpo = partes[0] + ',' + partes[1].substring(0, 2);
     }
-    
     return precoLimpo;
   };
 
@@ -221,17 +178,6 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
           {errorAlert}
         </Alert>
       </Collapse>
-      
-      {/* Alerta de nome duplicado */}
-      <Collapse in={nomeDuplicadoAlerta}>
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 2 }}
-        >
-          Já existe um produto com este nome. Por favor, escolha outro nome.
-        </Alert>
-      </Collapse>
-      
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <Controller
@@ -243,8 +189,8 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
                 id="produto-nome"
                 label="Nome do Produto"
                 fullWidth
-                error={!!errors.nome || nomeDuplicadoAlerta}
-                helperText={errors.nome?.message || (nomeDuplicadoAlerta ? 'Nome já existe na base' : '')}
+                error={!!errors.nome}
+                helperText={errors.nome?.message}
                 inputProps={{
                   maxLength: 100,
                 }}
@@ -337,7 +283,7 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
             <Button
               type="submit"
               variant="contained"
-              disabled={isLoading || isSubmitting || nomeDuplicadoAlerta}
+              disabled={isLoading || isSubmitting}
               sx={{ minWidth: 120 }}
               startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
             >
@@ -349,7 +295,6 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
     </Box>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default ProdutoForm;
