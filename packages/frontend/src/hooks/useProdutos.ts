@@ -24,10 +24,12 @@ export function useProdutos(page = 1, limit = 10, status?: string, search?: stri
       showSuccess('Produto criado com sucesso!');
     },
     onError: (error: any) => {
-      console.error('Mutation - Erro:', error);
+      // Garante que nunca exibe mensagem de sucesso junto com erro
       const message = error.response?.data?.message || 'Erro ao criar produto';
       showError(message);
     },
+    // Garante que não haja race condition de mensagens
+    throwOnError: true,
   });
 
   const { mutate: atualizarProduto, isPending: isUpdating } = useMutation({

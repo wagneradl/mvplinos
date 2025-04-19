@@ -26,25 +26,20 @@ export class ProdutosService {
       const nomeTratado = createProdutoDto.nome.trim();
       console.log('Nome tratado:', nomeTratado);
       
-      // Verificar se já existe produto com o mesmo nome (case-insensitive)
+      // Verificar se já existe produto com o mesmo nome (case-insensitive, igualdade exata)
       const existingProduto = await this.prisma.produto.findFirst({
         where: {
-          AND: [
-            {
-              nome: {
-                contains: nomeTratado,
-              }
-            },
-            {
-              deleted_at: null
-            }
-          ]
+          nome: {
+            equals: nomeTratado,
+            mode: 'insensitive',
+          },
+          deleted_at: null,
         },
       });
 
       console.log('Produto existente:', existingProduto);
 
-      if (existingProduto && existingProduto.nome.toLowerCase() === nomeTratado.toLowerCase()) {
+      if (existingProduto) {
         throw new BadRequestException('Já existe um produto com este nome');
       }
 
@@ -185,7 +180,8 @@ export class ProdutosService {
         const existingProduto = await this.prisma.produto.findFirst({
           where: {
             nome: {
-              contains: nomeTratado,
+              equals: nomeTratado,
+              mode: 'insensitive',
             },
             id: { not: id },
             deleted_at: null,
@@ -194,7 +190,7 @@ export class ProdutosService {
 
         console.log('Produto existente:', existingProduto);
 
-        if (existingProduto && existingProduto.nome.toLowerCase() === nomeTratado.toLowerCase()) {
+        if (existingProduto) {
           throw new BadRequestException('Já existe um produto com este nome');
         }
 
