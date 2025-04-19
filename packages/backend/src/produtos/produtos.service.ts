@@ -26,20 +26,20 @@ export class ProdutosService {
       const nomeTratado = createProdutoDto.nome.trim();
       console.log('Nome tratado:', nomeTratado);
       
-      // Verificar se já existe produto com o mesmo nome (case-insensitive, igualdade exata)
+      // Verificar se já existe produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
       const existingProduto = await this.prisma.produto.findFirst({
         where: {
-          nome: {
-            equals: nomeTratado,
-            mode: 'insensitive',
-          },
+          nome: nomeTratado,
           deleted_at: null,
         },
       });
 
       console.log('Produto existente:', existingProduto);
 
-      if (existingProduto) {
+      if (
+        existingProduto &&
+        existingProduto.nome.trim().toLowerCase() === nomeTratado.trim().toLowerCase()
+      ) {
         throw new BadRequestException('Já existe um produto com este nome');
       }
 
@@ -176,13 +176,10 @@ export class ProdutosService {
         const nomeTratado = updateProdutoDto.nome.trim();
         console.log('Nome tratado:', nomeTratado);
         
-        // Corrigido o where para não usar not: null que estava causando erro
+        // Verificar se já existe outro produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
         const existingProduto = await this.prisma.produto.findFirst({
           where: {
-            nome: {
-              equals: nomeTratado,
-              mode: 'insensitive',
-            },
+            nome: nomeTratado,
             id: { not: id },
             deleted_at: null,
           },
@@ -190,7 +187,10 @@ export class ProdutosService {
 
         console.log('Produto existente:', existingProduto);
 
-        if (existingProduto) {
+        if (
+          existingProduto &&
+          existingProduto.nome.trim().toLowerCase() === nomeTratado.trim().toLowerCase()
+        ) {
           throw new BadRequestException('Já existe um produto com este nome');
         }
 
