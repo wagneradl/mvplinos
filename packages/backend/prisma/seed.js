@@ -12,6 +12,13 @@ async function main() {
   await prisma.produto.deleteMany();
   await prisma.cliente.deleteMany();
 
+  // Remove possíveis admins antigos para evitar conflito de email
+  await prisma.usuario.deleteMany({
+    where: {
+      email: { in: ['admin@linos.com', 'admin@linos.com.br'] }
+    }
+  });
+
   // Garante papéis essenciais
   let papelAdmin = await prisma.papel.findUnique({ where: { nome: 'Administrador' } });
   if (!papelAdmin) {
@@ -52,21 +59,14 @@ async function main() {
   // Sempre sobrescreve/cria usuário admin
   const adminEmail = 'admin@linos.com';
   const hashSenha = await bcrypt.hash(adminPassword, 10);
-  await prisma.usuario.upsert({
-    where: { email: adminEmail },
-    update: {
-      nome: 'Administrador',
-      senha: hashSenha,
-      papel_id: papelAdmin.id,
-      status: 'ativo',
-    },
-    create: {
+  await prisma.usuario.create({
+    data: {
       nome: 'Administrador',
       email: adminEmail,
       senha: hashSenha,
       papel_id: papelAdmin.id,
       status: 'ativo',
-    },
+    }
   });
 
   // Sempre sobrescreve/cria usuário operador
