@@ -17,7 +17,7 @@
     "test:e2e": "ts-node scripts/setup-test-env.ts && jest --config jest.e2e.config.js",
     "test:all": "ts-node scripts/setup-test-env.ts && yarn test && yarn test:integration && yarn test:e2e",
     "clean": "rimraf dist",
-    "seed": "ts-node src/scripts/seed.ts",
+    "seed": "node dist/scripts/seed.js",
     "pretest:integration": "DATABASE_URL=file:./test.db yarn prisma migrate deploy",
     "pretest:e2e": "DATABASE_URL=file:./test.db yarn prisma migrate deploy",
     "setup-test-env": "ts-node scripts/setup-test-env.ts",
@@ -29,14 +29,14 @@
     "start:prod:cluster:prod": "pm2 start ecosystem.config.js --env production",
     "cloud:backup": "ts-node src/scripts/backup/cloud-backup.ts",
     "cloud:setup": "npx prisma generate && npx prisma migrate deploy",
-    "cloud:init": "npx prisma generate && npx prisma migrate deploy && ts-node src/scripts/seed.ts",
+    "cloud:init": "npx prisma generate && npx prisma migrate deploy && node dist/scripts/seed.js",
     "cloud:setup-static": "node ../../scripts/cloud/setup-static.js",
     "cloud:full-setup": "node ../../scripts/cloud/full-setup.js",
-    "deploy:clean": "prisma migrate deploy && ts-node src/scripts/seed.ts",
+    "deploy:clean": "prisma migrate deploy && node dist/scripts/seed.js",
     "postinstall": "node scripts/copy-logo.js && npx puppeteer browsers install chrome"
   },
   "prisma": {
-    "seed": "ts-node src/scripts/seed.ts"
+    "seed": "node dist/scripts/seed.js"
   },
   "dependencies": {
     "@linos/shared": "*",
