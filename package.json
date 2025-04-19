@@ -24,22 +24,23 @@
     "cloud:setup": "node scripts/cloud/full-setup.js"
   },
   "devDependencies": {
+    "@types/react": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
+    "prisma": "5.22.0",
     "turbo": "^1.10.0",
-    "typescript": "^5.0.0",
-    "prisma": "5.22.0"
+    "typescript": "^5.0.0"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
   },
   "packageManager": "yarn@1.22.19",
   "dependencies": {
-    "glob": "^11.0.1",
-    "@prisma/client": "5.22.0"
+    "@prisma/client": "5.22.0",
+    "glob": "^11.0.1"
   }
 }
