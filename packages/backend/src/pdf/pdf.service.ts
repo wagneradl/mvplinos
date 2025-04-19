@@ -1,8 +1,7 @@
 import { Injectable, Logger, OnModuleInit, InternalServerErrorException } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import { join } from 'path';
-import { mkdir } from 'fs/promises';
-import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { mkdir, existsSync, writeFileSync, copyFileSync, mkdirSync, dirname } from 'fs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -53,14 +52,21 @@ export class PdfService implements OnModuleInit {
         this.logger.error(`Erro ao criar diretórios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
     }
-    
+
     this.logger.log(`Logo path: ${this.logoPath}`);
-    
-    // Verificar se a logo existe
-    if (existsSync(this.logoPath)) {
-      this.logger.log(`Logo encontrada em: ${this.logoPath}`);
+
+    // NOVO: Copiar logo automaticamente se não existir
+    if (!existsSync(this.logoPath)) {
+      try {
+        const srcLogo = join(__dirname, '../assets/static/logo.png');
+        mkdirSync(dirname(this.logoPath), { recursive: true });
+        copyFileSync(srcLogo, this.logoPath);
+        this.logger.log(`Logo copiada automaticamente para: ${this.logoPath}`);
+      } catch (e) {
+        this.logger.warn(`Logo não encontrada e falha ao copiar automaticamente: ${e instanceof Error ? e.message : e}`);
+      }
     } else {
-      this.logger.warn(`Logo não encontrada em: ${this.logoPath}`);
+      this.logger.log(`Logo encontrada em: ${this.logoPath}`);
     }
   }
 

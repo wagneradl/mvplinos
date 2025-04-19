@@ -31,7 +31,8 @@
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
     "turbo": "^1.10.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "prisma": "5.22.0"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -39,7 +40,6 @@
   "packageManager": "yarn@1.22.19",
   "dependencies": {
     "glob": "^11.0.1",
-    "@prisma/client": "5.22.0",
-    "prisma": "5.22.0"
+    "@prisma/client": "5.22.0"
   }
 }

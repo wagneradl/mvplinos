@@ -3,12 +3,6 @@ const path = require('path');
 
 const nextConfig = {
   reactStrictMode: false, // Disable strict mode to prevent double rendering in development
-  swcMinify: true,
-  
-  // Simplify experimental features
-  experimental: {
-    serverActions: true,
-  },
   
   // Prevent type checking during build to avoid issues on Render
   typescript: {

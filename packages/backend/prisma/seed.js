@@ -12,12 +12,8 @@ async function main() {
   await prisma.produto.deleteMany();
   await prisma.cliente.deleteMany();
 
-  // Remove possíveis admins antigos para evitar conflito de email
-  await prisma.usuario.deleteMany({
-    where: {
-      email: { in: ['admin@linos.com', 'admin@linos.com.br'] }
-    }
-  });
+  // Limpar todos os usuários antes de criar os iniciais
+  await prisma.usuario.deleteMany();
 
   // Garante papéis essenciais
   let papelAdmin = await prisma.papel.findUnique({ where: { nome: 'Administrador' } });
@@ -56,7 +52,7 @@ async function main() {
   const adminPassword = 'A9!pLx7@wQ3#zR2$';
   const operadorPassword = 'Op3r@dor!2025#Xy';
 
-  // Sempre sobrescreve/cria usuário admin
+  // Criar usuário admin
   const adminEmail = 'admin@linos.com';
   const hashSenha = await bcrypt.hash(adminPassword, 10);
   await prisma.usuario.create({
@@ -66,21 +62,14 @@ async function main() {
       senha: hashSenha,
       papel_id: papelAdmin.id,
       status: 'ativo',
-    }
+    },
   });
 
-  // Sempre sobrescreve/cria usuário operador
+  // Criar usuário operador
   const operadorEmail = 'operador@linos.com';
   const hashSenhaOperador = await bcrypt.hash(operadorPassword, 10);
-  await prisma.usuario.upsert({
-    where: { email: operadorEmail },
-    update: {
-      nome: 'Operador',
-      senha: hashSenhaOperador,
-      papel_id: papelOperador.id,
-      status: 'ativo',
-    },
-    create: {
+  await prisma.usuario.create({
+    data: {
       nome: 'Operador',
       email: operadorEmail,
       senha: hashSenhaOperador,
