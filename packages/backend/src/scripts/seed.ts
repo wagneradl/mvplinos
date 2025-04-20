@@ -38,40 +38,48 @@ async function seed() {
       }
     });
 
+    // Hash das senhas
+    const adminPasswordHash = await bcrypt.hash('A9!pLx7@wQ3#zR2$', 10);
+    const operadorPasswordHash = await bcrypt.hash('Op3r@dor!2025#Xy', 10);
+    console.log('Hash senha admin:', adminPasswordHash);
+    console.log('Hash senha operador:', operadorPasswordHash);
+
     // Upsert (cria ou atualiza) usuário admin
-    await prisma.usuario.upsert({
+    const adminUser = await prisma.usuario.upsert({
       where: { email: 'admin@linos.com' },
       update: {
         nome: 'Administrador',
-        senha: await bcrypt.hash('A9!pLx7@wQ3#zR2$', 10),
+        senha: adminPasswordHash,
         papel_id: papelAdmin.id,
         status: 'ATIVO',
       },
       create: {
         email: 'admin@linos.com',
         nome: 'Administrador',
-        senha: await bcrypt.hash('A9!pLx7@wQ3#zR2$', 10),
+        senha: adminPasswordHash,
         papel_id: papelAdmin.id,
         status: 'ATIVO',
       }
     });
     // Upsert operador
-    await prisma.usuario.upsert({
+    const operadorUser = await prisma.usuario.upsert({
       where: { email: 'operador@linos.com' },
       update: {
         nome: 'Operador',
-        senha: await bcrypt.hash('Op3r@dor!2025#Xy', 10),
+        senha: operadorPasswordHash,
         papel_id: papelOperador.id,
         status: 'ATIVO',
       },
       create: {
         email: 'operador@linos.com',
         nome: 'Operador',
-        senha: await bcrypt.hash('Op3r@dor!2025#Xy', 10),
+        senha: operadorPasswordHash,
         papel_id: papelOperador.id,
         status: 'ATIVO',
       }
     });
+    console.log('Usuário admin no banco após upsert:', adminUser);
+    console.log('Usuário operador no banco após upsert:', operadorUser);
     console.log('Usuários admin e operador seedados/atualizados com sucesso!');
   } catch (error) {
     console.error('Erro ao criar dados essenciais:', error);
