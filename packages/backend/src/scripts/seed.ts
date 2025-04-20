@@ -5,10 +5,6 @@ const prisma = new PrismaClient();
 
 async function seed() {
   try {
-    // Limpar todas as tabelas exceto Papel e Usuario
-    // (Opcional: caso precise garantir limpeza total, pode-se deletar outras entidades)
-    // await prisma.<outrasTabelas>.deleteMany({});
-
     // Upsert (cria ou atualiza) papéis essenciais
     const papelAdmin = await prisma.papel.upsert({
       where: { nome: 'Administrador' },
@@ -16,7 +12,7 @@ async function seed() {
       create: {
         nome: 'Administrador',
         descricao: 'Acesso total ao sistema',
-        permissoes: '{"*": "read,write"}'
+        permissoes: '{"clientes": ["read","write","delete"], "produtos": ["read","write","delete"], "pedidos": ["read","write","delete"], "relatorios": ["read"], "usuarios": ["read","write","delete"]}'
       }
     });
     const papelOperador = await prisma.papel.upsert({
@@ -25,7 +21,7 @@ async function seed() {
       create: {
         nome: 'Operador',
         descricao: 'Acesso limitado',
-        permissoes: '{"clientes": "read"}'
+        permissoes: '{"clientes": ["read"]}'
       }
     });
 
@@ -38,51 +34,42 @@ async function seed() {
       }
     });
 
-    // Hash das senhas
-    const adminPasswordHash = await bcrypt.hash('A9!pLx7@wQ3#zR2$', 10);
-    const operadorPasswordHash = await bcrypt.hash('Op3r@dor!2025#Xy', 10);
-    console.log('Hash senha admin:', adminPasswordHash);
-    console.log('Hash senha operador:', operadorPasswordHash);
+    // Criação do admin apenas se não existir
+    const admin = await prisma.usuario.findUnique({ where: { email: 'admin@linos.com' } });
+    if (!admin) {
+      const adminPassword = process.env.ADMIN_PASSWORD || 'A9!pLx7@wQ3#zR2$';
+      const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+      await prisma.usuario.create({
+        data: {
+          email: 'admin@linos.com',
+          nome: 'Administrador',
+          senha: adminPasswordHash,
+          papel_id: papelAdmin.id,
+          status: 'ATIVO',
+        }
+      });
+    }
 
-    // Upsert (cria ou atualiza) usuário admin
-    const adminUser = await prisma.usuario.upsert({
-      where: { email: 'admin@linos.com' },
-      update: {
-        nome: 'Administrador',
-        senha: adminPasswordHash,
-        papel_id: papelAdmin.id,
-        status: 'ATIVO',
-      },
-      create: {
-        email: 'admin@linos.com',
-        nome: 'Administrador',
-        senha: adminPasswordHash,
-        papel_id: papelAdmin.id,
-        status: 'ATIVO',
-      }
-    });
-    // Upsert operador
-    const operadorUser = await prisma.usuario.upsert({
-      where: { email: 'operador@linos.com' },
-      update: {
-        nome: 'Operador',
-        senha: operadorPasswordHash,
-        papel_id: papelOperador.id,
-        status: 'ATIVO',
-      },
-      create: {
-        email: 'operador@linos.com',
-        nome: 'Operador',
-        senha: operadorPasswordHash,
-        papel_id: papelOperador.id,
-        status: 'ATIVO',
-      }
-    });
-    console.log('Usuário admin no banco após upsert:', adminUser);
-    console.log('Usuário operador no banco após upsert:', operadorUser);
-    console.log('Usuários admin e operador seedados/atualizados com sucesso!');
+    // Criação do operador apenas se não existir
+    const operador = await prisma.usuario.findUnique({ where: { email: 'operador@linos.com' } });
+    if (!operador) {
+      const operadorPassword = process.env.OPERADOR_PASSWORD || 'Op3r@dor!2025#Xy';
+      const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
+      await prisma.usuario.create({
+        data: {
+          email: 'operador@linos.com',
+          nome: 'Operador',
+          senha: operadorPasswordHash,
+          papel_id: papelOperador.id,
+          status: 'ATIVO',
+        }
+      });
+    }
+
+    console.log('Seed concluído com sucesso.');
   } catch (error) {
-    console.error('Erro ao criar dados essenciais:', error);
+    console.error('Erro ao rodar seed:', error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
