@@ -24,4 +24,10 @@ export class AdminController {
     
     return this.adminService.resetDatabase();
   }
+
+  @Post('clean-test-data')
+  @RequerPermissoes('usuarios', 'delete')
+  async cleanTestData() {
+    return this.adminService.cleanTestData();
+  }
 }

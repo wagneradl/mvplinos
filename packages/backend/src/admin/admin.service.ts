@@ -127,4 +127,49 @@ export class AdminService {
       };
     }
   }
+
+  async cleanTestData() {
+    this.logger.log('Iniciando limpeza de dados de teste...');
+    try {
+      // Devido às relações de chave estrangeira, precisamos excluir na ordem correta
+      
+      // 1. Primeiro removemos os itens de pedido
+      await this.prisma.itemPedido.deleteMany({});
+      this.logger.log('Itens de pedido removidos');
+      
+      // 2. Depois removemos os pedidos
+      await this.prisma.pedido.deleteMany({});
+      this.logger.log('Pedidos removidos');
+      
+      // 3. Agora podemos remover produtos
+      await this.prisma.produto.deleteMany({});
+      this.logger.log('Produtos removidos');
+      
+      // 4. Por fim, removemos os clientes
+      await this.prisma.cliente.deleteMany({});
+      this.logger.log('Clientes removidos');
+      
+      // 5. Execute o seed para garantir que admin e operador estejam atualizados
+      await this.executeSeed();
+
+      return {
+        success: true,
+        message: 'Dados de teste removidos com sucesso. Usuários padrões mantidos.',
+        details: {
+          usuariosPreservados: ['admin@linos.com', 'operador@linos.com'],
+          dadosRemovidos: ['ItemPedido', 'Pedido', 'Produto', 'Cliente']
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : '';
+      this.logger.error(`Erro ao limpar dados de teste: ${errorMessage}`, errorStack);
+      return {
+        success: false,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
