@@ -5,6 +5,10 @@ const prisma = new PrismaClient();
 
 async function seed() {
   try {
+    console.log('Iniciando seed...');
+    console.log(`Ambiente: ${process.env.NODE_ENV}`);
+    console.log(`Database URL: ${process.env.DATABASE_URL}`);
+
     // Upsert (cria ou atualiza) papéis essenciais
     const papelAdmin = await prisma.papel.upsert({
       where: { nome: 'Administrador' },
@@ -15,6 +19,8 @@ async function seed() {
         permissoes: '{"clientes": ["read","write","delete"], "produtos": ["read","write","delete"], "pedidos": ["read","write","delete"], "relatorios": ["read"], "usuarios": ["read","write","delete"]}'
       },
     });
+    console.log(`Papel Administrador: ${papelAdmin.id}`);
+
     const papelOperador = await prisma.papel.upsert({
       where: { nome: 'Operador' },
       update: {},
@@ -24,6 +30,7 @@ async function seed() {
         permissoes: '{"clientes": ["read"]}'
       },
     });
+    console.log(`Papel Operador: ${papelOperador.id}`);
 
     // Remove todos usuários exceto admin e operador
     await prisma.usuario.deleteMany({
@@ -33,40 +40,54 @@ async function seed() {
         },
       },
     });
+    console.log('Usuários não essenciais removidos');
 
-    // Criação do admin apenas se não existir
-    const admin = await prisma.usuario.findUnique({ where: { email: 'admin@linos.com' } });
-    if (!admin) {
-      console.log('ADMIN_PASSWORD em uso no seed:', process.env.ADMIN_PASSWORD);
-      const adminPassword = process.env.ADMIN_PASSWORD || 'A9!pLx7@wQ3#zR2$';
-      const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
-      await prisma.usuario.create({
-        data: {
-          email: 'admin@linos.com',
-          nome: 'Administrador',
-          senha: adminPasswordHash,
-          papel_id: papelAdmin.id,
-          status: 'ATIVO',
-        },
-      });
-    }
+    // Obter senhas das variáveis de ambiente com fallbacks
+    console.log('ADMIN_PASSWORD definido:', !!process.env.ADMIN_PASSWORD);
+    console.log('OPERADOR_PASSWORD definido:', !!process.env.OPERADOR_PASSWORD);
+    
+    const adminPassword = process.env.ADMIN_PASSWORD || 'A9!pLx7@wQ3#zR2$';
+    const operadorPassword = process.env.OPERADOR_PASSWORD || 'Op3r@dor!2025#Xy';
 
-    // Criação do operador apenas se não existir
-    const operador = await prisma.usuario.findUnique({ where: { email: 'operador@linos.com' } });
-    if (!operador) {
-      console.log('OPERADOR_PASSWORD em uso no seed:', process.env.OPERADOR_PASSWORD);
-      const operadorPassword = process.env.OPERADOR_PASSWORD || 'Op3r@dor!2025#Xy';
-      const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
-      await prisma.usuario.create({
-        data: {
-          email: 'operador@linos.com',
-          nome: 'Operador',
-          senha: operadorPasswordHash,
-          papel_id: papelOperador.id,
-          status: 'ATIVO',
-        },
-      });
-    }
+    // Gerar hashes das senhas
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+    const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
+
+    // Upsert para o admin (cria ou atualiza)
+    await prisma.usuario.upsert({
+      where: { email: 'admin@linos.com' },
+      update: {
+        senha: adminPasswordHash,
+        papel_id: papelAdmin.id,
+        status: 'ATIVO',
+      },
+      create: {
+        email: 'admin@linos.com',
+        nome: 'Administrador',
+        senha: adminPasswordHash,
+        papel_id: papelAdmin.id,
+        status: 'ATIVO',
+      },
+    });
+    console.log('Usuário admin atualizado/criado com sucesso');
+
+    // Upsert para o operador (cria ou atualiza)
+    await prisma.usuario.upsert({
+      where: { email: 'operador@linos.com' },
+      update: {
+        senha: operadorPasswordHash,
+        papel_id: papelOperador.id,
+        status: 'ATIVO',
+      },
+      create: {
+        email: 'operador@linos.com',
+        nome: 'Operador',
+        senha: operadorPasswordHash,
+        papel_id: papelOperador.id,
+        status: 'ATIVO',
+      },
+    });
+    console.log('Usuário operador atualizado/criado com sucesso');
 
     console.log('Seed concluído com sucesso.');
   } catch (error) {

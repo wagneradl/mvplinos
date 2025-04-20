@@ -4,7 +4,6 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import express from 'express';
 import { AppModule } from './app.module';
-import { ensureAdminUser } from './bootstrap/ensure-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -55,12 +54,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Seed admin user before starting
-  try {
-    await ensureAdminUser();
-  } catch (err) {
-    console.error('Error during admin seed:', err);
-  }
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
