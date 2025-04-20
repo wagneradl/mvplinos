@@ -50,6 +50,25 @@ sqlite3 /var/data/linos-panificadora.db "SELECT id, nome, email, papel_id, statu
   sqlite3 /var/data/linos-panificadora.db "INSERT INTO Usuario (nome, email, senha, papel_id, status, created_at, updated_at) VALUES ('NOME', 'EMAIL', 'HASH_SENHA', PAPEL_ID, 'ativo', datetime('now'), datetime('now'));"
   ```
 
+### Apagar Usuários Manualmente
+
+#### Apagar todos os usuários:
+```sh
+sqlite3 /var/data/linos-panificadora.db "DELETE FROM Usuario;"
+```
+
+#### Apagar apenas admin e operador:
+```sh
+sqlite3 /var/data/linos-panificadora.db "DELETE FROM Usuario WHERE email IN ('admin@linos.com', 'operador@linos.com');"
+```
+
+#### Apagar todos exceto admin e operador:
+```sh
+sqlite3 /var/data/linos-panificadora.db "DELETE FROM Usuario WHERE email NOT IN ('admin@linos.com', 'operador@linos.com');"
+```
+
+> **Dica:** Após apagar usuários, rode o seed do backend para recriá-los com as senhas das variáveis de ambiente.
+
 ---
 
 ## 3. Produtos e Clientes
@@ -79,7 +98,36 @@ sqlite3 /var/data/linos-panificadora.db "INSERT INTO Produto (nome, preco_unitar
 
 ---
 
-## 4. Dicas e Segurança
+## 4. Rodar o Seed Manualmente
+
+Se precisar rodar o seed manualmente (por exemplo, após apagar usuários):
+
+```sh
+yarn --cwd /opt/render/project/src/packages/backend run seed
+```
+Ou, localmente:
+```sh
+yarn --cwd packages/backend run seed
+```
+
+---
+
+## 5. Conferir Hash da Senha
+
+Para conferir o hash salvo de um usuário:
+```sh
+sqlite3 /var/data/linos-panificadora.db "SELECT email, senha FROM Usuario WHERE email = 'admin@linos.com';"
+```
+
+Você pode validar o hash usando Node.js localmente:
+```js
+const bcrypt = require('bcryptjs');
+bcrypt.compareSync('SENHA_PLAINTEXT', 'HASH_DO_BANCO');
+```
+
+---
+
+## 6. Dicas e Segurança
 - Sempre faça backup do banco antes de operações em massa:
   ```sh
   cp /var/data/linos-panificadora.db /var/data/linos-panificadora.db.bkp
@@ -92,7 +140,15 @@ sqlite3 /var/data/linos-panificadora.db "INSERT INTO Produto (nome, preco_unitar
 
 ---
 
-## 5. Referências rápidas
+## 7. Recomendações de Segurança
+- Nunca exponha senhas em texto plano em produção.
+- Sempre utilize variáveis de ambiente para credenciais.
+- Centralize a lógica de seed em um único script seguro.
+- Evite scripts de bootstrap que sobrescrevam usuários automaticamente em produção.
+
+---
+
+## 8. Referências rápidas
 - [Documentação SQLite](https://www.sqlite.org/cli.html)
 - [bcrypt online hash generator](https://bcrypt-generator.com/)
 
