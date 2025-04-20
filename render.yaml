@@ -13,8 +13,8 @@ services:
       yarn build
     startCommand: >
       cd packages/backend &&
-      npx prisma migrate deploy &&
-      npx prisma db seed &&
+      yarn prisma migrate deploy &&
+      yarn seed &&
       NODE_ENV=production node dist/main.js
     healthCheckPath: /health
     envVars:
