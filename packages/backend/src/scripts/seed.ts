@@ -59,14 +59,14 @@ async function seed() {
       update: {
         senha: adminPasswordHash,
         papel_id: papelAdmin.id,
-        status: 'ATIVO',
+        status: 'ativo',
       },
       create: {
         email: 'admin@linos.com',
         nome: 'Administrador',
         senha: adminPasswordHash,
         papel_id: papelAdmin.id,
-        status: 'ATIVO',
+        status: 'ativo',
       },
     });
     console.log('Usuário admin atualizado/criado com sucesso');
@@ -77,14 +77,14 @@ async function seed() {
       update: {
         senha: operadorPasswordHash,
         papel_id: papelOperador.id,
-        status: 'ATIVO',
+        status: 'ativo',
       },
       create: {
         email: 'operador@linos.com',
         nome: 'Operador',
         senha: operadorPasswordHash,
         papel_id: papelOperador.id,
-        status: 'ATIVO',
+        status: 'ativo',
       },
     });
     console.log('Usuário operador atualizado/criado com sucesso');

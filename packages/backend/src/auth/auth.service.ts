@@ -22,7 +22,7 @@ export class AuthService {
       },
     });
 
-    if (!usuario || usuario.status !== 'ativo') {
+    if (!usuario || usuario.status.toLowerCase() !== 'ativo') {
       console.log('Usuário não encontrado ou status diferente de ATIVO:', usuario);
       throw new UnauthorizedException('Credenciais inválidas');
     }
