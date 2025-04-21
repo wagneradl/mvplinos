@@ -3,7 +3,7 @@
 // Força renderização no lado do cliente, evitando SSG/SSR
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -30,6 +30,7 @@ import { useClientes } from '@/hooks/useClientes';
 import Link from 'next/link';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
+import { useDebounce } from '@/hooks/useDebounce';
 
 function formatCNPJ(cnpj: string) {
   return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -47,7 +48,16 @@ export default function ClientesPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  
+  const [inputSearchTerm, setInputSearchTerm] = useState<string>('');
+
+  // Aplicar debounce ao termo de busca
+  const debouncedSearchTerm = useDebounce(inputSearchTerm, 500);
+
+  // Atualizar searchTerm quando o valor debounced mudar
+  useEffect(() => {
+    setSearchTerm(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
+
   // Adiciona valores padrão seguros para evitar erros de referência
   const { 
     clientes = [], 
@@ -150,8 +160,8 @@ export default function ClientesPage() {
               label="Buscar cliente"
               variant="outlined"
               fullWidth
-              value={searchTerm}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(event.target.value)}
+              value={inputSearchTerm}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setInputSearchTerm(event.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

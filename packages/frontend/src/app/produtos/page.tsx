@@ -3,7 +3,7 @@
 // Força renderização no lado do cliente, evitando SSG/SSR
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -22,6 +22,7 @@ import {
   MenuItem,
   Grid,
   InputAdornment,
+  Typography,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
@@ -29,13 +30,23 @@ import { useProdutos } from '@/hooks/useProdutos';
 import Link from 'next/link';
 import { formatCurrency } from '@/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function ProdutosPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [inputSearchTerm, setInputSearchTerm] = useState<string>('');
   const queryClient = useQueryClient();
+  
+  // Aplicar debounce ao termo de busca
+  const debouncedSearchTerm = useDebounce(inputSearchTerm, 500);
+  
+  // Atualizar searchTerm quando o valor debounced mudar
+  useEffect(() => {
+    setSearchTerm(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
   
   // Valores padrão seguros para evitar erros de referência
   const { 
@@ -82,7 +93,7 @@ export default function ProdutosPage() {
   };
   
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    setInputSearchTerm(event.target.value);
     setPage(0); // Resetar para a primeira página ao mudar a busca
   };
 
@@ -139,7 +150,7 @@ export default function ProdutosPage() {
               label="Buscar produto"
               variant="outlined"
               fullWidth
-              value={searchTerm}
+              value={inputSearchTerm}
               onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
