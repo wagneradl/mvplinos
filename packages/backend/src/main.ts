@@ -44,21 +44,27 @@ async function bootstrap() {
 
   app.use('/uploads', express.static(uploadsPath));
 
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle("Lino's Panificadora API")
-    .setDescription("API para gestão da padaria Lino's")
-    .setVersion('1.0')
-    .build();
+  // Swagger - apenas em ambiente de desenvolvimento
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle("Lino's Panificadora API")
+      .setDescription("API para gestão da padaria Lino's")
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+    
+    console.log(`Documentação Swagger disponível em: http://localhost:${process.env.PORT || 3001}/api`);
+  } else {
+    console.log('Swagger desabilitado em ambiente de produção por motivos de segurança');
+  }
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
   console.log(`Servidor rodando na porta ${port}`);
-  console.log(`Documentação Swagger disponível em: http://localhost:${port}/api`);
   console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
   console.log(`Uploads: ${uploadsPath}`);
 }
