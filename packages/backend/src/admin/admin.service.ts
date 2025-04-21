@@ -133,28 +133,28 @@ export class AdminService {
     try {
       // Devido às relações de chave estrangeira, precisamos excluir na ordem correta
       
-      // 1. Primeiro removemos os itens de pedido
-      await this.prisma.itemPedido.deleteMany({});
-      this.logger.log('Itens de pedido removidos');
+      // 1. Primeiro removemos os itens de pedido (incluindo soft-deleted)
+      await this.prisma.$executeRaw`DELETE FROM "ItemPedido"`;
+      this.logger.log('Itens de pedido removidos (incluindo soft-deleted)');
       
-      // 2. Depois removemos os pedidos
-      await this.prisma.pedido.deleteMany({});
-      this.logger.log('Pedidos removidos');
+      // 2. Depois removemos os pedidos (incluindo soft-deleted)
+      await this.prisma.$executeRaw`DELETE FROM "Pedido"`;
+      this.logger.log('Pedidos removidos (incluindo soft-deleted)');
       
-      // 3. Agora podemos remover produtos
-      await this.prisma.produto.deleteMany({});
-      this.logger.log('Produtos removidos');
+      // 3. Agora podemos remover produtos (incluindo soft-deleted)
+      await this.prisma.$executeRaw`DELETE FROM "Produto"`;
+      this.logger.log('Produtos removidos (incluindo soft-deleted)');
       
-      // 4. Por fim, removemos os clientes
-      await this.prisma.cliente.deleteMany({});
-      this.logger.log('Clientes removidos');
+      // 4. Por fim, removemos os clientes (incluindo soft-deleted)
+      await this.prisma.$executeRaw`DELETE FROM "Cliente"`;
+      this.logger.log('Clientes removidos (incluindo soft-deleted)');
       
       // 5. Execute o seed para garantir que admin e operador estejam atualizados
       await this.executeSeed();
 
       return {
         success: true,
-        message: 'Dados de teste removidos com sucesso. Usuários padrões mantidos.',
+        message: 'Dados de teste removidos com sucesso (incluindo soft-deleted). Usuários padrões mantidos.',
         details: {
           usuariosPreservados: ['admin@linos.com', 'operador@linos.com'],
           dadosRemovidos: ['ItemPedido', 'Pedido', 'Produto', 'Cliente']
