@@ -13,9 +13,9 @@ import {
   Container
 } from '@mui/material';
 import Image from 'next/image';
-import { LockOutlined } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { extractErrorMessage } from '@/services/api';
+import { authService } from '@/services/auth.service';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -30,22 +30,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, senha }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
-      }
-
+      // Usar o serviço de autenticação em vez de fetch direto
+      const data = await authService.login({ email, senha });
       login(data.token, data.usuario);
-      
     } catch (error) {
       console.error('Erro de login:', error);
       setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');
