@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Sistema de gestão integrado da Lino's Panificadora",
   viewport: 'width=device-width, initial-scale=1',
   icons: {
-    icon: '/icon.png',
+    icon: '/icon1.png',
     shortcut: '/favicon.ico',
     apple: '/apple-icon.png',
     other: {
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     description: "Sistema de gestão integrado da Lino's Panificadora",
     images: [
       {
-        url: '/og-image.png', // Imagem para compartilhamento (1200x630 recomendado)
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
         alt: "Lino's Panificadora",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Lino's Panificadora - Sistema de Gestão",
     description: "Sistema de gestão integrado da Lino's Panificadora",
-    images: ['/og-image.png'],
+    images: ['/opengraph-image.png'],
     creator: '@linospanificadora',
   },
   // Metadados adicionais

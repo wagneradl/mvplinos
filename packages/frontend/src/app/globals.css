@@ -1,0 +1,52 @@
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #f5f5f5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Variáveis globais */
+:root {
+  --primary-color: #1976d2;
+  --secondary-color: #dc004e;
+  --background-light: #f5f5f5;
+  --text-primary: #333;
+  --text-secondary: #666;
+}
+
+/* Estilos para impressão */
+@media print {
+  body {
+    background: white;
+  }
+  
+  nav, 
+  header, 
+  footer, 
+  .no-print {
+    display: none !important;
+  }
+  
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

@@ -1,0 +1,9 @@
+Este arquivo é apenas um lembrete para criar uma imagem opengraph-image.png de 1200x630 pixels e colocá-la nesta pasta.
+
+A imagem deve conter:
+- Logo da Lino's Panificadora
+- Nome "Lino's Panificadora"
+- Texto "Sistema de Gestão"
+- Cores da identidade visual
+
+Depois de criar a imagem, renomeie-a para opengraph-image.png
