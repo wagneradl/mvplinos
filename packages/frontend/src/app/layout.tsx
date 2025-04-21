@@ -1,19 +1,19 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 import { Providers } from '@/components/Providers';
-import { metadata } from './metadata';
+import { metadata, viewport } from './metadata';
 import { ClientLayout } from '@/components/ClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export { metadata };
+export { metadata, viewport };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Removemos a tag meta viewport manual, pois o Next.js a adicionará automaticamente */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon1.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />

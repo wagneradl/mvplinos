@@ -1,9 +1,17 @@
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
+
+// Viewport export separado conforme recomendado pelo Next.js 15
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "Lino's Panificadora - Sistema de Gestão",
   description: "Sistema de gestão integrado da Lino's Panificadora",
-  viewport: 'width=device-width, initial-scale=1',
+  metadataBase: new URL('https://sistema.linospanificadora.com'),
   icons: {
     icon: '/icon1.png',
     shortcut: '/favicon.ico',
