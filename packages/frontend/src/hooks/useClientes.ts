@@ -32,8 +32,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
         throw err;
       }
     },
-    staleTime: 60000, // 1 minuto
+    staleTime: 1000, // Reduzido para 1 segundo para melhor resposta com debounce
     retry: 1, // Limita as tentativas automáticas para não sobrecarregar o servidor
+    enabled: search === undefined || search === null || search.length >= 2 || search === '', // Só busca se tiver pelo menos 2 caracteres ou campo vazio
   });
 
   const { mutate: criarCliente } = useMutation({

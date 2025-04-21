@@ -10,7 +10,8 @@ export function useProdutos(page = 1, limit = 10, status?: string, search?: stri
   const { data, isLoading } = useQuery({
     queryKey: ['produtos', page, limit, status, search],
     queryFn: () => ProdutosService.listarProdutos(page, limit, status, search),
-    staleTime: 0, // Sempre busca dados novos
+    staleTime: 1000, // Dados considerados frescos por 1 segundo
+    enabled: search === undefined || search === null || search.length >= 2 || search === '', // Só busca se tiver pelo menos 2 caracteres ou campo vazio
   });
 
   const { mutate: criarProduto, isPending: isCreating } = useMutation({
