@@ -89,6 +89,8 @@ export default function PedidoDetalhesPage() {
         }))
       }));
       
+      // Mantemos apenas esta notificação e removemos a duplicada na página de destino
+      // Isso evita que o usuário receba duas notificações idênticas
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
       router.push('/pedidos/novo');
     } catch (error) {

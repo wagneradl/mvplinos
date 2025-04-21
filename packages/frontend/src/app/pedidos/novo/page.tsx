@@ -91,9 +91,10 @@ export default function NovoPedidoPage() {
           localStorage.removeItem('pedidoParaCopiar');
           
           console.log('Pedido copiado carregado:', dados);
-          enqueueSnackbar('Dados do pedido anterior carregados. Revise e confirme.', { 
-            variant: 'info' 
-          });
+          // Removendo notificação duplicada - já exibida na tela anterior
+          // enqueueSnackbar('Dados do pedido anterior carregados. Revise e confirme.', { 
+          //   variant: 'info' 
+          // });
         }
       } catch (error) {
         console.error('Erro ao carregar pedido copiado:', error);

@@ -395,6 +395,10 @@ export function Navigation() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
+              marginTop: '0', // Remover qualquer margem superior
+              paddingTop: '64px', // Adicionar padding equivalente à altura da AppBar
+              height: 'calc(100% - 0px)', // Ajustar a altura para considerar a AppBar
+              zIndex: (theme) => theme.zIndex.drawer, // Garantir que fique abaixo da AppBar
             },
           }}
         >
