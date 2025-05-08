@@ -13,15 +13,17 @@ async function bootstrap() {
   if (process.env.NODE_ENV === 'production') {
     const allowedOrigins = process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-      : ['https://linos-frontend-6wef.onrender.com'];
+      : ['https://linos-frontend-6wef.onrender.com', 'https://sistema.linospanificadora.com'];
 
     console.log(`[CORS] Ambiente de produção, origens permitidas:`, allowedOrigins);
 
     app.enableCors({
       origin: (origin, callback) => {
-        if (allowedOrigins.includes(origin)) {
+        // Permitir requisições sem origem (como de health checks internos)
+        if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
+          console.log(`[CORS] Bloqueando requisição de origem não permitida: ${origin}`);
           callback(new Error(`CORS não permitido para origem: ${origin}`), false);
         }
       },
