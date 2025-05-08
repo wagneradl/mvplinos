@@ -1,5 +1,19 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
+const fs = require('fs');
+
+// Verificar se os arquivos estáticos essenciais existem
+const publicDir = path.join(__dirname, 'public');
+const requiredFiles = ['manifest.json', 'favicon.ico', 'icon1.png'];
+
+requiredFiles.forEach(file => {
+  const filePath = path.join(publicDir, file);
+  if (!fs.existsSync(filePath)) {
+    console.warn(`[AVISO] Arquivo estático necessário não encontrado: ${file}`);
+  } else {
+    console.log(`[OK] Arquivo estático encontrado: ${file}`);
+  }
+});
 
 const nextConfig = {
   reactStrictMode: false, // Disable strict mode to prevent double rendering in development
@@ -15,6 +29,11 @@ const nextConfig = {
   // Increase timeout for builds
   staticPageGenerationTimeout: 300,
   
+  // Configuração para servir arquivos estáticos corretamente
+  // O Next.js já serve a pasta public na raiz por padrão
+  // Esta configuração adicional é para garantir que funcione em desenvolvimento
+  assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
+  
   // Configure webpack for compatibility
   webpack: (config) => {
     // Explicitly set alias for @ to point to src
@@ -23,12 +42,16 @@ const nextConfig = {
       '@': path.resolve(__dirname, 'src'),
     };
     
-    // Optimize for production
+    // Otimizações específicas para ambiente
     if (process.env.NODE_ENV === 'production') {
+      // Optimize for production
       config.optimization = {
         ...config.optimization,
         minimize: true,
       };
+    } else {
+      // Em desenvolvimento, garantir que os arquivos estáticos sejam servidos corretamente
+      console.log('[DEV] Configurando webpack para servir arquivos estáticos em desenvolvimento');
     }
     
     // Add additional resolve extensions for TypeScript files

@@ -8,26 +8,48 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS
-  // CORS (origins from CORS_ORIGINS env or fallback list)
+  // CORS Configuration
+  // Definir origens permitidas com base no ambiente
   const allowedOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
     : process.env.NODE_ENV === 'production'
-      ? ['https://linos-frontend-6wef.onrender.com']
-      : ['http://localhost:3000', 'https://linos-frontend-6wef.onrender.com'];
+      ? ['https://linos-frontend-6wef.onrender.com'] // Apenas produção em ambiente de produção
+      : [
+          'http://localhost:3000',     // Next.js dev server padrão
+          'http://127.0.0.1:3000',      // Alternativa localhost
+          'http://localhost:8080',      // Porta alternativa possível
+          'http://127.0.0.1:8080'       // Porta alternativa possível
+        ];
+  
+  console.log(`[CORS] Ambiente: ${process.env.NODE_ENV}, Origens permitidas:`, allowedOrigins);
 
+  // Configuração CORS aprimorada
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Em desenvolvimento, permitir requisições sem origem (como curl/postman)
+      const isDev = process.env.NODE_ENV !== 'production';
+      
+      if (!origin && isDev) {
+        console.log('[CORS] Permitindo requisição sem origem em ambiente de desenvolvimento');
+        callback(null, true);
+        return;
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        console.log(`[CORS] Origem permitida: ${origin}`);
         callback(null, true);
       } else {
-        callback(new Error('CORS not allowed'), false);
+        console.warn(`[CORS] Origem bloqueada: ${origin}`);
+        callback(new Error(`CORS não permitido para origem: ${origin}`), false);
       }
     },
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization',
+    allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With',
+    exposedHeaders: 'Content-Disposition',  // Para download de arquivos
     credentials: true,
+    preflightContinue: false,
     optionsSuccessStatus: 204,
+    maxAge: 3600  // Cache preflight por 1 hora
   });
 
   // Pipes globais
