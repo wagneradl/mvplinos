@@ -54,7 +54,8 @@ export default function NovoPedidoPage() {
   const router = useRouter();
   // Apenas clientes ativos para seleção no pedido
   const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100, 'ativo');
-  const { produtos = [], isLoading: isLoadingProdutos } = useProdutos();
+  // Carregando produtos ativos (limite de 100 conforme permitido pela API)
+  const { produtos = [], isLoading: isLoadingProdutos } = useProdutos(1, 100, 'ativo');
   const { criarPedido } = usePedidos({ disableNotifications: true });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pedidoCopiado, setPedidoCopiado] = useState<PedidoCopiado | null>(null);

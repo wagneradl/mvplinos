@@ -9,55 +9,52 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS Configuration
-  // Definir origens permitidas com base no ambiente
-  const allowedOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-    : process.env.NODE_ENV === 'production'
-      ? ['https://linos-frontend-6wef.onrender.com'] // Apenas produção em ambiente de produção
-      : [
-          'http://localhost:3000',     // Next.js dev server padrão
-          'http://127.0.0.1:3000',      // Alternativa localhost
-          'http://localhost:8080',      // Porta alternativa possível
-          'http://127.0.0.1:8080'       // Porta alternativa possível
-        ];
-  
-  console.log(`[CORS] Ambiente: ${process.env.NODE_ENV}, Origens permitidas:`, allowedOrigins);
+  // Em produção, usar a configuração padrão do NestJS
+  if (process.env.NODE_ENV === 'production') {
+    const allowedOrigins = process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+      : ['https://linos-frontend-6wef.onrender.com'];
 
-  // Configuração CORS aprimorada
-  app.enableCors({
-    origin: (origin, callback) => {
-      // Em desenvolvimento, permitir requisições sem origem (como curl/postman)
-      const isDev = process.env.NODE_ENV !== 'production';
-      
-      if (!origin && isDev) {
-        console.log('[CORS] Permitindo requisição sem origem em ambiente de desenvolvimento');
-        callback(null, true);
-        return;
-      }
-      
-      if (allowedOrigins.includes(origin)) {
-        console.log(`[CORS] Origem permitida: ${origin}`);
-        callback(null, true);
-      } else {
-        console.warn(`[CORS] Origem bloqueada: ${origin}`);
-        callback(new Error(`CORS não permitido para origem: ${origin}`), false);
-      }
-    },
-    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With',
-    exposedHeaders: 'Content-Disposition',  // Para download de arquivos
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    maxAge: 3600  // Cache preflight por 1 hora
-  });
+    console.log(`[CORS] Ambiente de produção, origens permitidas:`, allowedOrigins);
 
-  // Pipes globais
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    // forbidNonWhitelisted: true, // Removido para evitar erro em queries GET
-  }));
+    app.enableCors({
+      origin: (origin, callback) => {
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS não permitido para origem: ${origin}`), false);
+        }
+      },
+      methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type,Authorization',
+      credentials: true,
+      optionsSuccessStatus: 204,
+    });
+  } 
+  // Em desenvolvimento, usar a configuração CORS do NestJS para localhost
+  else {
+    console.log('[CORS] Ambiente de desenvolvimento, configurando CORS para localhost');
+    
+    // Usar o enableCors do NestJS com regex para localhost em qualquer porta
+    app.enableCors({
+      origin: /^https?:\/\/localhost:\d+$/,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      credentials: true,
+      preflightContinue: false,
+      optionsSuccessStatus: 204
+    });
+    
+    console.log('[CORS] CORS configurado para permitir apenas hosts de desenvolvimento');
+  }
+
+  // Configurar validação global
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      // forbidNonWhitelisted: true, // Removido para evitar erro em queries GET
+    }),
+  );
 
   // Static uploads
   const uploadsPath = process.env.UPLOADS_PATH
@@ -66,7 +63,7 @@ async function bootstrap() {
 
   app.use('/uploads', express.static(uploadsPath));
 
-  // Swagger - apenas em ambiente de desenvolvimento
+  // Configurar Swagger
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle("Lino's Panificadora API")

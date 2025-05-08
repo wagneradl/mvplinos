@@ -31,8 +31,24 @@ const nextConfig = {
   
   // Configuração para servir arquivos estáticos corretamente
   // O Next.js já serve a pasta public na raiz por padrão
-  // Esta configuração adicional é para garantir que funcione em desenvolvimento
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
+  
+  // Configurar proxy para evitar CORS em desenvolvimento
+  ...(process.env.NODE_ENV === 'development' && {
+    async rewrites() {
+      console.log('[DEV] Configurando proxy para API para evitar CORS');
+      return [
+        {
+          source: '/api/health',
+          destination: 'http://localhost:3001/health'
+        },
+        {
+          source: '/api/:path*',
+          destination: 'http://localhost:3001/:path*'
+        }
+      ];
+    }
+  }),
   
   // Configure webpack for compatibility
   webpack: (config) => {

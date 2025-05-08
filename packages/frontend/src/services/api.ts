@@ -10,8 +10,22 @@ export interface ApiErrorResponse {
 }
 
 const getApiBaseUrl = () => {
-  // Sempre usar a variável de ambiente ou o fallback
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  // Em desenvolvimento, usar o proxy configurado no Next.js para evitar CORS
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[API] Ambiente de desenvolvimento, usando proxy local');
+    return '/api';
+  }
+  
+  // Em produção, usar a URL da API configurada nas variáveis de ambiente
+  let url = process.env.NEXT_PUBLIC_API_URL || 'https://linos-backend.onrender.com';
+  
+  // Verificar se a URL tem o protocolo correto
+  if (url && !url.startsWith('http')) {
+    url = `https://${url}`;
+  }
+  
+  console.log(`[API] Ambiente de produção, URL da API:`, url);
+  return url;
 };
 
 export const api = axios.create({
