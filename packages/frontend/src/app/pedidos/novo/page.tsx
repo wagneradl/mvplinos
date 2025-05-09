@@ -23,6 +23,7 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  InputAdornment,
 } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
@@ -181,11 +182,17 @@ export default function NovoPedidoPage() {
   const handleProdutoChange = (index: number, produtoId: number) => {
     const produto = produtos.find((p) => p.id === produtoId);
     if (produto) {
+      // Definir quantidade padrão baseada no tipo do produto
+      // 1 para unidades, 0.1 para kg/lt
+      const quantidadePadrao = produto.tipo_medida === 'un' ? 1 : 0.1;
+      
       const novoItem = {
         ...itens[index],
         produto_id: produto.id,
+        produto: produto,
+        quantidade: quantidadePadrao, // Reset da quantidade ao mudar o produto
         preco_unitario: produto.preco_unitario,
-        valor_total_item: produto.preco_unitario * itens[index].quantidade,
+        valor_total_item: produto.preco_unitario * quantidadePadrao,
       };
       const novosItens = [...itens];
       novosItens[index] = novoItem;
@@ -194,16 +201,47 @@ export default function NovoPedidoPage() {
   };
 
   const handleQuantidadeChange = (index: number, quantidade: number) => {
-    if (quantidade <= 0) {
+    // Garantir que a quantidade seja sempre um número válido
+    let quantidadeValida = isNaN(quantidade) ? 0 : quantidade;
+    
+    if (quantidadeValida <= 0) {
       enqueueSnackbar('A quantidade deve ser maior que zero', { variant: 'warning' });
       return;
     }
     
+    // Formatar a quantidade com base no tipo de medida do produto
+    const produto = itens[index].produto;
+    let quantidadeFormatada = quantidadeValida;
+    
+    if (produto) {
+      if (produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') {
+        // Para kg ou lt: garantir que seja valor decimal com 2 casas
+        quantidadeFormatada = Math.floor(quantidadeValida * 100) / 100; // Truncar para 2 casas decimais
+        
+        // Garantir valor mínimo para kg/lt
+        if (quantidadeFormatada < 0.01) {
+          quantidadeFormatada = 0.01;
+        }
+      } else if (produto.tipo_medida === 'un') {
+        // Para unidades: garantir que seja valor inteiro
+        quantidadeFormatada = Math.floor(quantidadeValida);
+        
+        // Garantir valor mínimo para unidades
+        if (quantidadeFormatada < 1) {
+          quantidadeFormatada = 1;
+        }
+      }
+    } else {
+      // Se não tiver produto, define um valor padrão
+      quantidadeFormatada = 1;
+    }
+    
     const novoItem = {
       ...itens[index],
-      quantidade,
-      valor_total_item: itens[index].preco_unitario * quantidade,
+      quantidade: quantidadeFormatada,
+      valor_total_item: itens[index].preco_unitario * quantidadeFormatada,
     };
+    
     const novosItens = [...itens];
     novosItens[index] = novoItem;
     setValue('itens', novosItens);
@@ -324,6 +362,12 @@ export default function NovoPedidoPage() {
 
   const valorTotal = itens.reduce((total, item) => total + item.valor_total_item, 0);
 
+  // Helper para exibir mensagem de ajuda para quantidade
+  const getQuantidadeHelperText = (tipoMedida?: string) => {
+    if (!tipoMedida) return '';
+    return ''; // Removemos as mensagens helper para evitar duplicação na UI
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Paper sx={{ p: 3 }}>
@@ -373,21 +417,23 @@ export default function NovoPedidoPage() {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Produto</TableCell>
-                      <TableCell>Quantidade</TableCell>
-                      <TableCell>Preço Unitário</TableCell>
-                      <TableCell>Valor Total</TableCell>
-                      <TableCell>Ações</TableCell>
+                      <TableCell width="35%">Produto</TableCell>
+                      <TableCell width="15%">Quantidade</TableCell>
+                      <TableCell width="15%">Preço Unitário</TableCell>
+                      <TableCell width="15%">Valor Total</TableCell>
+                      <TableCell width="20%">Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {itens.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <FormControl fullWidth>
+                          <FormControl fullWidth size="small">
                             <Select
                               value={item.produto_id || ''}
                               onChange={(e) => handleProdutoChange(index, Number(e.target.value))}
+                              displayEmpty
+                              sx={{ borderRadius: 1 }}
                             >
                               <MenuItem value="" disabled>
                                 Selecione um produto
@@ -395,18 +441,147 @@ export default function NovoPedidoPage() {
                               {produtos.map((produto) => (
                                 <MenuItem key={produto.id} value={produto.id}>
                                   {produto.nome}
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                    ({produto.tipo_medida})
+                                  </Typography>
                                 </MenuItem>
                               ))}
                             </Select>
                           </FormControl>
                         </TableCell>
                         <TableCell>
-                          <TextField
-                            type="number"
-                            value={item.quantidade}
-                            onChange={(e) => handleQuantidadeChange(index, Number(e.target.value))}
-                            inputProps={{ min: 1 }}
-                          />
+                          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            {/* Botão de decremento */}
+                            <IconButton 
+                              size="small" 
+                              onClick={() => {
+                                if (!item.produto) return;
+                                
+                                const isUnidade = item.produto.tipo_medida === 'un';
+                                const step = isUnidade ? 1 : 0.01;
+                                const valorMinimo = isUnidade ? 1 : 0.01;
+                                const novoValor = Math.max(item.quantidade - step, valorMinimo);
+                                handleQuantidadeChange(index, novoValor);
+                              }}
+                              sx={{ p: 0.5 }}
+                              disabled={!item.produto}
+                            >
+                              <Box sx={{ 
+                                bgcolor: '#f0f0f0', 
+                                borderRadius: '50%', 
+                                width: 24, 
+                                height: 24, 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                '&:hover': {
+                                  bgcolor: '#e0e0e0'
+                                } 
+                              }}>
+                                <Typography>-</Typography>
+                              </Box>
+                            </IconButton>
+                            <TextField
+                              type="number"
+                              value={item.quantidade}
+                              onChange={(e) => handleQuantidadeChange(index, Number(e.target.value))}
+                              onBlur={() => {
+                                if (!item.produto) return;
+                                
+                                if (item.produto.tipo_medida === 'un') {
+                                  // Força valores inteiros para unidades
+                                  handleQuantidadeChange(index, Math.floor(item.quantidade));
+                                } else if (item.produto.tipo_medida === 'kg' || item.produto.tipo_medida === 'lt') {
+                                  // Força 2 casas decimais para kg/lt
+                                  handleQuantidadeChange(index, Math.floor(item.quantidade * 100) / 100);
+                                }
+                              }}
+                              fullWidth
+                              size="small"
+                              inputProps={{
+                                min: item.produto?.tipo_medida === 'un' ? 1 : 0.01,
+                                step: (item.produto?.tipo_medida === 'kg' || item.produto?.tipo_medida === 'lt') ? 0.01 : 1,
+                                // Impede entrada de decimais para produtos tipo 'un'
+                                inputMode: item.produto?.tipo_medida === 'un' ? 'numeric' : 'decimal'
+                              }}
+                              InputProps={{
+                                endAdornment: (
+                                  <InputAdornment position="end">
+                                    <Typography variant="caption" color="text.secondary">
+                                      {item.produto?.tipo_medida || ''}
+                                    </Typography>
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                mx: 1, 
+                                width: 100,
+                                '& .MuiFormHelperText-root': {
+                                  position: 'absolute',
+                                  bottom: -18,
+                                  fontSize: '0.7rem',
+                                  textAlign: 'center',
+                                  width: '100%',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }
+                              }}
+                              FormHelperTextProps={{
+                                sx: { m: 0 }
+                              }}
+                              // Removido helperText para evitar problemas de exibição
+                              disabled={!item.produto}
+                            />
+                            {/* Botão de incremento */}
+                            <IconButton 
+                              size="small"
+                              onClick={() => {
+                                if (!item.produto) return;
+                                
+                                const isUnidade = item.produto.tipo_medida === 'un';
+                                const step = isUnidade ? 1 : 0.01;
+                                handleQuantidadeChange(index, item.quantidade + step);
+                              }}
+                              sx={{ p: 0.5 }}
+                              disabled={!item.produto}
+                            >
+                              <Box sx={{ 
+                                bgcolor: '#f0f0f0', 
+                                borderRadius: '50%', 
+                                width: 24, 
+                                height: 24, 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                '&:hover': {
+                                  bgcolor: '#e0e0e0'
+                                } 
+                              }}>
+                                <Typography>+</Typography>
+                              </Box>
+                            </IconButton>
+                            
+                            {item.produto && (
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary"
+                                sx={{ 
+                                  display: 'block', 
+                                  position: 'absolute',
+                                  bottom: -15,
+                                  left: 0,
+                                  right: 0,
+                                  fontSize: '9px',
+                                  textAlign: 'center'
+                                }}
+                              >
+                                {item.produto.tipo_medida === 'kg' ? 'Use decimais (0,5)' : 
+                                 item.produto.tipo_medida === 'litros' ? 'Use decimais (0,5)' : 
+                                 'Apenas números inteiros'}
+                              </Typography>
+                            )}
+                          </Box>
                         </TableCell>
                         <TableCell>
                           {item.preco_unitario.toLocaleString('pt-BR', {
