@@ -26,21 +26,32 @@ export class SupabaseService {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const bucketName = process.env.SUPABASE_BUCKET || 'pedidos-pdfs';
 
+    // Log detalhado das configurações (sem mostrar as chaves completas)
+    this.logger.log(`[SUPABASE] Inicializando serviço com as seguintes configurações:`);
+    this.logger.log(`[SUPABASE] URL: ${supabaseUrl || 'NÃO CONFIGURADA'}`);
+    this.logger.log(`[SUPABASE] SERVICE_ROLE_KEY: ${supabaseKey ? 'Configurada' : 'NÃO CONFIGURADA'}`);
+    this.logger.log(`[SUPABASE] Bucket: ${bucketName}`);
+    this.logger.log(`[SUPABASE] Ambiente: ${process.env.NODE_ENV || 'não definido'}`);
+
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error(
-        'Supabase URL or SERVICE_ROLE_KEY is missing. Configure environment variables SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY',
+        '[SUPABASE] ERRO: Supabase URL ou SERVICE_ROLE_KEY ausente. Configure as variáveis de ambiente SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY',
       );
     } else {
-      this.supabase = createClient(supabaseUrl, supabaseKey);
-      this.logger.log(`Supabase client initialized for URL: ${supabaseUrl}`);
-      this.logger.log(`[SUPABASE] Usando key: SERVICE_ROLE`);
-      // Adiciona log para depuração da sessão
-      if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
-        this.supabase.auth.getSession().then(sess => {
-          this.logger.log(`[SUPABASE] Sessão atual:`, sess);
-        }).catch(e => {
-          this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
-        });
+      try {
+        this.supabase = createClient(supabaseUrl, supabaseKey);
+        this.logger.log(`[SUPABASE] Cliente inicializado com sucesso para URL: ${supabaseUrl}`);
+        
+        // Adiciona log para depuração da sessão
+        if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
+          this.supabase.auth.getSession().then(sess => {
+            this.logger.log(`[SUPABASE] Sessão atual:`, sess);
+          }).catch(e => {
+            this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
+          });
+        }
+      } catch (error) {
+        this.logger.error(`[SUPABASE] ERRO ao criar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
       // Tentar criar o bucket se ele não existir, usando políticas públicas
       this.initializeBucket(bucketName).catch(error => {

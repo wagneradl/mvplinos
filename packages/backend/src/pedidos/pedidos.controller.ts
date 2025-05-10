@@ -191,6 +191,21 @@ export class PedidosController {
     @Res() res: Response,
   ) {
     try {
+      // Verificar ambiente e configurações
+      const isProduction = process.env.NODE_ENV === 'production';
+      console.log(`[PDF] Ambiente: ${isProduction ? 'Produção' : 'Desenvolvimento'}`);
+      console.log(`[PDF] PDF_STORAGE_PATH: ${process.env.PDF_STORAGE_PATH || 'não configurado'}`);
+      console.log(`[PDF] UPLOADS_PATH: ${process.env.UPLOADS_PATH || 'não configurado'}`);
+      
+      // Verificar disponibilidade do Supabase
+      const supabaseAvailable = this.supabaseService && this.supabaseService.isAvailable();
+      console.log(`[PDF] Supabase disponível: ${supabaseAvailable}`);
+      if (supabaseAvailable) {
+        console.log(`[PDF] Bucket Supabase: ${this.supabaseService.getBucketName()}`);
+        console.log(`[PDF] URL Supabase: ${process.env.SUPABASE_URL}`);
+        console.log(`[PDF] SERVICE_ROLE_KEY configurada: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`);
+      }
+
       // Buscar o pedido com informações completas
       const pedido = await this.pedidosService.findOne(id);
       
@@ -210,14 +225,16 @@ export class PedidosController {
           // Se a URL não for completa, verificar se é um caminho do Supabase
           console.log(`[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`);
           try {
-            if (this.supabaseService) {
-              const signedUrl = await this.supabaseService.getSignedUrl(pedido.pdf_url, 60);
+            if (supabaseAvailable) {
+              const signedUrl = await this.supabaseService.getSignedUrl(pedido.pdf_url, 3600); // Aumentar tempo para 1 hora
               if (signedUrl) {
                 console.log(`[PDF] URL assinada gerada: ${signedUrl}`);
                 // Atualizar o pedido com a URL completa
                 await this.pedidosService.update(id, { pdf_url: signedUrl });
                 return res.redirect(signedUrl);
               }
+            } else {
+              console.warn(`[PDF] Supabase não disponível para gerar URL assinada`);
             }
           } catch (error) {
             console.error(`[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -246,8 +263,7 @@ export class PedidosController {
       }
 
       // ETAPA 3: Verificar caminhos locais em várias possibilidades
-      // Determinar o ambiente para usar os caminhos apropriados
-      const isProduction = process.env.NODE_ENV === 'production';
+      // Usar a variável isProduction já declarada anteriormente
       const pdfStoragePath = process.env.PDF_STORAGE_PATH || 
         (isProduction ? '/opt/render/project/src/uploads/pdfs' : join(process.cwd(), 'uploads', 'pdfs'));
       const uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
