@@ -217,12 +217,39 @@ export class PedidosController {
 
       // ETAPA 1: Se o pedido tem URL do Supabase, redirecionar para lá (prioridade mais alta)
       if (pedido.pdf_url) {
-        // Verificar se a URL é completa (começa com http ou https)
-        if (pedido.pdf_url.startsWith('http')) {
-          console.log(`[PDF] Redirecionando para URL do Supabase: ${pedido.pdf_url}`);
+        // Verificar se a URL é válida para o ambiente atual
+        const isLocalUrl = pedido.pdf_url.includes('localhost') || pedido.pdf_url.includes('127.0.0.1');
+        
+        // Em produção, nunca usar URLs locais
+        if (isProduction && isLocalUrl) {
+          console.log(`[PDF] URL local detectada em produção: ${pedido.pdf_url}, ignorando e gerando nova URL`);
+          // Extrair o caminho do arquivo da URL local para usar com o Supabase
+          const pathMatch = pedido.pdf_url.match(/\/uploads\/pdfs\/(.*\.pdf)$/);
+          const pdfPath = pathMatch ? `pedidos/${pathMatch[1]}` : null;
+          
+          if (pdfPath && supabaseAvailable) {
+            try {
+              console.log(`[PDF] Tentando gerar URL do Supabase para: ${pdfPath}`);
+              const signedUrl = await this.supabaseService.getSignedUrl(pdfPath, 3600);
+              if (signedUrl) {
+                console.log(`[PDF] URL assinada gerada com sucesso: ${signedUrl}`);
+                // Atualizar o pedido com a URL correta do Supabase
+                await this.pedidosService.update(id, { pdf_url: signedUrl });
+                return res.redirect(signedUrl);
+              }
+            } catch (error) {
+              console.error(`[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+              // Continuar para os próximos métodos
+            }
+          }
+        }
+        // Verificar se a URL é completa (começa com http ou https) e não é local em produção
+        else if (pedido.pdf_url.startsWith('http') && (!isProduction || !isLocalUrl)) {
+          console.log(`[PDF] Redirecionando para URL: ${pedido.pdf_url}`);
           return res.redirect(pedido.pdf_url);
-        } else {
-          // Se a URL não for completa, verificar se é um caminho do Supabase
+        } 
+        // Se a URL não for completa, verificar se é um caminho do Supabase
+        else if (!pedido.pdf_url.startsWith('http')) {
           console.log(`[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`);
           try {
             if (supabaseAvailable) {
