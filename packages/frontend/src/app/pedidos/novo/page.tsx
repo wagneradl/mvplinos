@@ -40,6 +40,7 @@ interface ItemPedidoForm extends Omit<ItemPedido, 'id' | 'pedido_id'> {
 interface PedidoForm {
   cliente_id: number;
   itens: ItemPedidoForm[];
+  observacoes?: string;
 }
 
 interface PedidoCopiado {
@@ -303,6 +304,7 @@ export default function NovoPedidoPage() {
       // Evitando qualquer vazamento de propriedades através do spread operator
       const pedidoFinal = {
         cliente_id: pedidoData.cliente_id,
+        observacoes: data.observacoes, // Incluir observações no pedido
         itens: pedidoData.itensPedido.map(({ produto_id, quantidade }) => ({
           produto_id,
           quantidade
@@ -653,6 +655,33 @@ export default function NovoPedidoPage() {
               >
                 Adicionar Item
               </Button>
+            </Box>
+
+            <Box sx={{ mt: 4, mb: 3 }}>
+              <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
+                Observações (opcional)
+              </Typography>
+              <Controller
+                name="observacoes"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    placeholder="Adicione observações sobre o pedido"
+                    {...field}
+                    InputProps={{
+                      sx: {
+                        backgroundColor: 'background.paper',
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

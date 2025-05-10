@@ -1,4 +1,4 @@
-import { IsNumber, IsArray, ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNumber, IsArray, ValidateNested, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -42,4 +42,13 @@ export class CreatePedidoDto {
   @ValidateNested({ each: true })
   @Type(() => CreateItemPedidoDto)
   itens: CreateItemPedidoDto[];
+
+  @ApiProperty({
+    description: 'Observações sobre o pedido (opcional)',
+    example: 'Entregar pela porta dos fundos',
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  observacoes?: string;
 }

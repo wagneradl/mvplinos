@@ -118,6 +118,7 @@ export class PedidosService {
             data_pedido: dataPedido,
             valor_total: valorTotal,
             status: PedidoStatus.ATIVO,
+            observacoes: createPedidoDto.observacoes, // Adicionar observações do pedido
             pdf_path: '', // Será atualizado após gerar o PDF
             itensPedido: {
               create: produtosInfo,
@@ -354,6 +355,12 @@ export class PedidosService {
 
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+      
+      // Log para depurar o campo observacoes
+      console.log(`[DEBUG][PEDIDO] Pedido ${id} tem observacoes:`, pedido.observacoes ? 'SIM' : 'NÃO');
+      if (pedido.observacoes) {
+        console.log(`[DEBUG][PEDIDO] Observacoes do pedido ${id}:`, pedido.observacoes);
       }
 
       return pedido;

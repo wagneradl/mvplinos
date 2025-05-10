@@ -29,6 +29,7 @@ export interface Pedido {
   data_pedido: string;
   valor_total: number;
   status: 'ATIVO' | 'CANCELADO';
+  observacoes?: string;
   pdf_path?: string;
   created_at: string;
   updated_at: string;

@@ -149,6 +149,12 @@ export class PdfService implements OnModuleInit {
       // Gerar timestamp único para evitar cache do PDF
       const timestamp = Date.now();
       
+      // Verificar se o campo observacoes está presente nos dados do pedido
+      console.log(`[DEBUG][PDF] Pedido tem observacoes:`, pedidoData.observacoes ? 'SIM' : 'NÃO');
+      if (pedidoData.observacoes) {
+        console.log(`[DEBUG][PDF] Observacoes do pedido:`, pedidoData.observacoes);
+      }
+      
       // Gerar HTML do pedido
       const html = this.generatePedidoHTML(pedidoData, logoBase64);
       this.logger.log(`[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
@@ -429,6 +435,27 @@ export class PdfService implements OnModuleInit {
               background-color: #fdedee;
               color: #d32f2f;
             }
+            .observacoes-section {
+              margin-top: 20px;
+              padding: 15px;
+              background-color: #f8f5f1;
+              border-radius: 8px;
+              border-left: 4px solid #8B5A2B;
+            }
+            .observacoes-section h3 {
+              margin-top: 0;
+              color: #8B5A2B;
+              border-bottom: 1px solid #e0e0e0;
+              padding-bottom: 10px;
+            }
+            .observacoes-content {
+              white-space: pre-wrap;
+              font-style: italic;
+              color: #555;
+              line-height: 1.5;
+              font-size: 14px;
+              padding: 5px 0;
+            }
           </style>
         </head>
         <body>
@@ -488,6 +515,16 @@ export class PdfService implements OnModuleInit {
                 `).join('')}
               </tbody>
             </table>
+
+            <!-- Observações (se existirem) -->
+            ${pedidoData.observacoes ? `
+            <div class="observacoes-section">
+              <h3>Observações</h3>
+              <div class="observacoes-content">
+                ${pedidoData.observacoes}
+              </div>
+            </div>
+            ` : ''}
 
             <div class="total">
               <p>Total do Pedido: R$ ${pedidoData.valor_total.toFixed(2)}</p>

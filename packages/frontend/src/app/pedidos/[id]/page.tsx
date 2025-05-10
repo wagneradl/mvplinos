@@ -82,6 +82,7 @@ export default function PedidoDetalhesPage() {
       // Armazenar os dados do pedido no localStorage para usar na tela de novo pedido
       localStorage.setItem('pedidoParaCopiar', JSON.stringify({
         cliente_id: pedido.cliente_id,
+        observacoes: pedido.observacoes, // Incluir observações ao copiar o pedido
         itens: pedido.itensPedido.map(item => ({
           produto_id: item.produto_id,
           quantidade: item.quantidade,
@@ -264,6 +265,18 @@ export default function PedidoDetalhesPage() {
             </TableContainer>
           </Paper>
         </Stack>
+
+        {/* Observações do Pedido */}
+        {pedido?.observacoes && (
+          <Box mt={4}>
+            <Paper elevation={2} sx={{ p: 2, backgroundColor: '#f7f7fa' }}>
+              <Typography variant="h6" gutterBottom>Observações</Typography>
+              <Typography variant="body1" color="text.secondary">
+                {pedido.observacoes}
+              </Typography>
+            </Paper>
+          </Box>
+        )}
 
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirmar Cancelamento</DialogTitle>

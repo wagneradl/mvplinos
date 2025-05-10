@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum PedidoStatus {
@@ -34,4 +34,13 @@ export class UpdatePedidoDto {
   })
   @IsOptional()
   pdf_url?: string;
+
+  @ApiProperty({
+    description: 'Observações sobre o pedido',
+    example: 'Entregar pela porta dos fundos',
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  observacoes?: string;
 }
