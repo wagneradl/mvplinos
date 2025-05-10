@@ -89,7 +89,10 @@ export class PedidosService {
     }, 0).toFixed(2));
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      // ETAPA 1: Criar pedido em transação separada
+      // Isso garante que a transação do banco seja rápida 
+      // e não expire durante a geração do PDF que é mais lenta
+      let pedido = await this.prisma.$transaction(async (tx) => {
         // Verificar se o cliente existe e não está deletado
         const cliente = await tx.cliente.findFirst({
           where: { id: cliente_id, deleted_at: null },
@@ -108,8 +111,8 @@ export class PedidosService {
         const dataPedido = new Date();
         console.log('Criando pedido com data:', dataPedido.toISOString());
         
-        // Criar o pedido com os itens
-        const pedido = await tx.pedido.create({
+        // Criar o pedido com os itens (sem esperar o PDF)
+        return await tx.pedido.create({
           data: {
             cliente_id,
             data_pedido: dataPedido,
@@ -129,9 +132,26 @@ export class PedidosService {
             }
           }
         });
+      });
 
-        // Gerar PDF do pedido usando o serviço PDF
-        // Dependendo da configuração, pode gerar o PDF localmente ou no Supabase
+      // ETAPA 2: Gerar o PDF separadamente (fora da transação)
+      // Gerar PDF do pedido usando o serviço PDF
+      try {
+        // Fetch do pedido com relações para usar na geração de PDF
+        pedido = await this.prisma.pedido.findFirst({
+          where: { id: pedido.id },
+          include: {
+            cliente: true,
+            itensPedido: {
+              include: {
+                produto: true
+              }
+            }
+          }
+        });
+
+        // Gerar o PDF (operação lenta que estava causando o timeout da transação)
+        console.log('Gerando PDF para o pedido:', pedido.id);
         const pdfResult = await this.pdfService.generatePedidoPdf(pedido);
         
         // Preparar os dados para atualização do pedido
@@ -151,10 +171,15 @@ export class PedidosService {
           console.log('PDF enviado para Supabase:', pdfResult.url);
         }
         
-        // Atualizar o pedido com as informações do PDF
-        return await tx.pedido.update({
+        // ETAPA 3: Atualizar o pedido com as informações do PDF em uma nova transação
+        await this.prisma.pedido.update({
           where: { id: pedido.id },
-          data: updateData,
+          data: updateData
+        });
+
+        // Buscar o pedido atualizado com todas as informações para retornar
+        return await this.prisma.pedido.findFirst({
+          where: { id: pedido.id },
           include: {
             cliente: true,
             itensPedido: {
@@ -164,7 +189,14 @@ export class PedidosService {
             }
           }
         });
-      });
+      } catch (pdfError) {
+        // Se houver erro na geração do PDF, logamos mas não falhamos o pedido todo
+        console.error('Erro ao gerar PDF, mas o pedido foi criado:', pdfError);
+        console.log('Pedido criado com ID:', pedido.id);
+        
+        // Retornar o pedido mesmo sem o PDF para não perder a operação
+        return pedido;
+      }
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -330,6 +362,82 @@ export class PedidosService {
         throw error;
       }
       throw new BadRequestException('Erro ao buscar pedido');
+    }
+  }
+  
+  /**
+   * Regenera o PDF de um pedido existente
+   * @param id ID do pedido
+   * @returns String com o caminho ou URL do PDF regenerado, ou null se falhar
+   */
+  async regeneratePdf(id: number): Promise<string | null> {
+    try {
+      // Buscar o pedido com todas as informações necessárias
+      const pedido = await this.findOne(id);
+      
+      if (!pedido) {
+        console.error(`[PDF] Não foi possível regenerar PDF: Pedido ${id} não encontrado`);
+        return null;
+      }
+      
+      console.log(`[PDF] Regenerando PDF para o pedido ${id}`);
+      
+      // Usar o serviço de PDF para gerar o PDF novamente
+      const pdfResult = await this.pdfService.generatePedidoPdf(pedido);
+      
+      // Atualizar o pedido com o novo caminho/URL do PDF
+      const updateData: {
+        pdf_path?: string;
+        pdf_url?: string;
+      } = {};
+      
+      if (typeof pdfResult === 'string') {
+        // Formato antigo: apenas caminho local
+        updateData.pdf_path = pdfResult;
+        console.log(`[PDF] PDF regenerado localmente: ${pdfResult}`);
+        
+        // Atualizar o pedido no banco com o novo caminho
+        await this.prisma.pedido.update({
+          where: { id },
+          data: updateData
+        });
+        
+        return pdfResult;
+      } else {
+        // Novo formato: objeto com caminho e URL do Supabase
+        updateData.pdf_path = pdfResult.path;
+        updateData.pdf_url = pdfResult.url;
+        console.log(`[PDF] PDF regenerado e enviado para Supabase: ${pdfResult.url}`);
+        
+        // Atualizar o pedido no banco com o novo caminho e URL
+        await this.prisma.pedido.update({
+          where: { id },
+          data: updateData
+        });
+        
+        return pdfResult.url || pdfResult.path;
+      }
+    } catch (error) {
+      console.error(`[PDF] Erro ao regenerar PDF para pedido ${id}:`, error instanceof Error ? error.message : error);
+      return null;
+    }
+  }
+  
+  /**
+   * Atualiza apenas o caminho do PDF de um pedido
+   * @param id ID do pedido
+   * @param path Novo caminho do PDF
+   */
+  async updatePdfPath(id: number, path: string): Promise<void> {
+    try {
+      await this.prisma.pedido.update({
+        where: { id },
+        data: { pdf_path: path }
+      });
+      console.log(`[PDF] Caminho do PDF atualizado com sucesso para pedido ${id}: ${path}`);
+    } catch (error) {
+      console.error(`[PDF] Erro ao atualizar caminho do PDF para pedido ${id}:`, error);
+      // Não lançamos o erro para evitar interromper o fluxo principal
     }
   }
 
