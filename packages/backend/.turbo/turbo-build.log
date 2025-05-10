@@ -1,4 +1,0 @@
-[2K[1G[33mwarning[39m package.json: "dependencies" has dependency "prisma" with range "5.22.0" that collides with a dependency in "devDependencies" of the same name with version "^5.22.0"
-[2K[1G[2m$ tsc -p tsconfig.build.json && yarn nest build[22m
-[2K[1G[33mwarning[39m package.json: "dependencies" has dependency "prisma" with range "5.22.0" that collides with a dependency in "devDependencies" of the same name with version "^5.22.0"
-[2K[1G[2m$ /Users/wagner/Projetos/Linos/MVP7/node_modules/.bin/nest build[22m

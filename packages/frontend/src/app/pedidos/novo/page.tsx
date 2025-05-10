@@ -204,13 +204,26 @@ export default function NovoPedidoPage() {
     // Garantir que a quantidade seja sempre um número válido
     let quantidadeValida = isNaN(quantidade) ? 0 : quantidade;
     
-    if (quantidadeValida <= 0) {
+    // Verificar se o produto atual é do tipo 'un' ou 'kg'/'lt' para aplicação de regras diferentes
+    const produto = itens[index].produto;
+    if (produto) {
+      if (produto.tipo_medida === 'un' && quantidadeValida < 1) {
+        // Para produtos por unidade, quantidade mínima é 1
+        enqueueSnackbar('Para produtos em unidade, a quantidade mínima é 1', { variant: 'warning' });
+        return;
+      } else if ((produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') && quantidadeValida < 0.01) {
+        // Para produtos por kg/lt, quantidade mínima é 0.01
+        enqueueSnackbar('Para produtos em kg/lt, a quantidade mínima é 0,01', { variant: 'warning' });
+        return;
+      }
+    } else if (quantidadeValida <= 0) {
+      // Regra genérica para produtos não selecionados
       enqueueSnackbar('A quantidade deve ser maior que zero', { variant: 'warning' });
       return;
     }
     
     // Formatar a quantidade com base no tipo de medida do produto
-    const produto = itens[index].produto;
+    // Produto já foi obtido acima
     let quantidadeFormatada = quantidadeValida;
     
     if (produto) {
@@ -499,7 +512,8 @@ export default function NovoPedidoPage() {
                               fullWidth
                               size="small"
                               inputProps={{
-                                min: item.produto?.tipo_medida === 'un' ? 1 : 0.01,
+                                // Não usamos min aqui para evitar validações nativas do browser que podem ser confusas
+                                // A validação acontece no handler de onChange
                                 step: (item.produto?.tipo_medida === 'kg' || item.produto?.tipo_medida === 'lt') ? 0.01 : 1,
                                 // Impede entrada de decimais para produtos tipo 'un'
                                 inputMode: item.produto?.tipo_medida === 'un' ? 'numeric' : 'decimal'
