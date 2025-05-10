@@ -25,20 +25,42 @@ export class PdfService implements OnModuleInit {
   }
 
   constructor(private readonly supabaseService: SupabaseService) {
-    // Usar variáveis de ambiente para os caminhos ou fallback para os valores padrão
-    const pdfStoragePath = process.env.PDF_STORAGE_PATH || join(process.cwd(), 'uploads', 'pdfs');
-    const uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
-
+    // Configuração para ambiente de produção (Render) ou desenvolvimento
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Definir caminhos absolutos sem duplicações
+    let pdfStoragePath: string;
+    let uploadsPath: string;
+    
+    if (isProduction) {
+      // Em produção, usar caminhos absolutos simples
+      pdfStoragePath = process.env.PDF_STORAGE_PATH || '/opt/render/project/src/uploads/pdfs';
+      uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
+    } else {
+      // Em desenvolvimento, usar caminhos relativos
+      pdfStoragePath = join(process.cwd(), 'uploads', 'pdfs');
+      uploadsPath = join(process.cwd(), 'uploads');
+    }
+    
     this.pdfDir = pdfStoragePath;
     this.logoPath = join(uploadsPath, 'static', 'logo.png');
     
-    // Sempre usar Supabase, inclusive em ambiente local, se as variáveis estiverem presentes
-    this.useSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_BUCKET);
+    // Log detalhado dos caminhos para diagnóstico
+    this.logger.log(`[PDF_PATHS] PDF Storage Path: ${this.pdfDir}`);
+    this.logger.log(`[PDF_PATHS] Logo Path: ${this.logoPath}`);
+    
+    // Verificar se as variáveis de ambiente do Supabase estão presentes
+    this.useSupabase = Boolean(
+      process.env.SUPABASE_URL && 
+      process.env.SUPABASE_SERVICE_ROLE_KEY && 
+      process.env.SUPABASE_BUCKET
+    );
     
     if (this.useSupabase) {
-      this.logger.log('Usando Supabase Storage para armazenamento de PDFs');
+      this.logger.log(`[STORAGE] Usando Supabase Storage (${process.env.SUPABASE_URL}) para armazenamento de PDFs`);
+      this.logger.log(`[STORAGE] Bucket: ${process.env.SUPABASE_BUCKET}`);
     } else {
-      this.logger.log('Usando armazenamento local para PDFs');
+      this.logger.log(`[STORAGE] ATENÇÃO: Usando armazenamento local para PDFs. Supabase não configurado.`);
     }
   }
 
