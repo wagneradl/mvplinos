@@ -181,36 +181,52 @@ export class PedidosController {
   }
 
   @Get(':id/pdf')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'operador')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Download do PDF de um pedido' })
   @ApiResponse({ status: 200, description: 'Retorna o arquivo PDF' })
-  @ApiResponse({ status: 400, description: 'Pedido inválido ou PDF não disponível' })
+  @ApiResponse({ status: 404, description: 'PDF não encontrado' })
   @ApiParam({ name: 'id', description: 'ID do pedido' })
-  async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response, @Req() req: any) {
+  async downloadPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
     try {
-      // Buscar pedido pelo ID para obter o caminho ou URL do PDF
+      // Buscar o pedido com informações completas
       const pedido = await this.pedidosService.findOne(id);
       
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
       }
-      
-      // Verificar se o pedido tem PDF
-      if (!pedido.pdf_path && !pedido.pdf_url) {
-        throw new NotFoundException(`PDF não encontrado para o pedido ${id}`);
+
+      console.log(`[PDF] Buscando PDF para pedido ${id}, caminho: ${pedido.pdf_path}, url: ${pedido.pdf_url}`);
+
+      // ETAPA 1: Se o pedido tem URL do Supabase, redirecionar para lá (prioridade mais alta)
+      if (pedido.pdf_url) {
+        // Verificar se a URL é completa (começa com http ou https)
+        if (pedido.pdf_url.startsWith('http')) {
+          console.log(`[PDF] Redirecionando para URL do Supabase: ${pedido.pdf_url}`);
+          return res.redirect(pedido.pdf_url);
+        } else {
+          // Se a URL não for completa, verificar se é um caminho do Supabase
+          console.log(`[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`);
+          try {
+            if (this.supabaseService) {
+              const signedUrl = await this.supabaseService.getSignedUrl(pedido.pdf_url, 60);
+              if (signedUrl) {
+                console.log(`[PDF] URL assinada gerada: ${signedUrl}`);
+                // Atualizar o pedido com a URL completa
+                await this.pedidosService.update(id, { pdf_url: signedUrl });
+                return res.redirect(signedUrl);
+              }
+            }
+          } catch (error) {
+            console.error(`[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+            // Continuar para os próximos métodos
+          }
+        }
       }
       
-      // Verificar ambiente de execução para ajuste de caminhos
-      const isProduction = process.env.NODE_ENV === 'production';
-      const pdfStoragePath = process.env.PDF_STORAGE_PATH || 
-        (isProduction ? '/opt/render/project/src/uploads/pdfs' : join(process.cwd(), 'uploads', 'pdfs'));
-      
-      console.log(`[PDF] Diretório de armazenamento: ${pdfStoragePath}`);
-      console.log(`[PDF] Pedido PDF path: ${pedido.pdf_path}`);
-      console.log(`[PDF] Pedido PDF URL: ${pedido.pdf_url}`);
-      
-      // PRIORIDADE 1: Tentar baixar do Supabase (se tiver URL do supabase)
+      // ETAPA 2: Se o pedido tem o caminho Supabase (formato "pedidos/arquivo.pdf"), usar o serviço Supabase
       if (pedido.pdf_path && pedido.pdf_path.startsWith('pedidos/') && this.supabaseService) {
         try {
           console.log(`[PDF] Tentando baixar do Supabase: ${pedido.pdf_path}`);
@@ -228,67 +244,78 @@ export class PedidosController {
           // Continuar para o próximo método se o Supabase falhar
         }
       }
-      
-      // PRIORIDADE 2: Verificar caminho local completo
-      if (pedido.pdf_path) {
-        // Tentar vários formatos de caminho para compatibilidade
-        const possiblePaths = [
-          // 1. Caminho exato como armazenado no banco
-          pedido.pdf_path,
-          
-          // 2. Caminho absoluto baseado no PDF_STORAGE_PATH
-          join(pdfStoragePath, basename(pedido.pdf_path)),
-          
-          // 3. Caminho relativo ao diretório de trabalho (para desenvolvimento)
-          join(process.cwd(), 'uploads', 'pdfs', basename(pedido.pdf_path))
-        ];
+
+      // ETAPA 3: Verificar caminhos locais em várias possibilidades
+      // Determinar o ambiente para usar os caminhos apropriados
+      const isProduction = process.env.NODE_ENV === 'production';
+      const pdfStoragePath = process.env.PDF_STORAGE_PATH || 
+        (isProduction ? '/opt/render/project/src/uploads/pdfs' : join(process.cwd(), 'uploads', 'pdfs'));
+      const uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
+      const pdfFileName = `pedido-${id}.pdf`;
+
+      const possiblePaths = [
+        // Caminho exato como armazenado no banco
+        pedido.pdf_path,
         
-        // Em produção, adicionar o caminho direto do Render
-        if (isProduction) {
-          possiblePaths.push(join('/opt/render/project/src/uploads/pdfs', basename(pedido.pdf_path)));
-        }
-        
-        // Verificar cada caminho possível
-        for (const path of possiblePaths) {
-          console.log(`[PDF] Verificando caminho: ${path}`);
-          if (existsSync(path)) {
-            console.log(`[PDF] Arquivo encontrado em: ${path}`);
-            return res.sendFile(path);
-          }
-        }
-      }
+        // Caminhos relativos e absolutos baseados em convenções
+        join(pdfStoragePath, basename(pedido.pdf_path || pdfFileName)),
+        join(process.cwd(), pedido.pdf_path || ''), // Relativo ao CWD
+        join(process.cwd(), 'uploads', 'pdfs', pdfFileName),
+        join(uploadsPath, 'pdfs', pdfFileName),
+        // Alguns caminhos adicionais que podem estar sendo usados
+        join(uploadsPath, pdfFileName)
+      ].filter(Boolean); // Remover entradas undefined/null/empty
       
-      // PRIORIDADE 3: Tentar extrair caminho da URL (caso seja URL local)
-      if (pedido.pdf_url && pedido.pdf_url.includes('localhost')) {
-        try {
-          const urlObj = new URL(pedido.pdf_url);
-          const relativePath = urlObj.pathname.startsWith('/') 
-            ? urlObj.pathname.substring(1) 
-            : urlObj.pathname;
+      // Verificar cada caminho possível
+      for (const path of possiblePaths) {
+        console.log(`[PDF] Verificando caminho: ${path}`);
+        if (path && existsSync(path)) {
+          console.log(`[PDF] Arquivo encontrado em: ${path}`);
           
-          // Tentar vários caminhos possíveis baseados na URL
-          const possibleUrls = [
-            join(process.cwd(), relativePath),
-            join(pdfStoragePath, basename(relativePath))
-          ];
-          
-          for (const path of possibleUrls) {
-            console.log(`[PDF] Verificando URL path: ${path}`);
-            if (existsSync(path)) {
-              console.log(`[PDF] Arquivo encontrado via URL em: ${path}`);
-              return res.sendFile(path);
+          // Atualizar o caminho do PDF no banco de dados se ele for diferente do armazenado
+          if (path !== pedido.pdf_path) {
+            try {
+              await this.pedidosService.update(id, { pdf_path: path });
+              console.log(`[PDF] Caminho do PDF atualizado para: ${path}`);
+            } catch (updateError) {
+              console.error('[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado:', updateError);
             }
           }
-        } catch (error) {
-          console.log(`[PDF] Erro ao processar URL: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          
+          return res.sendFile(path);
         }
       }
       
-      // Nenhum método funcionou
+      // ETAPA 4: Tentar regenerar o PDF se não foi encontrado
+      try {
+        console.log(`[PDF] PDF não encontrado. Tentando regenerar para o pedido ${id}...`);
+        // Verificar se o serviço possui método para regenerar PDF
+        if (typeof this.pedidosService.regeneratePdf === 'function') {
+          const result = await this.pedidosService.regeneratePdf(id);
+          if (result) {
+            console.log(`[PDF] PDF regenerado com sucesso: ${result}`);
+            // Se o resultado for uma URL, redirecionar
+            if (typeof result === 'string' && result.startsWith('http')) {
+              return res.redirect(result);
+            } 
+            // Se for um caminho local, enviar o arquivo
+            else if (typeof result === 'string' && existsSync(result)) {
+              return res.sendFile(result);
+            }
+          }
+        } else {
+          console.log('[PDF] Método regeneratePdf não está disponível');
+        }
+      } catch (regenerateError) {
+        console.error('[PDF] Erro ao regenerar PDF:', regenerateError);
+        // Continuamos para o erro 404 se a regeneração falhar
+      }
+      
+      // Se chegou aqui, o PDF não foi encontrado por nenhum método
       console.log(`[PDF] PDF não encontrado por nenhum método para o pedido ${id}`);
       throw new NotFoundException(`PDF não disponível para o pedido ${id}. Tente gerar novamente.`);
     } catch (error) {
-      console.error('[DEBUG] Erro ao fazer download do PDF:', error instanceof Error ? error.message : error);
+      console.error('[PDF] Erro ao fazer download do PDF:', error instanceof Error ? error.message : error);
       if (error instanceof NotFoundException) {
         throw error;
       }

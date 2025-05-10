@@ -18,4 +18,20 @@ export class UpdatePedidoDto {
   @IsEnum(PedidoStatus)
   @IsOptional()
   status?: PedidoStatus;
+
+  @ApiProperty({
+    description: 'Caminho do arquivo PDF no sistema de arquivos',
+    example: '/uploads/pdfs/pedido-123.pdf',
+    required: false
+  })
+  @IsOptional()
+  pdf_path?: string;
+
+  @ApiProperty({
+    description: 'URL do arquivo PDF no Supabase',
+    example: 'https://storage.googleapis.com/bucket/pedido-123.pdf',
+    required: false
+  })
+  @IsOptional()
+  pdf_url?: string;
 }
