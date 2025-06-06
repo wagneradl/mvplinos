@@ -212,9 +212,9 @@ export default function NovoPedidoPage() {
         // Para produtos por unidade, quantidade mínima é 1
         enqueueSnackbar('Para produtos em unidade, a quantidade mínima é 1', { variant: 'warning' });
         return;
-      } else if ((produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') && quantidadeValida < 0.01) {
-        // Para produtos por kg/lt, quantidade mínima é 0.01
-        enqueueSnackbar('Para produtos em kg/lt, a quantidade mínima é 0,01', { variant: 'warning' });
+      } else if ((produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') && quantidadeValida < 0.001) {
+        // Para produtos por kg/lt, quantidade mínima é 0.001
+        enqueueSnackbar('Para produtos em kg/lt, a quantidade mínima é 0,001', { variant: 'warning' });
         return;
       }
     } else if (quantidadeValida <= 0) {
@@ -229,12 +229,12 @@ export default function NovoPedidoPage() {
     
     if (produto) {
       if (produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') {
-        // Para kg ou lt: garantir que seja valor decimal com 2 casas
-        quantidadeFormatada = Math.floor(quantidadeValida * 100) / 100; // Truncar para 2 casas decimais
+        // Para kg ou lt: garantir que seja valor decimal com 3 casas
+        quantidadeFormatada = Math.floor(quantidadeValida * 1000) / 1000; // Truncar para 3 casas decimais
         
         // Garantir valor mínimo para kg/lt
-        if (quantidadeFormatada < 0.01) {
-          quantidadeFormatada = 0.01;
+        if (quantidadeFormatada < 0.001) {
+          quantidadeFormatada = 0.001;
         }
       } else if (produto.tipo_medida === 'un') {
         // Para unidades: garantir que seja valor inteiro
@@ -473,8 +473,8 @@ export default function NovoPedidoPage() {
                                 if (!item.produto) return;
                                 
                                 const isUnidade = item.produto.tipo_medida === 'un';
-                                const step = isUnidade ? 1 : 0.01;
-                                const valorMinimo = isUnidade ? 1 : 0.01;
+                                const step = isUnidade ? 1 : 0.001;
+                                const valorMinimo = isUnidade ? 1 : 0.001;
                                 const novoValor = Math.max(item.quantidade - step, valorMinimo);
                                 handleQuantidadeChange(index, novoValor);
                               }}
@@ -507,8 +507,8 @@ export default function NovoPedidoPage() {
                                   // Força valores inteiros para unidades
                                   handleQuantidadeChange(index, Math.floor(item.quantidade));
                                 } else if (item.produto.tipo_medida === 'kg' || item.produto.tipo_medida === 'lt') {
-                                  // Força 2 casas decimais para kg/lt
-                                  handleQuantidadeChange(index, Math.floor(item.quantidade * 100) / 100);
+                                  // Força 3 casas decimais para kg/lt
+                                  handleQuantidadeChange(index, Math.floor(item.quantidade * 1000) / 1000);
                                 }
                               }}
                               fullWidth
@@ -516,7 +516,7 @@ export default function NovoPedidoPage() {
                               inputProps={{
                                 // Não usamos min aqui para evitar validações nativas do browser que podem ser confusas
                                 // A validação acontece no handler de onChange
-                                step: (item.produto?.tipo_medida === 'kg' || item.produto?.tipo_medida === 'lt') ? 0.01 : 1,
+                                step: (item.produto?.tipo_medida === 'kg' || item.produto?.tipo_medida === 'lt') ? 0.001 : 1,
                                 // Impede entrada de decimais para produtos tipo 'un'
                                 inputMode: item.produto?.tipo_medida === 'un' ? 'numeric' : 'decimal'
                               }}
@@ -556,7 +556,7 @@ export default function NovoPedidoPage() {
                                 if (!item.produto) return;
                                 
                                 const isUnidade = item.produto.tipo_medida === 'un';
-                                const step = isUnidade ? 1 : 0.01;
+                                const step = isUnidade ? 1 : 0.001;
                                 handleQuantidadeChange(index, item.quantidade + step);
                               }}
                               sx={{ p: 0.5 }}
@@ -592,8 +592,8 @@ export default function NovoPedidoPage() {
                                   textAlign: 'center'
                                 }}
                               >
-                                {item.produto.tipo_medida === 'kg' ? 'Use decimais (0,5)' : 
-                                 item.produto.tipo_medida === 'litros' ? 'Use decimais (0,5)' : 
+                                {item.produto.tipo_medida === 'kg' ? 'Use até 3 decimais (1,286)' : 
+                                 item.produto.tipo_medida === 'lt' ? 'Use até 3 decimais (1,286)' : 
                                  'Apenas números inteiros'}
                               </Typography>
                             )}
