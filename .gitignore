@@ -44,3 +44,8 @@ uploads/*
 
 # Cache
 .cache/
+
+.turbo/
+*.log
+backup-pre-cleanup/
+packages/*/storage/
