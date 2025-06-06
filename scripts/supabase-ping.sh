@@ -12,5 +12,5 @@ while true; do
     -d '{"prefix": ""}' \
     "$SUPABASE_URL/storage/v1/object/list/$SUPABASE_BUCKET"
 
-  sleep 60  # 6 horas (ajuste pra 60 se quiser testar)
+  sleep 86400
 done
