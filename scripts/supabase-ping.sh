@@ -6,7 +6,7 @@ while true; do
   echo "[supabase-ping] Rodando keep-alive para Supabase..."
   curl -s -o /dev/null -w "%{http_code}" \
     -H "Authorization: Bearer $SUPABASE_TOKEN" \
-    "https://vuxmjtpfbcpvncmabnhe.supabase.co/storage/v1/object/list/pedidos-pdfs"
+    "$SUPABASE_URL/storage/v1/object/list/$SUPABASE_BUCKET?prefix="
 
-  sleep 60  # Espera 6 horas (21600 segundos)
+  sleep 60
 done
