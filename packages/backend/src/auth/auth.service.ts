@@ -12,9 +12,6 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    console.log('==== LOGIN DEBUG ====');
-    console.log('Email recebido:', loginDto.email);
-    console.log('Senha recebida:', JSON.stringify(loginDto.senha));
     const usuario = await this.prisma.usuario.findUnique({
       where: { email: loginDto.email },
       include: {
@@ -23,13 +20,10 @@ export class AuthService {
     });
 
     if (!usuario || usuario.status.toLowerCase() !== 'ativo') {
-      console.log('Usuário não encontrado ou status diferente de ATIVO:', usuario);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    console.log('Hash salvo no banco:', usuario.senha);
     const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
-    console.log('Resultado bcrypt.compare:', senhaValida);
     if (!senhaValida) {
       throw new UnauthorizedException('Credenciais inválidas');
     }

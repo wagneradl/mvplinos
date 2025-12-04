@@ -32,62 +32,69 @@ async function seed() {
     });
     console.log(`Papel Operador: ${papelOperador.id}`);
 
+    // Obter configurações de usuários das variáveis de ambiente
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@linos.com';
+    const operadorEmail = process.env.OPERADOR_EMAIL || 'operador@linos.com';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const operadorPassword = process.env.OPERADOR_PASSWORD;
+
     // Remove todos usuários exceto admin e operador
     await prisma.usuario.deleteMany({
       where: {
         email: {
-          notIn: ['admin@linos.com', 'operador@linos.com'],
+          notIn: [adminEmail, operadorEmail],
         },
       },
     });
     console.log('Usuários não essenciais removidos');
 
-    // Obter senhas das variáveis de ambiente com fallbacks
-    console.log('ADMIN_PASSWORD definido:', !!process.env.ADMIN_PASSWORD);
-    console.log('OPERADOR_PASSWORD definido:', !!process.env.OPERADOR_PASSWORD);
-    
-    const adminPassword = process.env.ADMIN_PASSWORD || 'A9!pLx7@wQ3#zR2$';
-    const operadorPassword = process.env.OPERADOR_PASSWORD || 'Op3r@dor!2025#Xy';
+    // Criar/atualizar usuário admin (apenas se ADMIN_PASSWORD estiver definido)
+    if (adminPassword) {
+      const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+      await prisma.usuario.upsert({
+        where: { email: adminEmail },
+        update: {
+          senha: adminPasswordHash,
+          papel_id: papelAdmin.id,
+          status: 'ativo',
+        },
+        create: {
+          email: adminEmail,
+          nome: 'Administrador',
+          senha: adminPasswordHash,
+          papel_id: papelAdmin.id,
+          status: 'ativo',
+        },
+      });
+      console.log(`Usuário admin (${adminEmail}) atualizado/criado com sucesso`);
+    } else {
+      console.warn('⚠️  ADMIN_PASSWORD não definido. Pulando criação/atualização do usuário admin.');
+      console.warn('   Configure ADMIN_PASSWORD no arquivo .env para criar o usuário administrador.');
+    }
 
-    // Gerar hashes das senhas
-    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
-    const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
-
-    // Upsert para o admin (cria ou atualiza)
-    await prisma.usuario.upsert({
-      where: { email: 'admin@linos.com' },
-      update: {
-        senha: adminPasswordHash,
-        papel_id: papelAdmin.id,
-        status: 'ativo',
-      },
-      create: {
-        email: 'admin@linos.com',
-        nome: 'Administrador',
-        senha: adminPasswordHash,
-        papel_id: papelAdmin.id,
-        status: 'ativo',
-      },
-    });
-    console.log('Usuário admin atualizado/criado com sucesso');
-
-    // Upsert para o operador (cria ou atualiza)
-    await prisma.usuario.upsert({
-      where: { email: 'operador@linos.com' },
-      update: {
-        senha: operadorPasswordHash,
-        papel_id: papelOperador.id,
-        status: 'ativo',
-      },
-      create: {
-        email: 'operador@linos.com',
-        nome: 'Operador',
-        senha: operadorPasswordHash,
-        papel_id: papelOperador.id,
-        status: 'ativo',
-      },
-    });
-    console.log('Usuário operador atualizado/criado com sucesso');
+    // Criar/atualizar usuário operador (apenas se OPERADOR_PASSWORD estiver definido)
+    if (operadorPassword) {
+      const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
+      await prisma.usuario.upsert({
+        where: { email: operadorEmail },
+        update: {
+          senha: operadorPasswordHash,
+          papel_id: papelOperador.id,
+          status: 'ativo',
+        },
+        create: {
+          email: operadorEmail,
+          nome: 'Operador',
+          senha: operadorPasswordHash,
+          papel_id: papelOperador.id,
+          status: 'ativo',
+        },
+      });
+      console.log(`Usuário operador (${operadorEmail}) atualizado/criado com sucesso`);
+    } else {
+      console.warn('⚠️  OPERADOR_PASSWORD não definido. Pulando criação/atualização do usuário operador.');
+      console.warn('   Configure OPERADOR_PASSWORD no arquivo .env para criar o usuário operador.');
+    }
 
     console.log('Seed concluído com sucesso.');
   } catch (error) {
