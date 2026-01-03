@@ -34,6 +34,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { debugLog } from '../common/utils/debug-log';
 
 @ApiTags('pedidos')
 @Controller('pedidos')
@@ -51,7 +52,7 @@ export class PedidosController {
   @ApiResponse({ status: 201, description: 'Pedido criado com sucesso.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
   create(@Body() createPedidoDto: CreatePedidoDto) {
-    console.log('Controller recebeu createPedidoDto:', createPedidoDto);
+    debugLog('PedidosController', 'Recebeu createPedidoDto:', createPedidoDto);
     return this.pedidosService.create(createPedidoDto);
   }
 
@@ -101,7 +102,11 @@ export class PedidosController {
   ) {
     try {
       const reportDto: ReportPedidoDto = { data_inicio, data_fim, cliente_id };
-      console.log('Recebendo requisição para gerar PDF com parâmetros:', reportDto);
+      debugLog(
+        'PedidosController',
+        'Recebendo requisição para gerar PDF com parâmetros:',
+        reportDto,
+      );
       const pdfResult = await this.pedidosService.generateReportPdf(reportDto);
       if (typeof pdfResult === 'string') {
         // Local file path
@@ -115,16 +120,16 @@ export class PedidosController {
       } else {
         // Supabase: retorna objeto { path, url }
         // NOVO: gerar signed URL para o relatório
-        console.log(`[DEBUG] (Relatório) pdfResult.path: ${pdfResult.path}`);
+        debugLog('PedidosController', `[DEBUG] (Relatório) pdfResult.path: ${pdfResult.path}`);
         const signedUrl = await this.supabaseService.getSignedUrl(pdfResult.path, 300); // 5 minutos
-        console.log(`[DEBUG] (Relatório) signedUrl: ${signedUrl}`);
+        debugLog('PedidosController', `[DEBUG] (Relatório) signedUrl: ${signedUrl}`);
         if (!signedUrl) {
           console.error('[DEBUG] (Relatório) Falha ao gerar signed URL!');
           throw new InternalServerErrorException(
             'Falha ao gerar link seguro para o PDF do relatório',
           );
         }
-        console.log('[DEBUG] (Relatório) Respondendo JSON com signedUrl');
+        debugLog('PedidosController', '[DEBUG] (Relatório) Respondendo JSON com signedUrl');
         return res.json({
           url: signedUrl,
           path: pdfResult.path,
@@ -162,12 +167,13 @@ export class PedidosController {
   })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
   findAll(@Query() filterDto: FilterPedidoDto) {
-    console.log('Controller recebeu request para listar pedidos com filtros:', filterDto);
+    debugLog('PedidosController', 'Recebeu request para listar pedidos com filtros:', filterDto);
 
     // Log detalhado para troubleshooting do filtro de datas
     if (filterDto.startDate && filterDto.endDate) {
-      console.log(
-        `Controller: Filtrando pedidos de ${filterDto.startDate} até ${filterDto.endDate}`,
+      debugLog(
+        'PedidosController',
+        `Filtrando pedidos de ${filterDto.startDate} até ${filterDto.endDate}`,
       );
     }
 
@@ -221,17 +227,30 @@ export class PedidosController {
     try {
       // Verificar ambiente e configurações
       const isProduction = process.env.NODE_ENV === 'production';
-      console.log(`[PDF] Ambiente: ${isProduction ? 'Produção' : 'Desenvolvimento'}`);
-      console.log(`[PDF] PDF_STORAGE_PATH: ${process.env.PDF_STORAGE_PATH || 'não configurado'}`);
-      console.log(`[PDF] UPLOADS_PATH: ${process.env.UPLOADS_PATH || 'não configurado'}`);
+      debugLog(
+        'PedidosController',
+        `[PDF] Ambiente: ${isProduction ? 'Produção' : 'Desenvolvimento'}`,
+      );
+      debugLog(
+        'PedidosController',
+        `[PDF] PDF_STORAGE_PATH: ${process.env.PDF_STORAGE_PATH || 'não configurado'}`,
+      );
+      debugLog(
+        'PedidosController',
+        `[PDF] UPLOADS_PATH: ${process.env.UPLOADS_PATH || 'não configurado'}`,
+      );
 
       // Verificar disponibilidade do Supabase
       const supabaseAvailable = this.supabaseService && this.supabaseService.isAvailable();
-      console.log(`[PDF] Supabase disponível: ${supabaseAvailable}`);
+      debugLog('PedidosController', `[PDF] Supabase disponível: ${supabaseAvailable}`);
       if (supabaseAvailable) {
-        console.log(`[PDF] Bucket Supabase: ${this.supabaseService.getBucketName()}`);
-        console.log(`[PDF] URL Supabase: ${process.env.SUPABASE_URL}`);
-        console.log(
+        debugLog(
+          'PedidosController',
+          `[PDF] Bucket Supabase: ${this.supabaseService.getBucketName()}`,
+        );
+        debugLog('PedidosController', `[PDF] URL Supabase: ${process.env.SUPABASE_URL}`);
+        debugLog(
+          'PedidosController',
           `[PDF] SERVICE_ROLE_KEY configurada: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`,
         );
       }
@@ -243,7 +262,8 @@ export class PedidosController {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
       }
 
-      console.log(
+      debugLog(
+        'PedidosController',
         `[PDF] Buscando PDF para pedido ${id}, caminho: ${pedido.pdf_path}, url: ${pedido.pdf_url}`,
       );
 
@@ -255,7 +275,8 @@ export class PedidosController {
 
         // Em produção, nunca usar URLs locais
         if (isProduction && isLocalUrl) {
-          console.log(
+          debugLog(
+            'PedidosController',
             `[PDF] URL local detectada em produção: ${pedido.pdf_url}, ignorando e gerando nova URL`,
           );
           // Extrair o caminho do arquivo da URL local para usar com o Supabase
@@ -264,10 +285,16 @@ export class PedidosController {
 
           if (pdfPath && supabaseAvailable) {
             try {
-              console.log(`[PDF] Tentando gerar URL do Supabase para: ${pdfPath}`);
+              debugLog(
+                'PedidosController',
+                `[PDF] Tentando gerar URL do Supabase para: ${pdfPath}`,
+              );
               const signedUrl = await this.supabaseService.getSignedUrl(pdfPath, 3600);
               if (signedUrl) {
-                console.log(`[PDF] URL assinada gerada com sucesso: ${signedUrl}`);
+                debugLog(
+                  'PedidosController',
+                  `[PDF] URL assinada gerada com sucesso: ${signedUrl}`,
+                );
                 // Atualizar o pedido com a URL correta do Supabase
                 await this.pedidosService.update(id, { pdf_url: signedUrl });
                 return res.redirect(signedUrl);
@@ -282,25 +309,26 @@ export class PedidosController {
         }
         // Verificar se a URL é completa (começa com http ou https) e não é local em produção
         else if (pedido.pdf_url.startsWith('http') && (!isProduction || !isLocalUrl)) {
-          console.log(`[PDF] Redirecionando para URL: ${pedido.pdf_url}`);
+          debugLog('PedidosController', `[PDF] Redirecionando para URL: ${pedido.pdf_url}`);
           return res.redirect(pedido.pdf_url);
         }
         // Se a URL não for completa, verificar se é um caminho do Supabase
         else if (!pedido.pdf_url.startsWith('http')) {
-          console.log(
+          debugLog(
+            'PedidosController',
             `[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`,
           );
           try {
             if (supabaseAvailable) {
               const signedUrl = await this.supabaseService.getSignedUrl(pedido.pdf_url, 3600); // Aumentar tempo para 1 hora
               if (signedUrl) {
-                console.log(`[PDF] URL assinada gerada: ${signedUrl}`);
+                debugLog('PedidosController', `[PDF] URL assinada gerada: ${signedUrl}`);
                 // Atualizar o pedido com a URL completa
                 await this.pedidosService.update(id, { pdf_url: signedUrl });
                 return res.redirect(signedUrl);
               }
             } else {
-              console.warn(`[PDF] Supabase não disponível para gerar URL assinada`);
+              debugLog('PedidosController', `[PDF] Supabase não disponível para gerar URL assinada`);
             }
           } catch (error) {
             console.error(
@@ -314,18 +342,22 @@ export class PedidosController {
       // ETAPA 2: Se o pedido tem o caminho Supabase (formato "pedidos/arquivo.pdf"), usar o serviço Supabase
       if (pedido.pdf_path && pedido.pdf_path.startsWith('pedidos/') && this.supabaseService) {
         try {
-          console.log(`[PDF] Tentando baixar do Supabase: ${pedido.pdf_path}`);
+          debugLog('PedidosController', `[PDF] Tentando baixar do Supabase: ${pedido.pdf_path}`);
           const supabaseResponse = await this.supabaseService.downloadFile(pedido.pdf_path);
 
           if (supabaseResponse && supabaseResponse.data) {
             const arrayBuffer = await supabaseResponse.data.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             res.setHeader('Content-Type', 'application/pdf');
-            console.log(`[PDF] PDF baixado com sucesso do Supabase: ${pedido.pdf_path}`);
+            debugLog(
+              'PedidosController',
+              `[PDF] PDF baixado com sucesso do Supabase: ${pedido.pdf_path}`,
+            );
             return res.send(buffer);
           }
         } catch (error) {
-          console.log(
+          debugLog(
+            'PedidosController',
             `[PDF] Erro ao baixar do Supabase: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
           );
           // Continuar para o próximo método se o Supabase falhar
@@ -357,15 +389,15 @@ export class PedidosController {
 
       // Verificar cada caminho possível
       for (const path of possiblePaths) {
-        console.log(`[PDF] Verificando caminho: ${path}`);
+        debugLog('PedidosController', `[PDF] Verificando caminho: ${path}`);
         if (path && existsSync(path)) {
-          console.log(`[PDF] Arquivo encontrado em: ${path}`);
+          debugLog('PedidosController', `[PDF] Arquivo encontrado em: ${path}`);
 
           // Atualizar o caminho do PDF no banco de dados se ele for diferente do armazenado
           if (path !== pedido.pdf_path) {
             try {
               await this.pedidosService.update(id, { pdf_path: path });
-              console.log(`[PDF] Caminho do PDF atualizado para: ${path}`);
+              debugLog('PedidosController', `[PDF] Caminho do PDF atualizado para: ${path}`);
             } catch (updateError) {
               console.error(
                 '[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado:',
@@ -380,12 +412,15 @@ export class PedidosController {
 
       // ETAPA 4: Tentar regenerar o PDF se não foi encontrado
       try {
-        console.log(`[PDF] PDF não encontrado. Tentando regenerar para o pedido ${id}...`);
+        debugLog(
+          'PedidosController',
+          `[PDF] PDF não encontrado. Tentando regenerar para o pedido ${id}...`,
+        );
         // Verificar se o serviço possui método para regenerar PDF
         if (typeof this.pedidosService.regeneratePdf === 'function') {
           const result = await this.pedidosService.regeneratePdf(id);
           if (result) {
-            console.log(`[PDF] PDF regenerado com sucesso: ${result}`);
+            debugLog('PedidosController', `[PDF] PDF regenerado com sucesso: ${result}`);
             // Se o resultado for uma URL, redirecionar
             if (typeof result === 'string' && result.startsWith('http')) {
               return res.redirect(result);
@@ -396,7 +431,7 @@ export class PedidosController {
             }
           }
         } else {
-          console.log('[PDF] Método regeneratePdf não está disponível');
+          debugLog('PedidosController', '[PDF] Método regeneratePdf não está disponível');
         }
       } catch (regenerateError) {
         console.error('[PDF] Erro ao regenerar PDF:', regenerateError);
@@ -404,7 +439,10 @@ export class PedidosController {
       }
 
       // Se chegou aqui, o PDF não foi encontrado por nenhum método
-      console.log(`[PDF] PDF não encontrado por nenhum método para o pedido ${id}`);
+      debugLog(
+        'PedidosController',
+        `[PDF] PDF não encontrado por nenhum método para o pedido ${id}`,
+      );
       throw new NotFoundException(`PDF não disponível para o pedido ${id}. Tente gerar novamente.`);
     } catch (error) {
       console.error(
