@@ -8,6 +8,7 @@ import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { format } from 'date-fns';
+import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class PedidosService {
@@ -18,12 +19,13 @@ export class PedidosService {
 
   // Função auxiliar para depurar problemas de data
   private debugDates(date: Date): void {
-    console.log('Debug data:');
-    console.log('- toString():', date.toString());
-    console.log('- toISOString():', date.toISOString());
-    console.log('- toLocaleDateString():', date.toLocaleDateString());
-    console.log('- getTimezoneOffset():', date.getTimezoneOffset());
-    console.log(
+    debugLog('PedidosService', 'Debug data:');
+    debugLog('PedidosService', '- toString():', date.toString());
+    debugLog('PedidosService', '- toISOString():', date.toISOString());
+    debugLog('PedidosService', '- toLocaleDateString():', date.toLocaleDateString());
+    debugLog('PedidosService', '- getTimezoneOffset():', date.getTimezoneOffset());
+    debugLog(
+      'PedidosService',
       '- getFullYear()/getMonth()/getDate():',
       date.getFullYear(),
       date.getMonth() + 1,
@@ -115,7 +117,7 @@ export class PedidosService {
 
         // Data atual para o pedido
         const dataPedido = new Date();
-        console.log('Criando pedido com data:', dataPedido.toISOString());
+        debugLog('PedidosService', 'Criando pedido com data:', dataPedido.toISOString());
 
         // Criar o pedido com os itens (sem esperar o PDF)
         return await tx.pedido.create({
@@ -158,7 +160,7 @@ export class PedidosService {
         });
 
         // Gerar o PDF (operação lenta que estava causando o timeout da transação)
-        console.log('Gerando PDF para o pedido:', pedido.id);
+        debugLog('PedidosService', 'Gerando PDF para o pedido:', pedido.id);
         const pdfResult = await this.pdfService.generatePedidoPdf(pedido);
 
         // Preparar os dados para atualização do pedido
@@ -170,12 +172,12 @@ export class PedidosService {
         if (typeof pdfResult === 'string') {
           // Formato antigo: apenas caminho local
           updateData.pdf_path = pdfResult;
-          console.log('PDF gerado localmente:', pdfResult);
+          debugLog('PedidosService', 'PDF gerado localmente:', pdfResult);
         } else {
           // Novo formato: objeto com caminho e URL do Supabase
           updateData.pdf_path = pdfResult.path;
           updateData.pdf_url = pdfResult.url;
-          console.log('PDF enviado para Supabase:', pdfResult.url);
+          debugLog('PedidosService', 'PDF enviado para Supabase:', pdfResult.url);
         }
 
         // ETAPA 3: Atualizar o pedido com as informações do PDF em uma nova transação
@@ -199,7 +201,7 @@ export class PedidosService {
       } catch (pdfError) {
         // Se houver erro na geração do PDF, logamos mas não falhamos o pedido todo
         console.error('Erro ao gerar PDF, mas o pedido foi criado:', pdfError);
-        console.log('Pedido criado com ID:', pedido.id);
+        debugLog('PedidosService', 'Pedido criado com ID:', pedido.id);
 
         // Retornar o pedido mesmo sem o PDF para não perder a operação
         return pedido;
@@ -222,7 +224,7 @@ export class PedidosService {
       const limit = filter.limit || 10;
       const skip = (page - 1) * limit;
 
-      console.log('Processando filtros:', filter);
+      debugLog('PedidosService', 'Processando filtros:', filter);
 
       // Abordagem simplificada - usar Prisma diretamente com where conditions
       // para evitar problemas com SQL raw
@@ -231,13 +233,13 @@ export class PedidosService {
       // Filtro de cliente
       if (filter.clienteId) {
         where.cliente_id = filter.clienteId;
-        console.log(`Filtrando por cliente_id: ${filter.clienteId}`);
+        debugLog('PedidosService', `Filtrando por cliente_id: ${filter.clienteId}`);
       }
 
       // Filtro de status
       if (filter.status) {
         where.status = filter.status;
-        console.log(`Filtrando por status: ${filter.status}`);
+        debugLog('PedidosService', `Filtrando por status: ${filter.status}`);
       }
 
       // Filtro de datas - abordagem de intervalo manual
@@ -246,7 +248,10 @@ export class PedidosService {
           const startDateStr = filter.startDate.substring(0, 10);
           const endDateStr = filter.endDate.substring(0, 10);
 
-          console.log(`Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`);
+          debugLog(
+            'PedidosService',
+            `Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`,
+          );
 
           // Precisamos gerar uma lista com todas as datas no intervalo
           // para contemplar problemas de timezone
@@ -267,7 +272,7 @@ export class PedidosService {
             current.setDate(current.getDate() + 1);
           }
 
-          console.log('Datas no intervalo:', dates);
+          debugLog('PedidosService', 'Datas no intervalo:', dates);
 
           // Criar uma cláusula OR para cada data
           if (dates.length > 0) {
@@ -279,18 +284,18 @@ export class PedidosService {
               },
             }));
 
-            console.log(`Criadas ${where.OR.length} condições OR para as datas`);
+            debugLog('PedidosService', `Criadas ${where.OR.length} condições OR para as datas`);
           }
         } catch (error) {
           console.error('Erro ao processar filtro de datas:', error);
           // Não aplicamos o filtro de data se houver erro
           if (error instanceof Error) {
-            console.log('Erro detalhado:', error.message);
+            debugLog('PedidosService', 'Erro detalhado:', error.message);
           }
         }
       }
 
-      console.log('Consulta com where conditions:', where);
+      debugLog('PedidosService', 'Consulta com where conditions:', where);
 
       // Usar o Prisma para fazer a consulta
       const [data, total] = await Promise.all([
@@ -315,11 +320,11 @@ export class PedidosService {
 
       const totalPages = Math.ceil(total / limit);
 
-      console.log(`Encontrados ${data.length} pedidos de um total de ${total}`);
+      debugLog('PedidosService', `Encontrados ${data.length} pedidos de um total de ${total}`);
 
       // Log para debug
       if (data.length > 0) {
-        console.log('Primeiro pedido encontrado:', {
+        debugLog('PedidosService', 'Primeiro pedido encontrado:', {
           id: data[0].id,
           status: data[0].status,
           data: data[0].data_pedido.toISOString(),
@@ -364,12 +369,17 @@ export class PedidosService {
       }
 
       // Log para depurar o campo observacoes
-      console.log(
+      debugLog(
+        'PedidosService',
         `[DEBUG][PEDIDO] Pedido ${id} tem observacoes:`,
         pedido.observacoes ? 'SIM' : 'NÃO',
       );
       if (pedido.observacoes) {
-        console.log(`[DEBUG][PEDIDO] Observacoes do pedido ${id}:`, pedido.observacoes);
+        debugLog(
+          'PedidosService',
+          `[DEBUG][PEDIDO] Observacoes do pedido ${id}:`,
+          pedido.observacoes,
+        );
       }
 
       return pedido;
@@ -396,7 +406,7 @@ export class PedidosService {
         return null;
       }
 
-      console.log(`[PDF] Regenerando PDF para o pedido ${id}`);
+      debugLog('PedidosService', `[PDF] Regenerando PDF para o pedido ${id}`);
 
       // Usar o serviço de PDF para gerar o PDF novamente
       const pdfResult = await this.pdfService.generatePedidoPdf(pedido);
@@ -410,7 +420,7 @@ export class PedidosService {
       if (typeof pdfResult === 'string') {
         // Formato antigo: apenas caminho local
         updateData.pdf_path = pdfResult;
-        console.log(`[PDF] PDF regenerado localmente: ${pdfResult}`);
+        debugLog('PedidosService', `[PDF] PDF regenerado localmente: ${pdfResult}`);
 
         // Atualizar o pedido no banco com o novo caminho
         await this.prisma.pedido.update({
@@ -423,7 +433,10 @@ export class PedidosService {
         // Novo formato: objeto com caminho e URL do Supabase
         updateData.pdf_path = pdfResult.path;
         updateData.pdf_url = pdfResult.url;
-        console.log(`[PDF] PDF regenerado e enviado para Supabase: ${pdfResult.url}`);
+        debugLog(
+          'PedidosService',
+          `[PDF] PDF regenerado e enviado para Supabase: ${pdfResult.url}`,
+        );
 
         // Atualizar o pedido no banco com o novo caminho e URL
         await this.prisma.pedido.update({
@@ -453,7 +466,10 @@ export class PedidosService {
         where: { id },
         data: { pdf_path: path },
       });
-      console.log(`[PDF] Caminho do PDF atualizado com sucesso para pedido ${id}: ${path}`);
+      debugLog(
+        'PedidosService',
+        `[PDF] Caminho do PDF atualizado com sucesso para pedido ${id}: ${path}`,
+      );
     } catch (error) {
       console.error(`[PDF] Erro ao atualizar caminho do PDF para pedido ${id}:`, error);
       // Não lançamos o erro para evitar interromper o fluxo principal
@@ -506,7 +522,7 @@ export class PedidosService {
 
       // Se o pedido for atualizado com sucesso e regenerarPdf for true, gerar um novo PDF
       if (regenerarPdf) {
-        console.log('Regenerando PDF para pedido atualizado:', pedidoAtualizado.id);
+        debugLog('PedidosService', 'Regenerando PDF para pedido atualizado:', pedidoAtualizado.id);
 
         // Gerar um timestamp para evitar cache do navegador
         const timestamp = new Date().getTime();
@@ -526,12 +542,12 @@ export class PedidosService {
         if (typeof pdfResult === 'string') {
           // Formato antigo: apenas caminho local
           updateData.pdf_path = pdfResult;
-          console.log('PDF regenerado localmente:', pdfResult);
+          debugLog('PedidosService', 'PDF regenerado localmente:', pdfResult);
         } else {
           // Novo formato: objeto com caminho e URL do Supabase
           updateData.pdf_path = pdfResult.path;
           updateData.pdf_url = pdfResult.url;
-          console.log('PDF regenerado e enviado para Supabase:', pdfResult.url);
+          debugLog('PedidosService', 'PDF regenerado e enviado para Supabase:', pdfResult.url);
         }
 
         // Atualizar o pedido com o caminho do PDF
@@ -804,11 +820,11 @@ export class PedidosService {
       if (typeof pdfResult === 'string') {
         // Local file path
         const fullPath = join(process.cwd(), pdfResult);
-        console.log('Caminho completo do PDF:', fullPath);
+        debugLog('PedidosService', 'Caminho completo do PDF:', fullPath);
         return fullPath;
       } else {
         // Supabase: retorna objeto { path, url }
-        console.log('PDF enviado para Supabase:', pdfResult.url);
+        debugLog('PedidosService', 'PDF enviado para Supabase:', pdfResult.url);
         return pdfResult;
       }
     } catch (error) {
@@ -827,15 +843,21 @@ export class PedidosService {
       throw new BadRequestException('As datas inicial e final são obrigatórias');
     }
 
-    console.log(`Gerando relatório para o período de ${data_inicio} até ${data_fim}`);
-    console.log(`Cliente ID: ${cliente_id || 'Todos os clientes'}`);
+    debugLog(
+      'PedidosService',
+      `Gerando relatório para o período de ${data_inicio} até ${data_fim}`,
+    );
+    debugLog('PedidosService', `Cliente ID: ${cliente_id || 'Todos os clientes'}`);
 
     try {
       // Abordagem de intervalo manual - igual ao usado em findAll
       const startDateStr = data_inicio.substring(0, 10);
       const endDateStr = data_fim.substring(0, 10);
 
-      console.log(`Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`);
+      debugLog(
+        'PedidosService',
+        `Filtrando pedidos entre as datas ${startDateStr} e ${endDateStr}`,
+      );
 
       // Precisamos gerar uma lista com todas as datas no intervalo
       // para contemplar problemas de timezone
@@ -856,7 +878,7 @@ export class PedidosService {
         current.setDate(current.getDate() + 1);
       }
 
-      console.log('Datas no intervalo para relatório:', dates);
+      debugLog('PedidosService', 'Datas no intervalo para relatório:', dates);
 
       // Condição where básica (status = ATIVO)
       const where: Prisma.PedidoWhereInput = {
@@ -878,10 +900,13 @@ export class PedidosService {
           },
         }));
 
-        console.log(`Criadas ${where.OR.length} condições OR para as datas no relatório`);
+        debugLog(
+          'PedidosService',
+          `Criadas ${where.OR.length} condições OR para as datas no relatório`,
+        );
       }
 
-      console.log('Consulta de relatório com where conditions:', where);
+      debugLog('PedidosService', 'Consulta de relatório com where conditions:', where);
 
       const pedidos = await this.prisma.pedido.findMany({
         where,
@@ -894,11 +919,14 @@ export class PedidosService {
         },
       });
 
-      console.log(`Encontrados ${pedidos.length} pedidos ativos no período para relatório`);
+      debugLog(
+        'PedidosService',
+        `Encontrados ${pedidos.length} pedidos ativos no período para relatório`,
+      );
 
       // Log para debug do primeiro pedido encontrado
       if (pedidos.length > 0) {
-        console.log('Primeiro pedido do relatório:', {
+        debugLog('PedidosService', 'Primeiro pedido do relatório:', {
           id: pedidos[0].id,
           status: pedidos[0].status,
           data: pedidos[0].data_pedido.toISOString(),

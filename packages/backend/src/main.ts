@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import express from 'express';
 import { AppModule } from './app.module';
+import { debugLog } from './common/utils/debug-log';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   // CORS Configuration
@@ -15,7 +17,7 @@ async function bootstrap() {
       ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
       : ['https://linos-frontend-6wef.onrender.com', 'https://sistema.linospanificadora.com'];
 
-    console.log(`[CORS] Ambiente de produção, origens permitidas:`, allowedOrigins);
+    debugLog('CORS', `Ambiente de produção, origens permitidas:`, allowedOrigins);
 
     app.enableCors({
       origin: (origin, callback) => {
@@ -23,7 +25,7 @@ async function bootstrap() {
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.log(`[CORS] Bloqueando requisição de origem não permitida: ${origin}`);
+          debugLog('CORS', `Bloqueando requisição de origem não permitida: ${origin}`);
           callback(new Error(`CORS não permitido para origem: ${origin}`), false);
         }
       },
@@ -35,7 +37,7 @@ async function bootstrap() {
   }
   // Em desenvolvimento, usar a configuração CORS do NestJS para localhost
   else {
-    console.log('[CORS] Ambiente de desenvolvimento, configurando CORS para localhost');
+    debugLog('CORS', '[CORS] Ambiente de desenvolvimento, configurando CORS para localhost');
 
     // Usar o enableCors do NestJS com regex para localhost em qualquer porta
     app.enableCors({
@@ -46,7 +48,7 @@ async function bootstrap() {
       optionsSuccessStatus: 204,
     });
 
-    console.log('[CORS] CORS configurado para permitir apenas hosts de desenvolvimento');
+    debugLog('CORS', '[CORS] CORS configurado para permitir apenas hosts de desenvolvimento');
   }
 
   // Configurar validação global
@@ -77,19 +79,19 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
 
-    console.log(
+    logger.log(
       `Documentação Swagger disponível em: http://localhost:${process.env.PORT || 3001}/api`,
     );
   } else {
-    console.log('Swagger desabilitado em ambiente de produção por motivos de segurança');
+    logger.log('Swagger desabilitado em ambiente de produção por motivos de segurança');
   }
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`Servidor rodando na porta ${port}`);
-  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`Uploads: ${uploadsPath}`);
+  logger.log(`Servidor rodando na porta ${port}`);
+  logger.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  logger.log(`Uploads: ${uploadsPath}`);
 }
 
 bootstrap();

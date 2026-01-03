@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { Prisma } from '@prisma/client';
+import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class ProdutosService {
@@ -12,7 +13,7 @@ export class ProdutosService {
 
   async create(createProdutoDto: CreateProdutoDto) {
     try {
-      console.log('Recebido:', createProdutoDto);
+      debugLog('ProdutosService', 'Recebido:', createProdutoDto);
 
       if (!createProdutoDto.nome) {
         throw new BadRequestException('Nome é obrigatório');
@@ -24,7 +25,7 @@ export class ProdutosService {
 
       // Normalizar o nome para comparação case-insensitive
       const nomeTratado = createProdutoDto.nome.trim();
-      console.log('Nome tratado:', nomeTratado);
+      debugLog('ProdutosService', 'Nome tratado:', nomeTratado);
 
       // Verificar se já existe produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
       const existingProduto = await this.prisma.produto.findFirst({
@@ -34,7 +35,7 @@ export class ProdutosService {
         },
       });
 
-      console.log('Produto existente:', existingProduto);
+      debugLog('ProdutosService', 'Produto existente:', existingProduto);
 
       if (
         existingProduto &&
@@ -53,7 +54,7 @@ export class ProdutosService {
         },
       });
 
-      console.log('Produto criado:', produto);
+      debugLog('ProdutosService', 'Produto criado:', produto);
       return produto;
     } catch (error) {
       console.error('Erro detalhado:', error);
@@ -155,7 +156,11 @@ export class ProdutosService {
 
   async update(id: number, updateProdutoDto: UpdateProdutoDto, includeDeleted = false) {
     try {
-      console.log('Atualizando produto:', { id, dados: updateProdutoDto, includeDeleted });
+      debugLog('ProdutosService', 'Atualizando produto:', {
+        id,
+        dados: updateProdutoDto,
+        includeDeleted,
+      });
 
       // Verificar se o produto existe (incluindo ou não deletados conforme parâmetro)
       const produtoExistente = await this.findOne(id, includeDeleted);
@@ -163,7 +168,7 @@ export class ProdutosService {
       // Se o produto foi soft-deleted e estamos atualizando seu status para ativo,
       // limpar o campo deleted_at
       if (produtoExistente.deleted_at && updateProdutoDto.status === 'ativo') {
-        console.log('Reativando produto anteriormente deletado');
+        debugLog('ProdutosService', 'Reativando produto anteriormente deletado');
         updateProdutoDto = {
           ...updateProdutoDto,
           deleted_at: null,
@@ -173,7 +178,7 @@ export class ProdutosService {
       // Se o nome está sendo atualizado, verificar duplicação
       if (updateProdutoDto.nome) {
         const nomeTratado = updateProdutoDto.nome.trim();
-        console.log('Nome tratado:', nomeTratado);
+        debugLog('ProdutosService', 'Nome tratado:', nomeTratado);
 
         // Verificar se já existe outro produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
         const existingProduto = await this.prisma.produto.findFirst({
@@ -184,7 +189,7 @@ export class ProdutosService {
           },
         });
 
-        console.log('Produto existente:', existingProduto);
+        debugLog('ProdutosService', 'Produto existente:', existingProduto);
 
         if (
           existingProduto &&
@@ -202,7 +207,7 @@ export class ProdutosService {
         data: updateProdutoDto,
       });
 
-      console.log('Produto atualizado:', produto);
+      debugLog('ProdutosService', 'Produto atualizado:', produto);
       return produto;
     } catch (error) {
       console.error('Erro detalhado:', error);

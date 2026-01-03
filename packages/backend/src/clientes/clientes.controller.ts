@@ -21,6 +21,7 @@ import { PageOptionsDto } from '../common/dto/page-options.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { debugLog } from '../common/utils/debug-log';
 
 @ApiTags('clientes')
 @Controller('clientes')
@@ -37,7 +38,7 @@ export class ClientesController {
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
   @ApiResponse({ status: 409, description: 'CNPJ já cadastrado.' })
   create(@Body() createClienteDto: CreateClienteDto) {
-    console.log('Controller recebeu createClienteDto:', createClienteDto);
+    debugLog('ClientesController', 'Recebeu createClienteDto:', createClienteDto);
     return this.clientesService.create(createClienteDto);
   }
 

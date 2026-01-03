@@ -6,6 +6,7 @@ import { mkdirSync, existsSync, copyFileSync, readFileSync, writeFileSync } from
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SupabaseService } from '../supabase/supabase.service';
+import { debugLog } from '../common/utils/debug-log';
 
 // Tipagem para retorno de PDF
 interface PdfResult {
@@ -161,9 +162,13 @@ export class PdfService implements OnModuleInit {
       const timestamp = Date.now();
 
       // Verificar se o campo observacoes está presente nos dados do pedido
-      console.log(`[DEBUG][PDF] Pedido tem observacoes:`, pedidoData.observacoes ? 'SIM' : 'NÃO');
+      debugLog(
+        'PdfService',
+        `[DEBUG][PDF] Pedido tem observacoes:`,
+        pedidoData.observacoes ? 'SIM' : 'NÃO',
+      );
       if (pedidoData.observacoes) {
-        console.log(`[DEBUG][PDF] Observacoes do pedido:`, pedidoData.observacoes);
+        debugLog('PdfService', `[DEBUG][PDF] Observacoes do pedido:`, pedidoData.observacoes);
       }
 
       // Gerar HTML do pedido
@@ -171,7 +176,11 @@ export class PdfService implements OnModuleInit {
       this.logger.log(`[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
 
       // LOGAR HTML GERADO PARA DEBUG
-      console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
+      debugLog(
+        'PdfService',
+        `[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`,
+        html?.substring(0, 300),
+      );
 
       await page.setContent(html);
 
@@ -196,7 +205,8 @@ export class PdfService implements OnModuleInit {
               },
               printBackground: true,
             });
-            console.log(
+            debugLog(
+              'PdfService',
               `[DEBUG][PDF] Buffer gerado para ${filename}: tamanho = ${pdfBuffer.length} bytes`,
             );
           } catch (err) {
@@ -210,7 +220,7 @@ export class PdfService implements OnModuleInit {
 
           // Caminho no Supabase
           const supabasePath = `pedidos/${filename}`;
-          console.log(`[DEBUG][PDF] Enviando para Supabase: ${supabasePath}`);
+          debugLog('PdfService', `[DEBUG][PDF] Enviando para Supabase: ${supabasePath}`);
 
           // === UPLOAD PARA SUPABASE ===
           const pdfUrl = await this.supabaseService.uploadFile(
@@ -218,7 +228,7 @@ export class PdfService implements OnModuleInit {
             pdfBuffer,
             'application/pdf',
           );
-          console.log(`[DEBUG][PDF] URL retornada pelo Supabase: ${pdfUrl}`);
+          debugLog('PdfService', `[DEBUG][PDF] URL retornada pelo Supabase: ${pdfUrl}`);
           this.logger.log(`PDF enviado para o Supabase: ${pdfUrl}`);
 
           // Retornar caminho e URL
@@ -589,14 +599,24 @@ export class PdfService implements OnModuleInit {
       this.logger.log('Iniciando geração de PDF para relatório');
 
       // LOG DETALHADO PARA DEBUG DE RELATÓRIO
-      console.log('[DEBUG][PDF][RELATORIO] reportData:', JSON.stringify(reportData, null, 2));
-      console.log(
+      debugLog(
+        'PdfService',
+        '[DEBUG][PDF][RELATORIO] reportData:',
+        JSON.stringify(reportData, null, 2),
+      );
+      debugLog(
+        'PdfService',
         '[DEBUG][PDF][RELATORIO] dataInicioRaw:',
         reportData.dataInicio || reportData.data_inicio,
       );
-      console.log('[DEBUG][PDF][RELATORIO] dataFimRaw:', reportData.dataFim || reportData.data_fim);
-      console.log('[DEBUG][PDF][RELATORIO] reportData.titulo:', reportData?.titulo);
-      console.log(
+      debugLog(
+        'PdfService',
+        '[DEBUG][PDF][RELATORIO] dataFimRaw:',
+        reportData.dataFim || reportData.data_fim,
+      );
+      debugLog('PdfService', '[DEBUG][PDF][RELATORIO] reportData.titulo:', reportData?.titulo);
+      debugLog(
+        'PdfService',
         '[DEBUG][PDF][RELATORIO] reportData.itens.length:',
         Array.isArray(reportData?.itens) ? reportData.itens.length : 'NÃO É ARRAY',
       );
@@ -633,7 +653,7 @@ export class PdfService implements OnModuleInit {
         throw new InternalServerErrorException('Dados do relatório inválidos ou incompletos');
       }
       if (reportData.itens.length === 0) {
-        console.warn(
+        this.logger.warn(
           '[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).',
         );
       }
@@ -652,7 +672,13 @@ export class PdfService implements OnModuleInit {
         );
         writeFileSync(pdfPath, emptyPDF);
         const relativePath = join(relatorioDir, relatorioFilename);
-        console.log('[DEBUG][PdfService] PDF gerado (mock):', pdfPath, '| relative:', relativePath);
+        debugLog(
+          'PdfService',
+          '[DEBUG][PdfService] PDF gerado (mock):',
+          pdfPath,
+          '| relative:',
+          relativePath,
+        );
         if (this.useSupabase) {
           return {
             path: relativePath,
@@ -921,11 +947,15 @@ export class PdfService implements OnModuleInit {
       `;
 
       // LOGAR HTML GERADO PARA DEBUG
-      console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
+      debugLog(
+        'PdfService',
+        `[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`,
+        html?.substring(0, 300),
+      );
       // SALVAR HTML COMPLETO PARA INSPEÇÃO MANUAL DO RELATÓRIO
       try {
         writeFileSync('/tmp/relatorio-teste.html', html);
-        console.log('[DEBUG][PDF] HTML do relatório salvo em /tmp/relatorio-teste.html');
+        debugLog('PdfService', '[DEBUG][PDF] HTML do relatório salvo em /tmp/relatorio-teste.html');
       } catch (e) {
         console.error('[DEBUG][PDF] Falha ao salvar HTML do relatório:', e);
       }
@@ -950,10 +980,11 @@ export class PdfService implements OnModuleInit {
               left: '20px',
             },
           });
-          console.log(`[DEBUG] Tamanho do PDF gerado: ${pdfBuffer.length} bytes`);
+          debugLog('PdfService', `[DEBUG] Tamanho do PDF gerado: ${pdfBuffer.length} bytes`);
           // Upload para Supabase
           const uploadPath = `relatorios/${filename}`;
-          console.log(
+          debugLog(
+            'PdfService',
             `(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`,
           );
           const uploadResp = await this.supabaseService.uploadFile(
@@ -962,7 +993,7 @@ export class PdfService implements OnModuleInit {
             'application/pdf',
           );
           if (uploadResp) {
-            console.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);
+            debugLog('PdfService', `Relatório PDF enviado para Supabase: ${uploadResp}`);
             return { path: uploadPath, url: uploadResp };
           } else {
             this.logger.error('Erro ao fazer upload do relatório PDF para Supabase.');

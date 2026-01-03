@@ -328,7 +328,10 @@ export class PedidosController {
                 return res.redirect(signedUrl);
               }
             } else {
-              debugLog('PedidosController', `[PDF] Supabase não disponível para gerar URL assinada`);
+              debugLog(
+                'PedidosController',
+                `[PDF] Supabase não disponível para gerar URL assinada`,
+              );
             }
           } catch (error) {
             console.error(

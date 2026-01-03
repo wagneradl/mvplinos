@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { Prisma } from '@prisma/client';
+import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class ClientesService {
@@ -17,7 +18,7 @@ export class ClientesService {
 
   async create(createClienteDto: CreateClienteDto) {
     try {
-      console.log('Recebido DTO do cliente:', createClienteDto);
+      debugLog('ClientesService', 'Recebido DTO do cliente:', createClienteDto);
       return await this.prisma.$transaction(async (prisma) => {
         // Verifica se já existe um cliente com o mesmo CNPJ
         const existingCliente = await prisma.cliente.findFirst({
@@ -103,8 +104,11 @@ export class ClientesService {
         where.deleted_at = null;
       }
 
-      console.log(`Atualizando cliente com ID ${id}, includeDeleted=${includeDeleted}`);
-      console.log('Dados para atualização:', updateClienteDto);
+      debugLog(
+        'ClientesService',
+        `Atualizando cliente com ID ${id}, includeDeleted=${includeDeleted}`,
+      );
+      debugLog('ClientesService', 'Dados para atualização:', updateClienteDto);
 
       const cliente = await this.prisma.cliente.findFirst({ where });
 
@@ -121,7 +125,7 @@ export class ClientesService {
           updateData.deleted_at = null;
         }
 
-        console.log('Dados finais para atualização:', updateData);
+        debugLog('ClientesService', 'Dados finais para atualização:', updateData);
 
         return await this.prisma.cliente.update({
           where: { id },
@@ -177,7 +181,7 @@ export class ClientesService {
       // Verificar se devemos incluir clientes soft-deleted
       if (includeDeleted) {
         // Se includeDeleted=true, não filtramos por deleted_at
-        console.log('Incluindo clientes soft-deleted na busca');
+        debugLog('ClientesService', 'Incluindo clientes soft-deleted na busca');
 
         // Filtrar por status se fornecido
         if (status) {
@@ -225,7 +229,7 @@ export class ClientesService {
         }
       }
 
-      console.log('Filtros aplicados:', where);
+      debugLog('ClientesService', 'Filtros aplicados:', where);
 
       const total = await this.prisma.cliente.count({ where });
       const items = await this.prisma.cliente.findMany({
@@ -239,7 +243,7 @@ export class ClientesService {
       const hasPreviousPage = page > 1;
       const hasNextPage = page < pageCount;
 
-      console.log('findAll - dados retornados:', {
+      debugLog('ClientesService', 'findAll - dados retornados:', {
         data: items.length,
         meta: {
           page,
@@ -278,7 +282,10 @@ export class ClientesService {
         where.deleted_at = null;
       }
 
-      console.log(`Buscando cliente com ID ${id}, includeDeleted=${includeDeleted}`);
+      debugLog(
+        'ClientesService',
+        `Buscando cliente com ID ${id}, includeDeleted=${includeDeleted}`,
+      );
 
       const cliente = await this.prisma.cliente.findFirst({
         where,
