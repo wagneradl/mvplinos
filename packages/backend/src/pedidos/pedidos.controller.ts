@@ -145,7 +145,16 @@ export class PedidosController {
       if (error instanceof BadRequestException) {
         // Loga o corpo da exceção se disponível
         if (error.getResponse) {
-          debugLog('PedidosController', 'BadRequestException response:', error.getResponse());
+          const resp = error.getResponse();
+          const safe =
+            typeof resp === 'object' && resp
+              ? {
+                  statusCode: (resp as any).statusCode,
+                  message: (resp as any).message,
+                  error: (resp as any).error,
+                }
+              : { message: String(resp) };
+          debugLog('PedidosController', 'BadRequestException payload:', safe);
         }
         throw error;
       }
