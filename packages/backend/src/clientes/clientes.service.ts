@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Page } from '../common/interfaces/page.interface';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
@@ -14,6 +15,8 @@ import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class ClientesService {
+  private readonly logger = new Logger(ClientesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createClienteDto: CreateClienteDto) {
@@ -52,7 +55,7 @@ export class ClientesService {
         throw error;
       }
       // Registrar detalhes do erro para facilitar depuração
-      console.error('Erro detalhado ao criar cliente:', error);
+      this.logger.error(`Erro detalhado ao criar cliente: ${error}`);
       if (error instanceof Error) {
         throw new BadRequestException(`Não foi possível criar o cliente: ${error.message}`);
       } else {
@@ -267,7 +270,7 @@ export class ClientesService {
         },
       };
     } catch (error) {
-      console.error('Error in findAll:', error);
+      this.logger.error(`Error in findAll: ${error}`);
       throw new BadRequestException('Erro ao buscar clientes');
     }
   }

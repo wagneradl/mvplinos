@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
@@ -12,6 +12,8 @@ import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class PedidosService {
+  private readonly logger = new Logger(PedidosService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly pdfService: PdfService,
@@ -200,7 +202,7 @@ export class PedidosService {
         });
       } catch (pdfError) {
         // Se houver erro na geração do PDF, logamos mas não falhamos o pedido todo
-        console.error('Erro ao gerar PDF, mas o pedido foi criado:', pdfError);
+        this.logger.error(`Erro ao gerar PDF, mas o pedido foi criado: ${pdfError}`);
         debugLog('PedidosService', 'Pedido criado com ID:', pedido.id);
 
         // Retornar o pedido mesmo sem o PDF para não perder a operação
@@ -287,7 +289,7 @@ export class PedidosService {
             debugLog('PedidosService', `Criadas ${where.OR.length} condições OR para as datas`);
           }
         } catch (error) {
-          console.error('Erro ao processar filtro de datas:', error);
+          this.logger.error(`Erro ao processar filtro de datas: ${error}`);
           // Não aplicamos o filtro de data se houver erro
           if (error instanceof Error) {
             debugLog('PedidosService', 'Erro detalhado:', error.message);
@@ -341,7 +343,7 @@ export class PedidosService {
         },
       };
     } catch (error) {
-      console.error('Erro ao buscar pedidos:', error);
+      this.logger.error(`Erro ao buscar pedidos: ${error}`);
       if (error instanceof Error) {
         throw new BadRequestException('Erro ao buscar pedidos: ' + error.message);
       } else {
@@ -402,7 +404,7 @@ export class PedidosService {
       const pedido = await this.findOne(id);
 
       if (!pedido) {
-        console.error(`[PDF] Não foi possível regenerar PDF: Pedido ${id} não encontrado`);
+        this.logger.error(`[PDF] Não foi possível regenerar PDF: Pedido ${id} não encontrado`);
         return null;
       }
 
@@ -447,9 +449,8 @@ export class PedidosService {
         return pdfResult.url || pdfResult.path;
       }
     } catch (error) {
-      console.error(
-        `[PDF] Erro ao regenerar PDF para pedido ${id}:`,
-        error instanceof Error ? error.message : error,
+      this.logger.error(
+        `[PDF] Erro ao regenerar PDF para pedido ${id}: ${error instanceof Error ? error.message : error}`,
       );
       return null;
     }
@@ -471,7 +472,7 @@ export class PedidosService {
         `[PDF] Caminho do PDF atualizado com sucesso para pedido ${id}: ${path}`,
       );
     } catch (error) {
-      console.error(`[PDF] Erro ao atualizar caminho do PDF para pedido ${id}:`, error);
+      this.logger.error(`[PDF] Erro ao atualizar caminho do PDF para pedido ${id}: ${error}`);
       // Não lançamos o erro para evitar interromper o fluxo principal
     }
   }
@@ -828,7 +829,7 @@ export class PedidosService {
         return pdfResult;
       }
     } catch (error) {
-      console.error('Erro ao gerar PDF do relatório:', error);
+      this.logger.error(`Erro ao gerar PDF do relatório: ${error}`);
       if (error instanceof Error) {
         throw new BadRequestException(`Erro ao gerar PDF do relatório: ${error.message}`);
       }
@@ -968,7 +969,7 @@ export class PedidosService {
         cliente: cliente_id ? pedidos.find((p) => p.cliente_id === cliente_id)?.cliente : null,
       };
     } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
+      this.logger.error(`Erro ao gerar relatório: ${error}`);
       if (error instanceof Error) {
         throw new BadRequestException(`Erro ao gerar relatório: ${error.message}`);
       }

@@ -12,6 +12,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -41,6 +42,8 @@ import { debugLog } from '../common/utils/debug-log';
 @UseGuards(JwtAuthGuard, PermissoesGuard)
 @ApiBearerAuth()
 export class PedidosController {
+  private readonly logger = new Logger(PedidosController.name);
+
   constructor(
     private readonly pedidosService: PedidosService,
     private readonly supabaseService: SupabaseService,
@@ -111,7 +114,7 @@ export class PedidosController {
       if (typeof pdfResult === 'string') {
         // Local file path
         if (!existsSync(pdfResult)) {
-          console.error(`Arquivo PDF não encontrado: ${pdfResult}`);
+          this.logger.error(`Arquivo PDF não encontrado: ${pdfResult}`);
           throw new NotFoundException('PDF não encontrado');
         }
         res.setHeader('Content-Type', 'application/pdf');
@@ -136,20 +139,19 @@ export class PedidosController {
         });
       }
     } catch (error) {
-      console.error(
-        'Erro ao gerar PDF do relatório:',
-        error instanceof Error ? error.message : error,
+      this.logger.error(
+        `Erro ao gerar PDF do relatório: ${error instanceof Error ? error.message : error}`,
       );
       if (error instanceof BadRequestException) {
         // Loga o corpo da exceção se disponível
         if (error.getResponse) {
-          console.error('BadRequestException response:', error.getResponse());
+          debugLog('PedidosController', 'BadRequestException response:', error.getResponse());
         }
         throw error;
       }
       // Loga stacktrace para erros desconhecidos
       if (error instanceof Error && error.stack) {
-        console.error('Stacktrace:', error.stack);
+        debugLog('PedidosController', 'Stacktrace:', error.stack);
       }
       throw new BadRequestException('Erro ao gerar PDF do relatório');
     }
@@ -300,7 +302,7 @@ export class PedidosController {
                 return res.redirect(signedUrl);
               }
             } catch (error) {
-              console.error(
+              this.logger.error(
                 `[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
               );
               // Continuar para os próximos métodos
@@ -334,7 +336,7 @@ export class PedidosController {
               );
             }
           } catch (error) {
-            console.error(
+            this.logger.error(
               `[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             );
             // Continuar para os próximos métodos
@@ -402,9 +404,8 @@ export class PedidosController {
               await this.pedidosService.update(id, { pdf_path: path });
               debugLog('PedidosController', `[PDF] Caminho do PDF atualizado para: ${path}`);
             } catch (updateError) {
-              console.error(
-                '[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado:',
-                updateError,
+              this.logger.error(
+                `[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado: ${updateError}`,
               );
             }
           }
@@ -437,7 +438,7 @@ export class PedidosController {
           debugLog('PedidosController', '[PDF] Método regeneratePdf não está disponível');
         }
       } catch (regenerateError) {
-        console.error('[PDF] Erro ao regenerar PDF:', regenerateError);
+        this.logger.error(`[PDF] Erro ao regenerar PDF: ${regenerateError}`);
         // Continuamos para o erro 404 se a regeneração falhar
       }
 
@@ -448,9 +449,8 @@ export class PedidosController {
       );
       throw new NotFoundException(`PDF não disponível para o pedido ${id}. Tente gerar novamente.`);
     } catch (error) {
-      console.error(
-        '[PDF] Erro ao fazer download do PDF:',
-        error instanceof Error ? error.message : error,
+      this.logger.error(
+        `[PDF] Erro ao fazer download do PDF: ${error instanceof Error ? error.message : error}`,
       );
       if (error instanceof NotFoundException) {
         throw error;

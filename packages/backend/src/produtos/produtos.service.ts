@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Page } from '../common/interfaces/page.interface';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -9,6 +9,8 @@ import { debugLog } from '../common/utils/debug-log';
 
 @Injectable()
 export class ProdutosService {
+  private readonly logger = new Logger(ProdutosService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createProdutoDto: CreateProdutoDto) {
@@ -57,7 +59,7 @@ export class ProdutosService {
       debugLog('ProdutosService', 'Produto criado:', produto);
       return produto;
     } catch (error) {
-      console.error('Erro detalhado:', error);
+      this.logger.error(`Erro detalhado: ${error}`);
 
       if (error instanceof BadRequestException) {
         throw error;
@@ -210,7 +212,7 @@ export class ProdutosService {
       debugLog('ProdutosService', 'Produto atualizado:', produto);
       return produto;
     } catch (error) {
-      console.error('Erro detalhado:', error);
+      this.logger.error(`Erro detalhado: ${error}`);
 
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;

@@ -173,7 +173,7 @@ export class PdfService implements OnModuleInit {
 
       // Gerar HTML do pedido
       const html = this.generatePedidoHTML(pedidoData, logoBase64);
-      this.logger.log(`[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
+      debugLog('PdfService', `[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
 
       // LOGAR HTML GERADO PARA DEBUG
       debugLog(
@@ -210,8 +210,8 @@ export class PdfService implements OnModuleInit {
               `[DEBUG][PDF] Buffer gerado para ${filename}: tamanho = ${pdfBuffer.length} bytes`,
             );
           } catch (err) {
-            console.error(
-              `[DEBUG][PDF] Erro ao gerar buffer do PDF: ${err instanceof Error ? err.message : err}`,
+            this.logger.error(
+              `Erro ao gerar buffer do PDF: ${err instanceof Error ? err.message : err}`,
             );
             throw err;
           }
@@ -657,7 +657,7 @@ export class PdfService implements OnModuleInit {
           '[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).',
         );
       }
-      this.logger.log(`[DEBUG] dataInicioRaw: ${dataInicioRaw}, dataFimRaw: ${dataFimRaw}`);
+      debugLog('PdfService', `[DEBUG] dataInicioRaw: ${dataInicioRaw}, dataFimRaw: ${dataFimRaw}`);
 
       // Em ambiente de teste, gerar um PDF simples
       if (this.isMock) {
@@ -715,7 +715,10 @@ export class PdfService implements OnModuleInit {
       const dataFim = dataFimRaw
         ? format(new Date(dataFimRaw), 'dd/MM/yyyy', { locale: ptBR })
         : '';
-      this.logger.log(`[DEBUG] dataInicio formatado: ${dataInicio}, dataFim formatado: ${dataFim}`);
+      debugLog(
+        'PdfService',
+        `[DEBUG] dataInicio formatado: ${dataInicio}, dataFim formatado: ${dataFim}`,
+      );
 
       // Gerar HTML do relatório
       const html = `
@@ -964,7 +967,8 @@ export class PdfService implements OnModuleInit {
       const filename = `relatorio-${reportData.tipo || 'geral'}-${timestamp}.pdf`;
 
       if (this.useSupabase) {
-        this.logger.log(
+        debugLog(
+          'PdfService',
           `(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${filename}', bufferSize=${html.length}`,
         );
         this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
