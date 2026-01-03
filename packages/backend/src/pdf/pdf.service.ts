@@ -646,9 +646,9 @@ export class PdfService implements OnModuleInit {
         !dataFimRaw ||
         !Array.isArray(reportData.itens)
       ) {
-        console.error(
-          '[ERRO][PDF][RELATORIO] Dados do relatório inválidos:',
-          JSON.stringify(reportData, null, 2),
+        this.logger.error(
+          '[ERRO][PDF][RELATORIO] Dados do relatório inválidos: ' +
+            JSON.stringify(reportData, null, 2),
         );
         throw new InternalServerErrorException('Dados do relatório inválidos ou incompletos');
       }
