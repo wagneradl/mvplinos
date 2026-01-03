@@ -124,7 +124,7 @@ export class PedidosController {
         const signedUrl = await this.supabaseService.getSignedUrl(pdfResult.path, 300); // 5 minutos
         debugLog('PedidosController', `[DEBUG] (Relatório) signedUrl: ${signedUrl}`);
         if (!signedUrl) {
-          console.error('[DEBUG] (Relatório) Falha ao gerar signed URL!');
+          debugLog('PedidosController', '[DEBUG] (Relatório) Falha ao gerar signed URL!');
           throw new InternalServerErrorException(
             'Falha ao gerar link seguro para o PDF do relatório',
           );

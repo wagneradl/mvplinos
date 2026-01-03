@@ -957,7 +957,7 @@ export class PdfService implements OnModuleInit {
         writeFileSync('/tmp/relatorio-teste.html', html);
         debugLog('PdfService', '[DEBUG][PDF] HTML do relatório salvo em /tmp/relatorio-teste.html');
       } catch (e) {
-        console.error('[DEBUG][PDF] Falha ao salvar HTML do relatório:', e);
+        debugLog('PdfService', '[DEBUG][PDF] Falha ao salvar HTML do relatório:', e);
       }
       await page.setContent(html);
       const timestamp = Date.now();
