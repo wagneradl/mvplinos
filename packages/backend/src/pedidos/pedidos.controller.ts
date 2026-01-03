@@ -13,7 +13,14 @@ import {
   InternalServerErrorException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
@@ -25,12 +32,13 @@ import { join, basename } from 'path';
 import { existsSync } from 'fs';
 import { SupabaseService } from '../supabase/supabase.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Req } from '@nestjs/common';
+import { PermissoesGuard } from '../auth/guards/permissoes.guard';
+import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
 
 @ApiTags('pedidos')
 @Controller('pedidos')
+@UseGuards(JwtAuthGuard, PermissoesGuard)
+@ApiBearerAuth()
 export class PedidosController {
   constructor(
     private readonly pedidosService: PedidosService,
@@ -38,30 +46,35 @@ export class PedidosController {
   ) {}
 
   @Post()
+  @RequerPermissoes('pedidos:criar')
   @ApiOperation({ summary: 'Criar novo pedido' })
   @ApiResponse({ status: 201, description: 'Pedido criado com sucesso.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   create(@Body() createPedidoDto: CreatePedidoDto) {
     console.log('Controller recebeu createPedidoDto:', createPedidoDto);
     return this.pedidosService.create(createPedidoDto);
   }
 
   @Get('reports/summary')
-  @ApiOperation({ 
+  @RequerPermissoes('relatorios:ver')
+  @ApiOperation({
     summary: 'Gerar relatório de pedidos',
-    description: 'Gera relatório de pedidos com agrupamento por período e filtros'
+    description: 'Gera relatório de pedidos com agrupamento por período e filtros',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Relatório gerado com sucesso.' 
+  @ApiResponse({
+    status: 200,
+    description: 'Relatório gerado com sucesso.',
   })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   async generateReport(@Query() reportDto: ReportPedidoDto) {
     return this.pedidosService.generateReport(reportDto);
   }
 
   @Get('reports/pdf')
+  @RequerPermissoes('relatorios:exportar')
   @ApiOperation({
     summary: 'Gerar PDF de relatório de pedidos',
-    description: 'Gera um arquivo PDF com o relatório de pedidos para o período especificado'
+    description: 'Gera um arquivo PDF com o relatório de pedidos para o período especificado',
   })
   @ApiResponse({
     status: 200,
@@ -70,21 +83,21 @@ export class PedidosController {
       'application/pdf': {
         schema: {
           type: 'string',
-          format: 'binary'
-        }
-      }
-    }
+          format: 'binary',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 400,
-    description: 'Parâmetros inválidos ou erro ao gerar o relatório'
+    description: 'Parâmetros inválidos ou erro ao gerar o relatório',
   })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   async generateReportPdf(
     @Query('data_inicio') data_inicio: string,
     @Query('data_fim') data_fim: string,
     @Query('cliente_id') cliente_id: number,
     @Res() res: Response,
-    @Req() req: any
   ) {
     try {
       const reportDto: ReportPedidoDto = { data_inicio, data_fim, cliente_id };
@@ -107,16 +120,21 @@ export class PedidosController {
         console.log(`[DEBUG] (Relatório) signedUrl: ${signedUrl}`);
         if (!signedUrl) {
           console.error('[DEBUG] (Relatório) Falha ao gerar signed URL!');
-          throw new InternalServerErrorException('Falha ao gerar link seguro para o PDF do relatório');
+          throw new InternalServerErrorException(
+            'Falha ao gerar link seguro para o PDF do relatório',
+          );
         }
         console.log('[DEBUG] (Relatório) Respondendo JSON com signedUrl');
         return res.json({
           url: signedUrl,
-          path: pdfResult.path
+          path: pdfResult.path,
         });
       }
     } catch (error) {
-      console.error('Erro ao gerar PDF do relatório:', error instanceof Error ? error.message : error);
+      console.error(
+        'Erro ao gerar PDF do relatório:',
+        error instanceof Error ? error.message : error,
+      );
       if (error instanceof BadRequestException) {
         // Loga o corpo da exceção se disponível
         if (error.getResponse) {
@@ -133,100 +151,117 @@ export class PedidosController {
   }
 
   @Get()
-  @ApiOperation({ 
+  @RequerPermissoes('pedidos:listar')
+  @ApiOperation({
     summary: 'Listar todos os pedidos',
-    description: 'Lista pedidos com suporte a filtros por data e cliente, além de paginação'
+    description: 'Lista pedidos com suporte a filtros por data e cliente, além de paginação',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Lista de pedidos retornada com metadados de paginação.' 
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de pedidos retornada com metadados de paginação.',
   })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   findAll(@Query() filterDto: FilterPedidoDto) {
     console.log('Controller recebeu request para listar pedidos com filtros:', filterDto);
-    
+
     // Log detalhado para troubleshooting do filtro de datas
     if (filterDto.startDate && filterDto.endDate) {
-      console.log(`Controller: Filtrando pedidos de ${filterDto.startDate} até ${filterDto.endDate}`);
+      console.log(
+        `Controller: Filtrando pedidos de ${filterDto.startDate} até ${filterDto.endDate}`,
+      );
     }
-    
+
     return this.pedidosService.findAll(filterDto);
   }
 
   @Get(':id')
+  @RequerPermissoes('pedidos:ver')
   @ApiOperation({ summary: 'Buscar pedido por ID' })
   @ApiResponse({ status: 200, description: 'Pedido encontrado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   findOne(@Param('id') id: string) {
     return this.pedidosService.findOne(+id);
   }
 
   @Patch(':id')
+  @RequerPermissoes('pedidos:editar')
   @ApiOperation({ summary: 'Atualizar pedido' })
   @ApiResponse({ status: 200, description: 'Pedido atualizado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   update(@Param('id') id: string, @Body() updatePedidoDto: UpdatePedidoDto) {
     return this.pedidosService.update(+id, updatePedidoDto);
   }
 
   @Delete(':id')
+  @RequerPermissoes('pedidos:cancelar')
   @ApiOperation({ summary: 'Remover pedido (soft delete)' })
   @ApiResponse({ status: 200, description: 'Pedido removido.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   remove(@Param('id') id: string) {
     return this.pedidosService.remove(+id);
   }
 
   @Post(':id/repeat')
+  @RequerPermissoes('pedidos:criar')
   @ApiOperation({ summary: 'Repetir pedido existente' })
   @ApiResponse({ status: 201, description: 'Novo pedido criado baseado no original.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   repeat(@Param('id') id: string) {
     return this.pedidosService.repeat(+id);
   }
 
   @Get(':id/pdf')
-  @UseGuards(JwtAuthGuard)
+  @RequerPermissoes('pedidos:ver')
   @ApiOperation({ summary: 'Download do PDF de um pedido' })
   @ApiResponse({ status: 200, description: 'Retorna o arquivo PDF' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   @ApiResponse({ status: 404, description: 'PDF não encontrado' })
   @ApiParam({ name: 'id', description: 'ID do pedido' })
-  async downloadPdf(
-    @Param('id', ParseIntPipe) id: number,
-    @Res() res: Response,
-  ) {
+  async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     try {
       // Verificar ambiente e configurações
       const isProduction = process.env.NODE_ENV === 'production';
       console.log(`[PDF] Ambiente: ${isProduction ? 'Produção' : 'Desenvolvimento'}`);
       console.log(`[PDF] PDF_STORAGE_PATH: ${process.env.PDF_STORAGE_PATH || 'não configurado'}`);
       console.log(`[PDF] UPLOADS_PATH: ${process.env.UPLOADS_PATH || 'não configurado'}`);
-      
+
       // Verificar disponibilidade do Supabase
       const supabaseAvailable = this.supabaseService && this.supabaseService.isAvailable();
       console.log(`[PDF] Supabase disponível: ${supabaseAvailable}`);
       if (supabaseAvailable) {
         console.log(`[PDF] Bucket Supabase: ${this.supabaseService.getBucketName()}`);
         console.log(`[PDF] URL Supabase: ${process.env.SUPABASE_URL}`);
-        console.log(`[PDF] SERVICE_ROLE_KEY configurada: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`);
+        console.log(
+          `[PDF] SERVICE_ROLE_KEY configurada: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        );
       }
 
       // Buscar o pedido com informações completas
       const pedido = await this.pedidosService.findOne(id);
-      
+
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
       }
 
-      console.log(`[PDF] Buscando PDF para pedido ${id}, caminho: ${pedido.pdf_path}, url: ${pedido.pdf_url}`);
+      console.log(
+        `[PDF] Buscando PDF para pedido ${id}, caminho: ${pedido.pdf_path}, url: ${pedido.pdf_url}`,
+      );
 
       // ETAPA 1: Se o pedido tem URL do Supabase, redirecionar para lá (prioridade mais alta)
       if (pedido.pdf_url) {
         // Verificar se a URL é válida para o ambiente atual
-        const isLocalUrl = pedido.pdf_url.includes('localhost') || pedido.pdf_url.includes('127.0.0.1');
-        
+        const isLocalUrl =
+          pedido.pdf_url.includes('localhost') || pedido.pdf_url.includes('127.0.0.1');
+
         // Em produção, nunca usar URLs locais
         if (isProduction && isLocalUrl) {
-          console.log(`[PDF] URL local detectada em produção: ${pedido.pdf_url}, ignorando e gerando nova URL`);
+          console.log(
+            `[PDF] URL local detectada em produção: ${pedido.pdf_url}, ignorando e gerando nova URL`,
+          );
           // Extrair o caminho do arquivo da URL local para usar com o Supabase
           const pathMatch = pedido.pdf_url.match(/\/uploads\/pdfs\/(.*\.pdf)$/);
           const pdfPath = pathMatch ? `pedidos/${pathMatch[1]}` : null;
-          
+
           if (pdfPath && supabaseAvailable) {
             try {
               console.log(`[PDF] Tentando gerar URL do Supabase para: ${pdfPath}`);
@@ -238,7 +273,9 @@ export class PedidosController {
                 return res.redirect(signedUrl);
               }
             } catch (error) {
-              console.error(`[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+              console.error(
+                `[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+              );
               // Continuar para os próximos métodos
             }
           }
@@ -247,10 +284,12 @@ export class PedidosController {
         else if (pedido.pdf_url.startsWith('http') && (!isProduction || !isLocalUrl)) {
           console.log(`[PDF] Redirecionando para URL: ${pedido.pdf_url}`);
           return res.redirect(pedido.pdf_url);
-        } 
+        }
         // Se a URL não for completa, verificar se é um caminho do Supabase
         else if (!pedido.pdf_url.startsWith('http')) {
-          console.log(`[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`);
+          console.log(
+            `[PDF] URL não é completa, tentando obter URL do Supabase para: ${pedido.pdf_url}`,
+          );
           try {
             if (supabaseAvailable) {
               const signedUrl = await this.supabaseService.getSignedUrl(pedido.pdf_url, 3600); // Aumentar tempo para 1 hora
@@ -264,18 +303,20 @@ export class PedidosController {
               console.warn(`[PDF] Supabase não disponível para gerar URL assinada`);
             }
           } catch (error) {
-            console.error(`[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+            console.error(
+              `[PDF] Erro ao gerar URL assinada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+            );
             // Continuar para os próximos métodos
           }
         }
       }
-      
+
       // ETAPA 2: Se o pedido tem o caminho Supabase (formato "pedidos/arquivo.pdf"), usar o serviço Supabase
       if (pedido.pdf_path && pedido.pdf_path.startsWith('pedidos/') && this.supabaseService) {
         try {
           console.log(`[PDF] Tentando baixar do Supabase: ${pedido.pdf_path}`);
           const supabaseResponse = await this.supabaseService.downloadFile(pedido.pdf_path);
-          
+
           if (supabaseResponse && supabaseResponse.data) {
             const arrayBuffer = await supabaseResponse.data.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
@@ -284,51 +325,59 @@ export class PedidosController {
             return res.send(buffer);
           }
         } catch (error) {
-          console.log(`[PDF] Erro ao baixar do Supabase: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          console.log(
+            `[PDF] Erro ao baixar do Supabase: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
           // Continuar para o próximo método se o Supabase falhar
         }
       }
 
       // ETAPA 3: Verificar caminhos locais em várias possibilidades
       // Usar a variável isProduction já declarada anteriormente
-      const pdfStoragePath = process.env.PDF_STORAGE_PATH || 
-        (isProduction ? '/opt/render/project/src/uploads/pdfs' : join(process.cwd(), 'uploads', 'pdfs'));
+      const pdfStoragePath =
+        process.env.PDF_STORAGE_PATH ||
+        (isProduction
+          ? '/opt/render/project/src/uploads/pdfs'
+          : join(process.cwd(), 'uploads', 'pdfs'));
       const uploadsPath = process.env.UPLOADS_PATH || '/opt/render/project/src/uploads';
       const pdfFileName = `pedido-${id}.pdf`;
 
       const possiblePaths = [
         // Caminho exato como armazenado no banco
         pedido.pdf_path,
-        
+
         // Caminhos relativos e absolutos baseados em convenções
         join(pdfStoragePath, basename(pedido.pdf_path || pdfFileName)),
         join(process.cwd(), pedido.pdf_path || ''), // Relativo ao CWD
         join(process.cwd(), 'uploads', 'pdfs', pdfFileName),
         join(uploadsPath, 'pdfs', pdfFileName),
         // Alguns caminhos adicionais que podem estar sendo usados
-        join(uploadsPath, pdfFileName)
+        join(uploadsPath, pdfFileName),
       ].filter(Boolean); // Remover entradas undefined/null/empty
-      
+
       // Verificar cada caminho possível
       for (const path of possiblePaths) {
         console.log(`[PDF] Verificando caminho: ${path}`);
         if (path && existsSync(path)) {
           console.log(`[PDF] Arquivo encontrado em: ${path}`);
-          
+
           // Atualizar o caminho do PDF no banco de dados se ele for diferente do armazenado
           if (path !== pedido.pdf_path) {
             try {
               await this.pedidosService.update(id, { pdf_path: path });
               console.log(`[PDF] Caminho do PDF atualizado para: ${path}`);
             } catch (updateError) {
-              console.error('[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado:', updateError);
+              console.error(
+                '[PDF] Erro ao atualizar caminho do PDF, mas arquivo será enviado:',
+                updateError,
+              );
             }
           }
-          
+
           return res.sendFile(path);
         }
       }
-      
+
       // ETAPA 4: Tentar regenerar o PDF se não foi encontrado
       try {
         console.log(`[PDF] PDF não encontrado. Tentando regenerar para o pedido ${id}...`);
@@ -340,7 +389,7 @@ export class PedidosController {
             // Se o resultado for uma URL, redirecionar
             if (typeof result === 'string' && result.startsWith('http')) {
               return res.redirect(result);
-            } 
+            }
             // Se for um caminho local, enviar o arquivo
             else if (typeof result === 'string' && existsSync(result)) {
               return res.sendFile(result);
@@ -353,23 +402,30 @@ export class PedidosController {
         console.error('[PDF] Erro ao regenerar PDF:', regenerateError);
         // Continuamos para o erro 404 se a regeneração falhar
       }
-      
+
       // Se chegou aqui, o PDF não foi encontrado por nenhum método
       console.log(`[PDF] PDF não encontrado por nenhum método para o pedido ${id}`);
       throw new NotFoundException(`PDF não disponível para o pedido ${id}. Tente gerar novamente.`);
     } catch (error) {
-      console.error('[PDF] Erro ao fazer download do PDF:', error instanceof Error ? error.message : error);
+      console.error(
+        '[PDF] Erro ao fazer download do PDF:',
+        error instanceof Error ? error.message : error,
+      );
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException(`Erro ao processar PDF do pedido: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      throw new InternalServerErrorException(
+        `Erro ao processar PDF do pedido: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
     }
   }
 
   @Patch(':id/itens/:itemId')
+  @RequerPermissoes('pedidos:editar')
   @ApiOperation({ summary: 'Atualizar quantidade de um item do pedido' })
   @ApiParam({ name: 'id', description: 'ID do pedido' })
   @ApiParam({ name: 'itemId', description: 'ID do item do pedido' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -377,15 +433,15 @@ export class PedidosController {
         quantidade: {
           type: 'number',
           description: 'Nova quantidade do item',
-          example: 2
-        }
-      }
-    }
+          example: 2,
+        },
+      },
+    },
   })
   async updateItemQuantidade(
     @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
-    @Body('quantidade', ParseFloatPipe) quantidade: number
+    @Body('quantidade', ParseFloatPipe) quantidade: number,
   ) {
     return this.pedidosService.updateItemQuantidade(id, itemId, quantidade);
   }

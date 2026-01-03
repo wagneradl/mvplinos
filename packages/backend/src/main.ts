@@ -32,20 +32,20 @@ async function bootstrap() {
       credentials: true,
       optionsSuccessStatus: 204,
     });
-  } 
+  }
   // Em desenvolvimento, usar a configuração CORS do NestJS para localhost
   else {
     console.log('[CORS] Ambiente de desenvolvimento, configurando CORS para localhost');
-    
+
     // Usar o enableCors do NestJS com regex para localhost em qualquer porta
     app.enableCors({
       origin: /^https?:\/\/localhost:\d+$/,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       credentials: true,
       preflightContinue: false,
-      optionsSuccessStatus: 204
+      optionsSuccessStatus: 204,
     });
-    
+
     console.log('[CORS] CORS configurado para permitir apenas hosts de desenvolvimento');
   }
 
@@ -76,8 +76,10 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
-    
-    console.log(`Documentação Swagger disponível em: http://localhost:${process.env.PORT || 3001}/api`);
+
+    console.log(
+      `Documentação Swagger disponível em: http://localhost:${process.env.PORT || 3001}/api`,
+    );
   } else {
     console.log('Swagger desabilitado em ambiente de produção por motivos de segurança');
   }

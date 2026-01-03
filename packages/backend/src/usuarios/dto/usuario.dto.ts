@@ -38,15 +38,15 @@ export class UsuarioResponseDto {
   @ApiProperty({ example: 'ativo' })
   status: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: {
       id: 1,
       nome: 'Administrador',
       permissoes: {
         clientes: ['read', 'write', 'delete'],
-        produtos: ['read', 'write', 'delete']
-      }
-    }
+        produtos: ['read', 'write', 'delete'],
+      },
+    },
   })
   papel: {
     id: number;

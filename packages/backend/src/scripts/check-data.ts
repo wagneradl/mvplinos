@@ -11,10 +11,10 @@ async function checkData() {
         cliente: true,
         itensPedido: {
           include: {
-            produto: true
-          }
-        }
-      }
+            produto: true,
+          },
+        },
+      },
     });
 
     console.log('Pedido:', JSON.stringify(pedido, null, 2));

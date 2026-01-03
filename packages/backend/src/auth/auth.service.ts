@@ -35,7 +35,13 @@ export class AuthService {
       sub: usuario.id,
       email: usuario.email,
       nome: usuario.nome,
-      papel: usuario.papel.nome,
+      papel: {
+        id: usuario.papel.id,
+        nome: usuario.papel.nome,
+        codigo: usuario.papel.codigo,
+        tipo: usuario.papel.tipo,
+        nivel: usuario.papel.nivel,
+      },
       permissoes,
     };
 
@@ -48,6 +54,9 @@ export class AuthService {
         papel: {
           id: usuario.papel.id,
           nome: usuario.papel.nome,
+          codigo: usuario.papel.codigo,
+          tipo: usuario.papel.tipo,
+          nivel: usuario.papel.nivel,
           permissoes,
         },
       },

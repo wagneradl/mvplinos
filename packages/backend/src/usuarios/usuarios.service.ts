@@ -44,7 +44,7 @@ export class UsuariosService {
     const permissoes = JSON.parse(usuarioCriado.papel.permissoes);
 
     // Remover a senha do retorno
-    const { senha, ...usuario } = usuarioCriado;
+    const { senha: _senha, ...usuario } = usuarioCriado;
     return {
       ...usuario,
       papel: {
@@ -65,10 +65,10 @@ export class UsuariosService {
     });
 
     // Mapear os usuários para remover a senha e processar permissões
-    return usuarios.map(usuario => {
-      const { senha, ...usuarioSemSenha } = usuario;
+    return usuarios.map((usuario) => {
+      const { senha: _senha, ...usuarioSemSenha } = usuario;
       const permissoes = JSON.parse(usuario.papel.permissoes);
-      
+
       return {
         ...usuarioSemSenha,
         papel: {
@@ -95,7 +95,7 @@ export class UsuariosService {
     const permissoes = JSON.parse(usuario.papel.permissoes);
 
     // Remover a senha do retorno
-    const { senha, ...usuarioSemSenha } = usuario;
+    const { senha: _senha, ...usuarioSemSenha } = usuario;
     return {
       ...usuarioSemSenha,
       papel: {
@@ -158,7 +158,7 @@ export class UsuariosService {
     const permissoes = JSON.parse(usuarioAtualizado.papel.permissoes);
 
     // Remover a senha do retorno
-    const { senha, ...usuario } = usuarioAtualizado;
+    const { senha: _senha, ...usuario } = usuarioAtualizado;
     return {
       ...usuario,
       papel: {
@@ -190,9 +190,9 @@ export class UsuariosService {
 
   async findPapeis() {
     const papeis = await this.prisma.papel.findMany();
-    
+
     // Processar permissões para cada papel
-    return papeis.map(papel => {
+    return papeis.map((papel) => {
       const permissoes = JSON.parse(papel.permissoes);
       return {
         ...papel,

@@ -1,11 +1,18 @@
-import { IsNumber, IsArray, ValidateNested, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateItemPedidoDto {
   @ApiProperty({
     description: 'ID do produto',
-    example: 1
+    example: 1,
   })
   @IsNumber()
   @IsNotEmpty()
@@ -13,7 +20,7 @@ export class CreateItemPedidoDto {
 
   @ApiProperty({
     description: 'Quantidade do produto',
-    example: 5
+    example: 5,
   })
   @IsNumber()
   @IsNotEmpty()
@@ -23,7 +30,7 @@ export class CreateItemPedidoDto {
 export class CreatePedidoDto {
   @ApiProperty({
     description: 'ID do cliente',
-    example: 1
+    example: 1,
   })
   @IsNumber()
   @IsNotEmpty()
@@ -32,10 +39,12 @@ export class CreatePedidoDto {
   @ApiProperty({
     description: 'Lista de itens do pedido',
     type: [CreateItemPedidoDto],
-    example: [{
-      produto_id: 1,
-      quantidade: 5
-    }]
+    example: [
+      {
+        produto_id: 1,
+        quantidade: 5,
+      },
+    ],
   })
   @IsArray()
   @IsNotEmpty()
@@ -46,7 +55,7 @@ export class CreatePedidoDto {
   @ApiProperty({
     description: 'Observações sobre o pedido (opcional)',
     example: 'Entregar pela porta dos fundos',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()

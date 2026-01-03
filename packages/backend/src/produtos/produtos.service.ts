@@ -13,7 +13,7 @@ export class ProdutosService {
   async create(createProdutoDto: CreateProdutoDto) {
     try {
       console.log('Recebido:', createProdutoDto);
-      
+
       if (!createProdutoDto.nome) {
         throw new BadRequestException('Nome é obrigatório');
       }
@@ -25,7 +25,7 @@ export class ProdutosService {
       // Normalizar o nome para comparação case-insensitive
       const nomeTratado = createProdutoDto.nome.trim();
       console.log('Nome tratado:', nomeTratado);
-      
+
       // Verificar se já existe produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
       const existingProduto = await this.prisma.produto.findFirst({
         where: {
@@ -55,10 +55,9 @@ export class ProdutosService {
 
       console.log('Produto criado:', produto);
       return produto;
-
     } catch (error) {
       console.error('Erro detalhado:', error);
-      
+
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -68,9 +67,9 @@ export class ProdutosService {
       }
 
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       throw new BadRequestException(
-        'Erro ao criar produto. Verifique os dados informados: ' + errorMessage
+        'Erro ao criar produto. Verifique os dados informados: ' + errorMessage,
       );
     }
   }
@@ -92,7 +91,7 @@ export class ProdutosService {
       // Adicionar busca por nome se fornecida
       if (search) {
         where.nome = {
-          contains: search.toLowerCase()
+          contains: search.toLowerCase(),
         };
       }
 
@@ -133,12 +132,12 @@ export class ProdutosService {
   async findOne(id: number, includeDeleted = false) {
     try {
       const where: Prisma.ProdutoWhereInput = { id };
-      
+
       // Se não incluir deletados, adiciona filtro de deleted_at null
       if (!includeDeleted) {
         where.deleted_at = null;
       }
-      
+
       const produto = await this.prisma.produto.findFirst({ where });
 
       if (!produto) {
@@ -157,17 +156,17 @@ export class ProdutosService {
   async update(id: number, updateProdutoDto: UpdateProdutoDto, includeDeleted = false) {
     try {
       console.log('Atualizando produto:', { id, dados: updateProdutoDto, includeDeleted });
-      
+
       // Verificar se o produto existe (incluindo ou não deletados conforme parâmetro)
       const produtoExistente = await this.findOne(id, includeDeleted);
-      
+
       // Se o produto foi soft-deleted e estamos atualizando seu status para ativo,
       // limpar o campo deleted_at
       if (produtoExistente.deleted_at && updateProdutoDto.status === 'ativo') {
         console.log('Reativando produto anteriormente deletado');
         updateProdutoDto = {
           ...updateProdutoDto,
-          deleted_at: null
+          deleted_at: null,
         };
       }
 
@@ -175,7 +174,7 @@ export class ProdutosService {
       if (updateProdutoDto.nome) {
         const nomeTratado = updateProdutoDto.nome.trim();
         console.log('Nome tratado:', nomeTratado);
-        
+
         // Verificar se já existe outro produto com o mesmo nome (case-insensitive, igualdade exata para SQLite)
         const existingProduto = await this.prisma.produto.findFirst({
           where: {
@@ -205,10 +204,9 @@ export class ProdutosService {
 
       console.log('Produto atualizado:', produto);
       return produto;
-
     } catch (error) {
       console.error('Erro detalhado:', error);
-      
+
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -220,9 +218,9 @@ export class ProdutosService {
 
       // Extrair mensagem de erro de forma segura
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       throw new BadRequestException(
-        'Não foi possível atualizar o produto. Verifique os dados informados: ' + errorMessage
+        'Não foi possível atualizar o produto. Verifique os dados informados: ' + errorMessage,
       );
     }
   }
@@ -243,12 +241,14 @@ export class ProdutosService {
       });
 
       if (pedidoComProduto) {
-        throw new BadRequestException('Não é possível excluir um produto que está sendo usado em pedidos');
+        throw new BadRequestException(
+          'Não é possível excluir um produto que está sendo usado em pedidos',
+        );
       }
 
       return await this.prisma.produto.update({
         where: { id },
-        data: { 
+        data: {
           deleted_at: new Date(),
           status: 'inativo',
         },

@@ -10,7 +10,7 @@ interface SupabaseServiceError extends Error {
 
 /**
  * Serviço para integração com Supabase Storage
- * 
+ *
  * Responsável por gerenciar o upload de arquivos para o Supabase Storage
  * e fornecer URLs públicas para acesso aos arquivos.
  */
@@ -29,7 +29,9 @@ export class SupabaseService {
     // Log detalhado das configurações (sem mostrar as chaves completas)
     this.logger.log(`[SUPABASE] Inicializando serviço com as seguintes configurações:`);
     this.logger.log(`[SUPABASE] URL: ${supabaseUrl || 'NÃO CONFIGURADA'}`);
-    this.logger.log(`[SUPABASE] SERVICE_ROLE_KEY: ${supabaseKey ? 'Configurada' : 'NÃO CONFIGURADA'}`);
+    this.logger.log(
+      `[SUPABASE] SERVICE_ROLE_KEY: ${supabaseKey ? 'Configurada' : 'NÃO CONFIGURADA'}`,
+    );
     this.logger.log(`[SUPABASE] Bucket: ${bucketName}`);
     this.logger.log(`[SUPABASE] Ambiente: ${process.env.NODE_ENV || 'não definido'}`);
 
@@ -41,20 +43,25 @@ export class SupabaseService {
       try {
         this.supabase = createClient(supabaseUrl, supabaseKey);
         this.logger.log(`[SUPABASE] Cliente inicializado com sucesso para URL: ${supabaseUrl}`);
-        
+
         // Adiciona log para depuração da sessão
         if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
-          this.supabase.auth.getSession().then(sess => {
-            this.logger.log(`[SUPABASE] Sessão atual:`, sess);
-          }).catch(e => {
-            this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
-          });
+          this.supabase.auth
+            .getSession()
+            .then((sess) => {
+              this.logger.log(`[SUPABASE] Sessão atual:`, sess);
+            })
+            .catch((e) => {
+              this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
+            });
         }
       } catch (error) {
-        this.logger.error(`[SUPABASE] ERRO ao criar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        this.logger.error(
+          `[SUPABASE] ERRO ao criar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        );
       }
       // Tentar criar o bucket se ele não existir, usando políticas públicas
-      this.initializeBucket(bucketName).catch(error => {
+      this.initializeBucket(bucketName).catch((error) => {
         this.logger.warn(`Failed to initialize bucket: ${error.message}`);
       });
     }
@@ -71,39 +78,44 @@ export class SupabaseService {
     try {
       // Verificar se o bucket existe
       const { data: buckets } = await this.supabase.storage.listBuckets();
-      
+
       if (!buckets || !buckets.find((b) => b.name === bucketName)) {
         this.logger.log(`Bucket ${bucketName} not found, attempting to create it...`);
-        
+
         // Criar o bucket com opções de acesso público
         const { error } = await this.supabase.storage.createBucket(bucketName, {
-          public: true // Tornar o bucket público
+          public: true, // Tornar o bucket público
         });
-        
+
         if (error) {
           throw error;
         }
-        
+
         this.logger.log(`Bucket ${bucketName} created successfully`);
       } else {
         this.logger.log(`Bucket ${bucketName} already exists`);
-        
+
         // Como não podemos alterar as políticas via API cliente, informamos ao usuário
-        this.logger.warn(`Make sure the bucket ${bucketName} has public access or appropriate RLS policies`);
+        this.logger.warn(
+          `Make sure the bucket ${bucketName} has public access or appropriate RLS policies`,
+        );
         this.logger.warn(`You may need to configure this in the Supabase dashboard manually`);
       }
     } catch (error: any) {
-      this.logger.error(`Error initializing bucket: ${error instanceof Error ? error.message : 'Unknown error'}`, error);
+      this.logger.error(
+        `Error initializing bucket: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error,
+      );
       // Não lançamos o erro para evitar que o serviço falhe durante a inicialização
     }
   }
 
   /**
    * Upload a file to Supabase Storage
-   * 
+   *
    * Faz upload de um arquivo para o bucket configurado no Supabase Storage
    * e retorna uma URL assinada para acesso direto ao arquivo (funciona para bucket público ou privado).
-   * 
+   *
    * @param filePath Path with filename to store in Supabase (e.g. 'pedidos/pedido-123.pdf')
    * @param fileData File contents as Buffer or Blob
    * @param contentType MIME type of the file
@@ -148,7 +160,7 @@ export class SupabaseService {
       // Erro não esperado
       this.logger.error(
         `Storage service error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error
+        error,
       );
       // Modo de desenvolvimento/teste: gerar URL local temporária
       if (process.env.NODE_ENV !== 'production') {
@@ -165,10 +177,10 @@ export class SupabaseService {
 
   /**
    * Upload a file to Supabase Storage and return structured result
-   * 
+   *
    * Similar ao método uploadFile, mas retorna um objeto com caminho e URL
    * para melhor integração com o sistema de tipagem.
-   * 
+   *
    * @param filePath Path with filename to store in Supabase (e.g. 'pedidos/pedido-123.pdf')
    * @param fileData File contents as Buffer or Blob
    * @param contentType MIME type of the file
@@ -181,10 +193,10 @@ export class SupabaseService {
     contentType: string,
   ): Promise<SupabaseUploadResultDto> {
     const publicUrl = await this.uploadFile(filePath, fileData, contentType);
-    
+
     return {
       path: filePath,
-      url: publicUrl
+      url: publicUrl,
     };
   }
 
@@ -231,8 +243,12 @@ export class SupabaseService {
         .createSignedUrl(filePath, expiresIn);
 
       if (error) {
-        this.logger.error(`Error creating signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        throw new Error(`Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        this.logger.error(
+          `Error creating signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        throw new Error(
+          `Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
 
       if (!data || !data.signedUrl) {
@@ -241,9 +257,11 @@ export class SupabaseService {
 
       return data.signedUrl;
     } catch (error) {
-      this.logger.error(`Error generating signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Error generating signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       throw new InternalServerErrorException(
-        `Failed to generate signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to generate signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
@@ -253,7 +271,7 @@ export class SupabaseService {
    * @param filePath Caminho do arquivo no bucket
    * @returns Blob de dados do arquivo
    */
-  async downloadFile(filePath: string): Promise<{ data: Blob | null, error: any }> {
+  async downloadFile(filePath: string): Promise<{ data: Blob | null; error: any }> {
     if (!this.supabase) {
       throw new InternalServerErrorException('Supabase client not initialized');
     }

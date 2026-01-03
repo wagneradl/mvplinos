@@ -8,7 +8,7 @@ export class HealthController {
       status: 'ok',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      service: 'linos-backend'
+      service: 'linos-backend',
     };
   }
 }

@@ -1,6 +1,41 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
+import { PAPEL_ADMIN_SISTEMA, PAPEL_OPERADOR_PEDIDOS, NIVEIS_PAPEL } from '../auth/roles.constants';
+
+// Configuração dos papéis essenciais para o seed via API
+const PAPEIS_ESSENCIAIS = [
+  {
+    nome: 'Administrador do Sistema',
+    codigo: PAPEL_ADMIN_SISTEMA,
+    descricao: 'Acesso total ao sistema, incluindo configurações e backups',
+    tipo: 'INTERNO',
+    nivel: NIVEIS_PAPEL[PAPEL_ADMIN_SISTEMA],
+    permissoes: {
+      usuarios: ['listar', 'ver', 'criar', 'editar', 'desativar', 'deletar', 'resetar_senha'],
+      papeis: ['listar', 'ver', 'criar', 'editar', 'desativar', 'deletar'],
+      clientes: ['listar', 'ver', 'criar', 'editar', 'desativar', 'exportar'],
+      produtos: ['listar', 'ver', 'criar', 'editar', 'desativar', 'exportar'],
+      pedidos: ['listar', 'ver', 'criar', 'editar', 'cancelar', 'exportar'],
+      relatorios: ['listar', 'ver', 'exportar'],
+      financeiro: ['listar', 'ver', 'criar', 'editar', 'exportar'],
+      sistema: ['ver', 'editar', 'backup', 'restore'],
+    },
+  },
+  {
+    nome: 'Operador de Pedidos',
+    codigo: PAPEL_OPERADOR_PEDIDOS,
+    descricao: 'Cria e gerencia pedidos do dia a dia',
+    tipo: 'INTERNO',
+    nivel: NIVEIS_PAPEL[PAPEL_OPERADOR_PEDIDOS],
+    permissoes: {
+      clientes: ['listar', 'ver'],
+      produtos: ['listar', 'ver'],
+      pedidos: ['listar', 'ver', 'criar', 'editar', 'cancelar'],
+      relatorios: ['listar', 'ver'],
+    },
+  },
+];
 
 @Injectable()
 export class AdminService {
@@ -11,77 +46,95 @@ export class AdminService {
   async executeSeed() {
     this.logger.log('Iniciando seed manual...');
     try {
-      // Upsert (cria ou atualiza) papéis essenciais
-      const papelAdmin = await this.prisma.papel.upsert({
-        where: { nome: 'Administrador' },
-        update: {},
-        create: {
-          nome: 'Administrador',
-          descricao: 'Acesso total ao sistema',
-          permissoes: '{"clientes": ["read","write","delete"], "produtos": ["read","write","delete"], "pedidos": ["read","write","delete"], "relatorios": ["read"], "usuarios": ["read","write","delete"]}'
-        },
-      });
-      this.logger.log(`Papel Administrador: ${papelAdmin.id}`);
+      const papeisMap: Record<string, { id: number; codigo: string }> = {};
 
-      const papelOperador = await this.prisma.papel.upsert({
-        where: { nome: 'Operador' },
-        update: {},
-        create: {
-          nome: 'Operador',
-          descricao: 'Acesso limitado',
-          permissoes: '{"clientes": ["read"]}'
-        },
-      });
-      this.logger.log(`Papel Operador: ${papelOperador.id}`);
+      // Upsert papéis essenciais
+      for (const papelConfig of PAPEIS_ESSENCIAIS) {
+        const papel = await this.prisma.papel.upsert({
+          where: { codigo: papelConfig.codigo },
+          update: {
+            nome: papelConfig.nome,
+            descricao: papelConfig.descricao,
+            tipo: papelConfig.tipo,
+            nivel: papelConfig.nivel,
+            permissoes: JSON.stringify(papelConfig.permissoes),
+            ativo: true,
+          },
+          create: {
+            nome: papelConfig.nome,
+            codigo: papelConfig.codigo,
+            descricao: papelConfig.descricao,
+            tipo: papelConfig.tipo,
+            nivel: papelConfig.nivel,
+            permissoes: JSON.stringify(papelConfig.permissoes),
+            ativo: true,
+          },
+        });
+        papeisMap[papelConfig.codigo] = { id: papel.id, codigo: papel.codigo };
+        this.logger.log(`Papel ${papelConfig.codigo}: ${papel.id}`);
+      }
 
-      // Obter senhas das variáveis de ambiente com fallbacks
-      const adminPassword = process.env.ADMIN_PASSWORD || 'A9!pLx7@wQ3#zR2$';
-      const operadorPassword = process.env.OPERADOR_PASSWORD || 'Op3r@dor!2025#Xy';
+      // Criar usuário admin apenas se variáveis de ambiente estiverem definidas
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      const papelAdmin = papeisMap[PAPEL_ADMIN_SISTEMA];
 
-      // Gerar hashes das senhas
-      const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
-      const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
+      if (adminEmail && adminPassword && papelAdmin) {
+        const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+        await this.prisma.usuario.upsert({
+          where: { email: adminEmail },
+          update: {
+            senha: adminPasswordHash,
+            papel_id: papelAdmin.id,
+            status: 'ativo',
+          },
+          create: {
+            email: adminEmail,
+            nome: 'Administrador do Sistema',
+            senha: adminPasswordHash,
+            papel_id: papelAdmin.id,
+            status: 'ativo',
+          },
+        });
+        this.logger.log(`Usuário admin criado/atualizado: ${adminEmail}`);
+      } else {
+        this.logger.warn('ADMIN_EMAIL ou ADMIN_PASSWORD não definidos - usuário admin não criado');
+      }
 
-      // Upsert para o admin (cria ou atualiza)
-      await this.prisma.usuario.upsert({
-        where: { email: 'admin@linos.com' },
-        update: {
-          senha: adminPasswordHash,
-          papel_id: papelAdmin.id,
-          status: 'ativo',
-        },
-        create: {
-          email: 'admin@linos.com',
-          nome: 'Administrador',
-          senha: adminPasswordHash,
-          papel_id: papelAdmin.id,
-          status: 'ativo',
-        },
-      });
-      this.logger.log('Usuário admin atualizado/criado com sucesso');
+      // Criar usuário operador apenas se variáveis de ambiente estiverem definidas
+      const operadorEmail = process.env.OPERADOR_EMAIL;
+      const operadorPassword = process.env.OPERADOR_PASSWORD;
+      const papelOperador = papeisMap[PAPEL_OPERADOR_PEDIDOS];
 
-      // Upsert para o operador (cria ou atualiza)
-      await this.prisma.usuario.upsert({
-        where: { email: 'operador@linos.com' },
-        update: {
-          senha: operadorPasswordHash,
-          papel_id: papelOperador.id,
-          status: 'ativo',
-        },
-        create: {
-          email: 'operador@linos.com',
-          nome: 'Operador',
-          senha: operadorPasswordHash,
-          papel_id: papelOperador.id,
-          status: 'ativo',
-        },
-      });
-      this.logger.log('Usuário operador atualizado/criado com sucesso');
+      if (operadorEmail && operadorPassword && papelOperador) {
+        const operadorPasswordHash = await bcrypt.hash(operadorPassword, 10);
+        await this.prisma.usuario.upsert({
+          where: { email: operadorEmail },
+          update: {
+            senha: operadorPasswordHash,
+            papel_id: papelOperador.id,
+            status: 'ativo',
+          },
+          create: {
+            email: operadorEmail,
+            nome: 'Operador de Pedidos',
+            senha: operadorPasswordHash,
+            papel_id: papelOperador.id,
+            status: 'ativo',
+          },
+        });
+        this.logger.log(`Usuário operador criado/atualizado: ${operadorEmail}`);
+      } else {
+        this.logger.warn(
+          'OPERADOR_EMAIL ou OPERADOR_PASSWORD não definidos - usuário operador não criado',
+        );
+      }
 
       return {
         success: true,
         message: 'Seed executado com sucesso',
-        timestamp: new Date().toISOString()
+        papeisCriados: Object.keys(papeisMap),
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -90,7 +143,7 @@ export class AdminService {
       return {
         success: false,
         error: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -114,7 +167,7 @@ export class AdminService {
       return {
         success: true,
         message: 'Banco de dados resetado com sucesso',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -123,7 +176,7 @@ export class AdminService {
       return {
         success: false,
         error: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -132,34 +185,35 @@ export class AdminService {
     this.logger.log('Iniciando limpeza de dados de teste...');
     try {
       // Devido às relações de chave estrangeira, precisamos excluir na ordem correta
-      
+
       // 1. Primeiro removemos os itens de pedido (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "ItemPedido"`;
       this.logger.log('Itens de pedido removidos (incluindo soft-deleted)');
-      
+
       // 2. Depois removemos os pedidos (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Pedido"`;
       this.logger.log('Pedidos removidos (incluindo soft-deleted)');
-      
+
       // 3. Agora podemos remover produtos (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Produto"`;
       this.logger.log('Produtos removidos (incluindo soft-deleted)');
-      
+
       // 4. Por fim, removemos os clientes (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Cliente"`;
       this.logger.log('Clientes removidos (incluindo soft-deleted)');
-      
+
       // 5. Execute o seed para garantir que admin e operador estejam atualizados
       await this.executeSeed();
 
       return {
         success: true,
-        message: 'Dados de teste removidos com sucesso (incluindo soft-deleted). Usuários padrões mantidos.',
+        message:
+          'Dados de teste removidos com sucesso (incluindo soft-deleted). Usuários padrões mantidos.',
         details: {
           usuariosPreservados: ['admin@linos.com', 'operador@linos.com'],
-          dadosRemovidos: ['ItemPedido', 'Pedido', 'Produto', 'Cliente']
+          dadosRemovidos: ['ItemPedido', 'Pedido', 'Produto', 'Cliente'],
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -168,7 +222,7 @@ export class AdminService {
       return {
         success: false,
         error: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

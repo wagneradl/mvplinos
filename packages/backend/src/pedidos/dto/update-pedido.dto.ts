@@ -13,7 +13,7 @@ export class UpdatePedidoDto {
     description: 'Status do pedido',
     enum: PedidoStatus,
     example: PedidoStatus.ATIVO,
-    required: false
+    required: false,
   })
   @IsEnum(PedidoStatus)
   @IsOptional()
@@ -22,7 +22,7 @@ export class UpdatePedidoDto {
   @ApiProperty({
     description: 'Caminho do arquivo PDF no sistema de arquivos',
     example: '/uploads/pdfs/pedido-123.pdf',
-    required: false
+    required: false,
   })
   @IsOptional()
   pdf_path?: string;
@@ -30,7 +30,7 @@ export class UpdatePedidoDto {
   @ApiProperty({
     description: 'URL do arquivo PDF no Supabase',
     example: 'https://storage.googleapis.com/bucket/pedido-123.pdf',
-    required: false
+    required: false,
   })
   @IsOptional()
   pdf_url?: string;
@@ -38,7 +38,7 @@ export class UpdatePedidoDto {
   @ApiProperty({
     description: 'Observações sobre o pedido',
     example: 'Entregar pela porta dos fundos',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()

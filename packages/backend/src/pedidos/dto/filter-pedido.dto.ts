@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 import { PedidoStatus } from './update-pedido.dto';
@@ -6,12 +6,12 @@ import { PedidoStatus } from './update-pedido.dto';
 export class FilterPedidoDto {
   @ApiPropertyOptional({ description: 'Data inicial do período (YYYY-MM-DD)' })
   @IsOptional()
-  @Transform(({ value }) => value ? String(value).substring(0, 10) : value)
+  @Transform(({ value }) => (value ? String(value).substring(0, 10) : value))
   startDate?: string;
 
   @ApiPropertyOptional({ description: 'Data final do período (YYYY-MM-DD)' })
   @IsOptional()
-  @Transform(({ value }) => value ? String(value).substring(0, 10) : value)
+  @Transform(({ value }) => (value ? String(value).substring(0, 10) : value))
   endDate?: string;
 
   @ApiPropertyOptional({ description: 'ID do cliente' })

@@ -9,7 +9,7 @@ export class SupabaseUploadResultDto {
 
   @ApiProperty({
     description: 'URL pública do arquivo para acesso direto',
-    example: 
+    example:
       'https://vuxmjtpfbcpvncmabnhe.supabase.co/storage/v1/object/public/pedidos-pdfs/pedidos/pedido-123-1744728900.pdf',
   })
   url: string;
@@ -24,8 +24,8 @@ export class PdfInfoResponseDto {
 
   @ApiProperty({
     description: 'URL do PDF no Supabase (se disponível)',
-    example: 
-     'https://vuxmjtpfbcpvncmabnhe.supabase.co/storage/v1/object/public/pedidos-pdfs/pedidos/pedido-123-1744728900.pdf',
+    example:
+      'https://vuxmjtpfbcpvncmabnhe.supabase.co/storage/v1/object/public/pedidos-pdfs/pedidos/pedido-123-1744728900.pdf',
     required: false,
   })
   pdfUrl?: string;

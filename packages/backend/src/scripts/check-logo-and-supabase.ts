@@ -32,12 +32,20 @@ async function main() {
     supabaseService = new SupabaseService();
   } catch (e) {
     supabaseError = e;
-    logger.error('Erro ao inicializar SupabaseService:', e instanceof Error ? e.stack || e.message : JSON.stringify(e));
+    logger.error(
+      'Erro ao inicializar SupabaseService:',
+      e instanceof Error ? e.stack || e.message : JSON.stringify(e),
+    );
   }
   if (!supabaseService) {
     logger.error('Supabase NÃO está configurado corretamente!');
     if (supabaseError) {
-      logger.error('Erro detalhado Supabase (init):', supabaseError instanceof Error ? supabaseError.stack || supabaseError.message : JSON.stringify(supabaseError));
+      logger.error(
+        'Erro detalhado Supabase (init):',
+        supabaseError instanceof Error
+          ? supabaseError.stack || supabaseError.message
+          : JSON.stringify(supabaseError),
+      );
     }
     logger.error('Variáveis atuais:', {
       SUPABASE_URL: process.env.SUPABASE_URL,
@@ -62,7 +70,10 @@ async function main() {
       process.exit(5);
     }
   } catch (e) {
-    logger.error('Erro ao testar upload/download no Supabase:', e instanceof Error ? e.stack || e.message : JSON.stringify(e));
+    logger.error(
+      'Erro ao testar upload/download no Supabase:',
+      e instanceof Error ? e.stack || e.message : JSON.stringify(e),
+    );
     process.exit(6);
   }
   logger.log('Health check concluído com sucesso!');

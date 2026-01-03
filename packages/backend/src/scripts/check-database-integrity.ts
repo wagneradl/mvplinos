@@ -18,15 +18,15 @@ async function checkDatabaseIntegrity() {
       FROM pragma_table_info('Pedido') 
       WHERE name = 'observacoes'
     `;
-    
+
     const result = Array.isArray(testPedido) ? testPedido[0] : testPedido;
-    
+
     if (result && result.result === 'exists') {
       console.log('✅ Coluna "observacoes" encontrada na tabela "Pedido"');
     } else {
       console.error('❌ ERRO: Coluna "observacoes" NÃO encontrada na tabela "Pedido"');
       console.log('Tentando adicionar a coluna automaticamente...');
-      
+
       try {
         // Tentar adicionar a coluna
         await prisma.$executeRaw`ALTER TABLE "Pedido" ADD COLUMN "observacoes" TEXT;`;
@@ -36,7 +36,7 @@ async function checkDatabaseIntegrity() {
         process.exit(1);
       }
     }
-    
+
     console.log('✅ Verificação de integridade concluída com sucesso');
   } catch (error) {
     console.error('❌ Erro ao verificar integridade do banco de dados:', error);

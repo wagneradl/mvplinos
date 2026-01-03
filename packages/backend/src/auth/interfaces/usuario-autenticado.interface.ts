@@ -1,3 +1,5 @@
+import { CodigoPapel, TipoPapel } from '../roles.constants';
+
 export interface UsuarioAutenticado {
   id: number;
   email: string;
@@ -5,6 +7,9 @@ export interface UsuarioAutenticado {
   papel: {
     id: number;
     nome: string;
+    codigo: CodigoPapel;
+    tipo: TipoPapel;
+    nivel: number;
     permissoes: Record<string, string[]>;
   };
 }

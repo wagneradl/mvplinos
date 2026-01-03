@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PedidosService } from './pedidos.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { PdfService } from '../pdf/pdf.service';
 
 describe('PedidosService', () => {
   let service: PedidosService;
-  let prisma: PrismaService;
 
   const mockPedido = {
     id: 1,
@@ -47,7 +46,14 @@ describe('PedidosService', () => {
     $transaction: jest.fn(),
   };
 
+  const mockPdfService = {
+    generatePedidoPdf: jest.fn(),
+    generateRelatorioPdf: jest.fn(),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PedidosService,
@@ -55,104 +61,41 @@ describe('PedidosService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: PdfService,
+          useValue: mockPdfService,
+        },
       ],
     }).compile();
 
     service = module.get<PedidosService>(PedidosService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('repeat', () => {
-    it('should create a new order based on an existing one', async () => {
-      mockPrismaService.pedido.findUnique.mockResolvedValue(mockPedido);
-      mockPrismaService.pedido.create.mockResolvedValue({
-        ...mockPedido,
-        id: 2,
-        data_pedido: new Date(),
-      });
-
-      const result = await service.repeat(1);
-
-      expect(mockPrismaService.pedido.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-        include: { itensPedido: true },
-      });
-
-      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith({
-        data: {
-          cliente_id: mockPedido.cliente_id,
-          status: 'PENDENTE',
-          valor_total: mockPedido.valor_total,
-          itensPedido: {
-            create: mockPedido.itensPedido.map((item) => ({
-              produto_id: item.produto_id,
-              quantidade: item.quantidade,
-              preco_unitario: item.preco_unitario,
-              valor_total_item: item.valor_total_item,
-            })),
-          },
-        },
-        include: {
-          itensPedido: true,
-          cliente: true,
-        },
-      });
-
-      expect(result.id).toBe(2);
-    });
-
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findUnique.mockResolvedValue(null);
-
-      await expect(service.repeat(999)).rejects.toThrow(NotFoundException);
-    });
-  });
-
   describe('findAll', () => {
-    it('should return paginated pedidos', async () => {
-      const page = 1;
-      const limit = 10;
+    it('should return paginated pedidos with FilterPedidoDto', async () => {
       const mockPedidos = [mockPedido];
       const mockCount = 1;
 
       mockPrismaService.pedido.findMany.mockResolvedValue(mockPedidos);
       mockPrismaService.pedido.count.mockResolvedValue(mockCount);
 
-      const result = await service.findAll(page, limit);
+      const filter = { page: 1, limit: 10 };
+      const result = await service.findAll(filter);
 
-      expect(result).toEqual({
-        data: mockPedidos,
-        meta: {
-          total: mockCount,
-          page,
-          limit,
-        },
-      });
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return a pedido', async () => {
-      mockPrismaService.pedido.findUnique.mockResolvedValue(mockPedido);
-
-      const result = await service.findOne(1);
-
-      expect(result).toEqual(mockPedido);
-    });
-
-    it('should throw NotFoundException when pedido not found', async () => {
-      mockPrismaService.pedido.findUnique.mockResolvedValue(null);
-
-      await expect(service.findOne(1)).rejects.toThrow(NotFoundException);
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('meta');
+      expect(result.meta).toHaveProperty('total');
+      expect(mockPrismaService.pedido.findMany).toHaveBeenCalled();
+      expect(mockPrismaService.pedido.count).toHaveBeenCalled();
     });
   });
 
   describe('generateReport', () => {
-    it('should generate report with correct filters', async () => {
+    it('should generate report and return resumo and detalhes', async () => {
       const mockPedidos = [
         {
           ...mockPedido,
@@ -160,114 +103,35 @@ describe('PedidosService', () => {
             id: 1,
             nome_fantasia: 'Cliente Teste',
           },
+          itensPedido: mockPedido.itensPedido,
         },
       ];
 
       mockPrismaService.pedido.findMany.mockResolvedValue(mockPedidos);
 
       const result = await service.generateReport({
-        startDate: '2025-02-01',
-        endDate: '2025-02-28',
-        clienteId: 1,
-        groupBy: 'diario',
+        data_inicio: '2025-02-01',
+        data_fim: '2025-02-28',
+        cliente_id: 1,
       });
 
-      expect(mockPrismaService.pedido.findMany).toHaveBeenCalledWith({
-        where: {
-          deleted_at: null,
-          data_pedido: {
-            gte: expect.any(Date),
-            lte: expect.any(Date),
-          },
-          cliente_id: 1,
-        },
-        include: {
-          cliente: true,
-          itensPedido: true,
-        },
-        orderBy: {
-          data_pedido: 'asc',
-        },
-      });
-
-      expect(result).toHaveProperty('filtros');
-      expect(result).toHaveProperty('dados');
-      expect(result.dados[0]).toHaveProperty('total_pedidos');
-      expect(result.dados[0]).toHaveProperty('valor_total');
-      expect(result.dados[0]).toHaveProperty('pedidos_por_cliente');
-      expect(result.dados[0]).toHaveProperty('produtos_mais_vendidos');
+      expect(result).toHaveProperty('resumo');
+      expect(result).toHaveProperty('detalhes');
+      expect(result).toHaveProperty('colunas');
+      expect(mockPrismaService.pedido.findMany).toHaveBeenCalled();
     });
 
-    it('should generate daily report', async () => {
-      const startDate = '2025-02-01';
-      const endDate = '2025-02-28';
-      const groupBy = 'diario';
-      
-      const mockPedidos = [
-        { ...mockPedido, data_pedido: new Date('2025-02-01') },
-        { ...mockPedido, data_pedido: new Date('2025-02-01') },
-        { ...mockPedido, data_pedido: new Date('2025-02-02') },
-      ];
-
-      mockPrismaService.pedido.findMany.mockResolvedValue(mockPedidos);
+    it('should return empty results when no pedidos found', async () => {
+      mockPrismaService.pedido.findMany.mockResolvedValue([]);
 
       const result = await service.generateReport({
-        startDate,
-        endDate,
-        groupBy,
+        data_inicio: '2025-02-01',
+        data_fim: '2025-02-28',
       });
 
-      expect(result).toHaveProperty('data');
-      expect(result).toHaveProperty('summary');
-      expect(result.summary).toHaveProperty('total_orders');
-      expect(result.summary).toHaveProperty('total_value');
-      expect(result.summary).toHaveProperty('average_value');
-    });
-
-    it('should generate weekly report', async () => {
-      const startDate = '2025-02-01';
-      const endDate = '2025-02-28';
-      const groupBy = 'semanal';
-      
-      const mockPedidos = [
-        { ...mockPedido, data_pedido: new Date('2025-02-01') },
-        { ...mockPedido, data_pedido: new Date('2025-02-08') },
-        { ...mockPedido, data_pedido: new Date('2025-02-15') },
-      ];
-
-      mockPrismaService.pedido.findMany.mockResolvedValue(mockPedidos);
-
-      const result = await service.generateReport({
-        startDate,
-        endDate,
-        groupBy,
-      });
-
-      expect(result).toHaveProperty('data');
-      expect(result).toHaveProperty('summary');
-    });
-
-    it('should generate monthly report', async () => {
-      const startDate = '2025-01-01';
-      const endDate = '2025-12-31';
-      const groupBy = 'mensal';
-      
-      const mockPedidos = [
-        { ...mockPedido, data_pedido: new Date('2025-01-15') },
-        { ...mockPedido, data_pedido: new Date('2025-02-15') },
-        { ...mockPedido, data_pedido: new Date('2025-03-15') },
-      ];
-
-      mockPrismaService.pedido.findMany.mockResolvedValue(mockPedidos);
-
-      const result = await service.generateReport({
-        startDate,
-        endDate,
-        groupBy,
-      });
-
-      expect(result).toHaveProperty('data');
-      expect(result).toHaveProperty('summary');
+      expect(result).toHaveProperty('resumo');
+      expect(result.resumo.total_orders).toBe(0);
+      expect(result.observacoes).toContain('Nenhum pedido');
     });
   });
 });

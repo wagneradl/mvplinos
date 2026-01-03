@@ -2,13 +2,14 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UsuarioAutenticado } from '../interfaces/usuario-autenticado.interface';
+import { PAPEL_ADMIN_SISTEMA, NIVEIS_PAPEL, CodigoPapel } from '../roles.constants';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // Obtém os papéis necessários do decorador
+    // Obtém os papéis necessários do decorador (espera códigos como 'ADMIN_SISTEMA', 'OPERADOR_PEDIDOS')
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -23,28 +24,41 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
     const usuario = user as UsuarioAutenticado;
 
-    // Verifica se o usuário está autenticado
-    if (!usuario) {
+    // Verifica se o usuário está autenticado e tem papel
+    if (!usuario || !usuario.papel) {
       throw new ForbiddenException('Acesso não autorizado');
     }
 
-    // Verifica se o usuário tem o papel requerido
-    const temPapelRequerido = requiredRoles.some(role => {
-      // Converte para formato consistente (admin -> Admin -> Administrador)
-      const roleLowerCase = role.toLowerCase();
-      
-      if (roleLowerCase === 'admin' || roleLowerCase === 'administrador') {
-        return usuario.papel?.nome === 'Administrador';
+    const codigoUsuario = usuario.papel.codigo;
+    const nivelUsuario = usuario.papel.nivel ?? NIVEIS_PAPEL[codigoUsuario as CodigoPapel] ?? 0;
+
+    // ADMIN_SISTEMA sempre tem acesso a tudo
+    if (codigoUsuario === PAPEL_ADMIN_SISTEMA) {
+      return true;
+    }
+
+    // Verifica se o usuário tem um dos papéis requeridos ou nível suficiente
+    const temPapelRequerido = requiredRoles.some((role) => {
+      // Verifica correspondência direta do código
+      if (codigoUsuario === role) {
+        return true;
       }
-      
-      if (roleLowerCase === 'operador') {
-        return usuario.papel?.nome === 'Operador' || usuario.papel?.nome === 'Administrador';
+
+      // Verifica se o nível do usuário é maior ou igual ao nível requerido
+      const nivelRequerido = NIVEIS_PAPEL[role as CodigoPapel];
+      if (nivelRequerido !== undefined && nivelUsuario >= nivelRequerido) {
+        return true;
       }
-      
-      // Verificação direta do nome do papel
-      return usuario.papel?.nome === role;
+
+      return false;
     });
 
-    return temPapelRequerido;
+    if (!temPapelRequerido) {
+      throw new ForbiddenException(
+        `Acesso negado. Papel necessário: ${requiredRoles.join(' ou ')}`,
+      );
+    }
+
+    return true;
   }
 }

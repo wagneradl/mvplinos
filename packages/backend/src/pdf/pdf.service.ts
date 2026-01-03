@@ -27,11 +27,11 @@ export class PdfService implements OnModuleInit {
   constructor(private readonly supabaseService: SupabaseService) {
     // Configuração para ambiente de produção (Render) ou desenvolvimento
     const isProduction = process.env.NODE_ENV === 'production';
-    
+
     // Definir caminhos absolutos sem duplicações
     let pdfStoragePath: string;
     let uploadsPath: string;
-    
+
     if (isProduction) {
       // Em produção, usar caminhos absolutos simples
       pdfStoragePath = process.env.PDF_STORAGE_PATH || '/opt/render/project/src/uploads/pdfs';
@@ -41,26 +41,30 @@ export class PdfService implements OnModuleInit {
       pdfStoragePath = join(process.cwd(), 'uploads', 'pdfs');
       uploadsPath = join(process.cwd(), 'uploads');
     }
-    
+
     this.pdfDir = pdfStoragePath;
     this.logoPath = join(uploadsPath, 'static', 'logo.png');
-    
+
     // Log detalhado dos caminhos para diagnóstico
     this.logger.log(`[PDF_PATHS] PDF Storage Path: ${this.pdfDir}`);
     this.logger.log(`[PDF_PATHS] Logo Path: ${this.logoPath}`);
-    
+
     // Verificar se as variáveis de ambiente do Supabase estão presentes
     this.useSupabase = Boolean(
-      process.env.SUPABASE_URL && 
-      process.env.SUPABASE_SERVICE_ROLE_KEY && 
-      process.env.SUPABASE_BUCKET
+      process.env.SUPABASE_URL &&
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        process.env.SUPABASE_BUCKET,
     );
-    
+
     if (this.useSupabase) {
-      this.logger.log(`[STORAGE] Usando Supabase Storage (${process.env.SUPABASE_URL}) para armazenamento de PDFs`);
+      this.logger.log(
+        `[STORAGE] Usando Supabase Storage (${process.env.SUPABASE_URL}) para armazenamento de PDFs`,
+      );
       this.logger.log(`[STORAGE] Bucket: ${process.env.SUPABASE_BUCKET}`);
     } else {
-      this.logger.log(`[STORAGE] ATENÇÃO: Usando armazenamento local para PDFs. Supabase não configurado.`);
+      this.logger.log(
+        `[STORAGE] ATENÇÃO: Usando armazenamento local para PDFs. Supabase não configurado.`,
+      );
     }
   }
 
@@ -72,7 +76,9 @@ export class PdfService implements OnModuleInit {
         await mkdir(join(this.pdfDir, '..', 'static'), { recursive: true });
         this.logger.log(`Diretórios inicializados: ${this.pdfDir}`);
       } catch (error) {
-        this.logger.error(`Erro ao criar diretórios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        this.logger.error(
+          `Erro ao criar diretórios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        );
       }
     }
 
@@ -86,7 +92,9 @@ export class PdfService implements OnModuleInit {
         copyFileSync(srcLogo, this.logoPath);
         this.logger.log(`Logo copiada automaticamente para: ${this.logoPath}`);
       } catch (e) {
-        this.logger.warn(`Logo não encontrada e falha ao copiar automaticamente: ${e instanceof Error ? e.message : e}`);
+        this.logger.warn(
+          `Logo não encontrada e falha ao copiar automaticamente: ${e instanceof Error ? e.message : e}`,
+        );
       }
     } else {
       this.logger.log(`Logo encontrada em: ${this.logoPath}`);
@@ -112,27 +120,30 @@ export class PdfService implements OnModuleInit {
       if (this.isMock) {
         const pdfPath = join(this.pdfDir, `pedido-${pedidoData.id}.pdf`);
         await mkdir(this.pdfDir, { recursive: true });
-        const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
+        const emptyPDF = Buffer.from(
+          '%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF',
+          'utf-8',
+        );
         writeFileSync(pdfPath, emptyPDF);
         const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
         if (this.useSupabase) {
           // Em modo Supabase mock, path deve ser o local real do arquivo
           return {
             path: relativePath,
-            url: `https://example.com/pedido-${pedidoData.id}.pdf`
+            url: `https://example.com/pedido-${pedidoData.id}.pdf`,
           };
         } else {
           return relativePath;
         }
       }
-      
-      browser = await puppeteer.launch({ 
+
+      browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox'],
       });
-      
+
       const page = await browser.newPage();
-      
+
       // Carregar a logo como base64
       let logoBase64 = '';
       try {
@@ -148,13 +159,13 @@ export class PdfService implements OnModuleInit {
 
       // Gerar timestamp único para evitar cache do PDF
       const timestamp = Date.now();
-      
+
       // Verificar se o campo observacoes está presente nos dados do pedido
       console.log(`[DEBUG][PDF] Pedido tem observacoes:`, pedidoData.observacoes ? 'SIM' : 'NÃO');
       if (pedidoData.observacoes) {
         console.log(`[DEBUG][PDF] Observacoes do pedido:`, pedidoData.observacoes);
       }
-      
+
       // Gerar HTML do pedido
       const html = this.generatePedidoHTML(pedidoData, logoBase64);
       this.logger.log(`[DEBUG] HTML do pedido (início): ${html.substring(0, 500)}`);
@@ -163,14 +174,14 @@ export class PdfService implements OnModuleInit {
       console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
 
       await page.setContent(html);
-      
+
       // Nome do arquivo
       const filename = `pedido-${pedidoData.id}-${timestamp}.pdf`;
-      
+
       if (this.useSupabase) {
         // === OPÇÃO SUPABASE: GERAR PDF E FAZER UPLOAD PARA SUPABASE ===
         this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
-        
+
         try {
           // Gerar o PDF como buffer (em memória)
           let pdfBuffer: Buffer;
@@ -183,46 +194,52 @@ export class PdfService implements OnModuleInit {
                 bottom: '20px',
                 left: '20px',
               },
-              printBackground: true
+              printBackground: true,
             });
-            console.log(`[DEBUG][PDF] Buffer gerado para ${filename}: tamanho = ${pdfBuffer.length} bytes`);
+            console.log(
+              `[DEBUG][PDF] Buffer gerado para ${filename}: tamanho = ${pdfBuffer.length} bytes`,
+            );
           } catch (err) {
-            console.error(`[DEBUG][PDF] Erro ao gerar buffer do PDF: ${err instanceof Error ? err.message : err}`);
+            console.error(
+              `[DEBUG][PDF] Erro ao gerar buffer do PDF: ${err instanceof Error ? err.message : err}`,
+            );
             throw err;
           }
           // (Opcional) Salvar localmente para inspeção manual
           // writeFileSync(`/tmp/${filename}`, pdfBuffer);
-          
+
           // Caminho no Supabase
           const supabasePath = `pedidos/${filename}`;
           console.log(`[DEBUG][PDF] Enviando para Supabase: ${supabasePath}`);
-          
+
           // === UPLOAD PARA SUPABASE ===
           const pdfUrl = await this.supabaseService.uploadFile(
             supabasePath,
             pdfBuffer,
-            'application/pdf'
+            'application/pdf',
           );
           console.log(`[DEBUG][PDF] URL retornada pelo Supabase: ${pdfUrl}`);
           this.logger.log(`PDF enviado para o Supabase: ${pdfUrl}`);
-          
+
           // Retornar caminho e URL
           return {
             path: supabasePath,
-            url: pdfUrl
+            url: pdfUrl,
           };
         } catch (error) {
-          this.logger.error(`Erro ao gerar/enviar PDF para Supabase: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-          
+          this.logger.error(
+            `Erro ao gerar/enviar PDF para Supabase: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
+
           // NOVO: Em caso de erro, tentar fallback para salvamento local
           try {
             // Gerar nome do arquivo local
             const pdfPath = join(this.pdfDir, filename);
             this.logger.log(`Tentando fallback local para: ${pdfPath}`);
-            
+
             // Garantir que o diretório existe
             await mkdir(this.pdfDir, { recursive: true });
-            
+
             // Gerar PDF diretamente para o arquivo
             await page.pdf({
               path: pdfPath,
@@ -233,34 +250,38 @@ export class PdfService implements OnModuleInit {
                 bottom: '20px',
                 left: '20px',
               },
-              printBackground: true
+              printBackground: true,
             });
-            
+
             // Gerar URL local para o PDF
             const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
             const localUrl = `http://localhost:${process.env.PORT || 3001}/${relativePath}`;
-            
+
             this.logger.log(`Fallback para PDF local concluído: ${localUrl}`);
-            
+
             // Retornar informações do PDF local
             return {
               path: relativePath,
-              url: localUrl
+              url: localUrl,
             };
           } catch (fallbackError) {
-            this.logger.error(`Fallback local também falhou: ${fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido'}`);
-            throw new InternalServerErrorException(`Falha ao processar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+            this.logger.error(
+              `Fallback local também falhou: ${fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido'}`,
+            );
+            throw new InternalServerErrorException(
+              `Falha ao processar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+            );
           }
         }
       } else {
         // === OPÇÃO LOCAL: SALVAR PDF LOCALMENTE (comportamento original) ===
         const pdfPath = join(this.pdfDir, filename);
         this.logger.log(`Gerando PDF em: ${pdfPath}`);
-        
+
         try {
           // Garantir que o diretório existe
           await mkdir(this.pdfDir, { recursive: true });
-          
+
           await page.pdf({
             path: pdfPath,
             format: 'A4',
@@ -269,35 +290,43 @@ export class PdfService implements OnModuleInit {
               right: '20px',
               bottom: '20px',
               left: '20px',
-            }
+            },
           });
-          
+
           this.logger.log(`PDF gerado com sucesso para pedido ${pedidoData.id}-${timestamp}`);
-          
+
           // Retornar caminho relativo (comportamento original)
           return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
         } catch (error) {
-          this.logger.error(`Erro ao gerar PDF local: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-          throw new InternalServerErrorException(`Falha ao processar PDF localmente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          this.logger.error(
+            `Erro ao gerar PDF local: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
+          throw new InternalServerErrorException(
+            `Falha ao processar PDF localmente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
         }
       }
     } catch (error) {
       this.logger.error(
         `Erro ao gerar PDF para pedido ${pedidoData?.id}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        error instanceof Error ? error.stack : undefined
+        error instanceof Error ? error.stack : undefined,
       );
-      
+
       // Re-lançar o erro se já for um InternalServerErrorException, ou criar um novo
       if (error instanceof InternalServerErrorException) {
         throw error;
       }
-      throw new InternalServerErrorException(`Falha ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      throw new InternalServerErrorException(
+        `Falha ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
     } finally {
       if (browser) {
         try {
           await browser.close();
         } catch (error) {
-          this.logger.warn(`Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          this.logger.warn(
+            `Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
         }
       }
     }
@@ -505,26 +534,34 @@ export class PdfService implements OnModuleInit {
                 </tr>
               </thead>
               <tbody>
-                ${pedidoData.itensPedido.map(item => `
+                ${pedidoData.itensPedido
+                  .map(
+                    (item) => `
                   <tr>
                     <td>${item.produto.nome}</td>
                     <td>${item.quantidade} ${item.produto.tipo_medida}</td>
                     <td>R$ ${item.preco_unitario.toFixed(2)}</td>
                     <td>R$ ${item.valor_total_item.toFixed(2)}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </tbody>
             </table>
 
             <!-- Observações (se existirem) -->
-            ${pedidoData.observacoes ? `
+            ${
+              pedidoData.observacoes
+                ? `
             <div class="observacoes-section">
               <h3>Observações</h3>
               <div class="observacoes-content">
                 ${pedidoData.observacoes}
               </div>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <div class="total">
               <p>Total do Pedido: R$ ${pedidoData.valor_total.toFixed(2)}</p>
@@ -542,7 +579,7 @@ export class PdfService implements OnModuleInit {
 
   /**
    * Gera um relatório em PDF
-   * @param reportData Dados do relatório 
+   * @param reportData Dados do relatório
    * @param clienteData Dados do cliente (opcional)
    * @returns Se usar Supabase: {path, url}, caso contrário: string (caminho)
    */
@@ -553,27 +590,52 @@ export class PdfService implements OnModuleInit {
 
       // LOG DETALHADO PARA DEBUG DE RELATÓRIO
       console.log('[DEBUG][PDF][RELATORIO] reportData:', JSON.stringify(reportData, null, 2));
-      console.log('[DEBUG][PDF][RELATORIO] dataInicioRaw:', reportData.dataInicio || reportData.data_inicio);
+      console.log(
+        '[DEBUG][PDF][RELATORIO] dataInicioRaw:',
+        reportData.dataInicio || reportData.data_inicio,
+      );
       console.log('[DEBUG][PDF][RELATORIO] dataFimRaw:', reportData.dataFim || reportData.data_fim);
       console.log('[DEBUG][PDF][RELATORIO] reportData.titulo:', reportData?.titulo);
-      console.log('[DEBUG][PDF][RELATORIO] reportData.itens.length:', Array.isArray(reportData?.itens) ? reportData.itens.length : 'NÃO É ARRAY');
+      console.log(
+        '[DEBUG][PDF][RELATORIO] reportData.itens.length:',
+        Array.isArray(reportData?.itens) ? reportData.itens.length : 'NÃO É ARRAY',
+      );
 
       // Validar dados do relatório (sempre validar, independente do ambiente)
       let dataInicioRaw = reportData.dataInicio || reportData.data_inicio;
       let dataFimRaw = reportData.dataFim || reportData.data_fim;
-      if (!dataInicioRaw && reportData.periodo && (reportData.periodo.inicio || reportData.periodo.data_inicio)) {
+      if (
+        !dataInicioRaw &&
+        reportData.periodo &&
+        (reportData.periodo.inicio || reportData.periodo.data_inicio)
+      ) {
         dataInicioRaw = reportData.periodo.inicio || reportData.periodo.data_inicio;
       }
-      if (!dataFimRaw && reportData.periodo && (reportData.periodo.fim || reportData.periodo.data_fim)) {
+      if (
+        !dataFimRaw &&
+        reportData.periodo &&
+        (reportData.periodo.fim || reportData.periodo.data_fim)
+      ) {
         dataFimRaw = reportData.periodo.fim || reportData.periodo.data_fim;
       }
       // Validação: título, datas, itens
-      if (!reportData || !reportData.titulo || !dataInicioRaw || !dataFimRaw || !Array.isArray(reportData.itens)) {
-        console.error('[ERRO][PDF][RELATORIO] Dados do relatório inválidos:', JSON.stringify(reportData, null, 2));
+      if (
+        !reportData ||
+        !reportData.titulo ||
+        !dataInicioRaw ||
+        !dataFimRaw ||
+        !Array.isArray(reportData.itens)
+      ) {
+        console.error(
+          '[ERRO][PDF][RELATORIO] Dados do relatório inválidos:',
+          JSON.stringify(reportData, null, 2),
+        );
         throw new InternalServerErrorException('Dados do relatório inválidos ou incompletos');
       }
       if (reportData.itens.length === 0) {
-        console.warn('[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).');
+        console.warn(
+          '[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).',
+        );
       }
       this.logger.log(`[DEBUG] dataInicioRaw: ${dataInicioRaw}, dataFimRaw: ${dataFimRaw}`);
 
@@ -584,21 +646,24 @@ export class PdfService implements OnModuleInit {
         const relatorioFilename = 'relatorio-geral-mock.pdf';
         const pdfPath = join(process.cwd(), relatorioDir, relatorioFilename);
         await mkdir(join(process.cwd(), relatorioDir), { recursive: true });
-        const emptyPDF = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF', 'utf-8');
+        const emptyPDF = Buffer.from(
+          '%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF',
+          'utf-8',
+        );
         writeFileSync(pdfPath, emptyPDF);
         const relativePath = join(relatorioDir, relatorioFilename);
         console.log('[DEBUG][PdfService] PDF gerado (mock):', pdfPath, '| relative:', relativePath);
         if (this.useSupabase) {
           return {
             path: relativePath,
-            url: `https://example.com/${relatorioFilename}`
+            url: `https://example.com/${relatorioFilename}`,
           };
         } else {
           return relativePath;
         }
       }
 
-      browser = await puppeteer.launch({ 
+      browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox'],
       });
@@ -612,12 +677,18 @@ export class PdfService implements OnModuleInit {
         this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
         this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
-        this.logger.error(`Erro ao carregar logo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        this.logger.error(
+          `Erro ao carregar logo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        );
       }
 
       // Formatação de datas
-      const dataInicio = dataInicioRaw ? format(new Date(dataInicioRaw), 'dd/MM/yyyy', { locale: ptBR }) : '';
-      const dataFim = dataFimRaw ? format(new Date(dataFimRaw), 'dd/MM/yyyy', { locale: ptBR }) : '';
+      const dataInicio = dataInicioRaw
+        ? format(new Date(dataInicioRaw), 'dd/MM/yyyy', { locale: ptBR })
+        : '';
+      const dataFim = dataFimRaw
+        ? format(new Date(dataFimRaw), 'dd/MM/yyyy', { locale: ptBR })
+        : '';
       this.logger.log(`[DEBUG] dataInicio formatado: ${dataInicio}, dataFim formatado: ${dataFim}`);
 
       // Gerar HTML do relatório
@@ -783,45 +854,61 @@ export class PdfService implements OnModuleInit {
             </div>
 
             <!-- Dados Detalhados -->
-            ${Array.isArray(reportData.detalhes) && reportData.detalhes.length > 0 ? `
+            ${
+              Array.isArray(reportData.detalhes) && reportData.detalhes.length > 0
+                ? `
               <h3>Dados Detalhados</h3>
               <table>
                 <thead>
                   <tr>
-                    ${reportData.colunas ? reportData.colunas.map(col => `<th>${col}</th>`).join('') : ''}
+                    ${reportData.colunas ? reportData.colunas.map((col) => `<th>${col}</th>`).join('') : ''}
                   </tr>
                 </thead>
                 <tbody>
-                  ${reportData.detalhes.map(item => `
+                  ${reportData.detalhes
+                    .map(
+                      (item) => `
                     <tr>
                       <td>${item.pedido}</td>
                       <td>${item.data}</td>
                       <td>${typeof item.valor_total === 'number' ? item.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : item.valor_total}</td>
                     </tr>
-                  `).join('')}
+                  `,
+                    )
+                    .join('')}
                 </tbody>
               </table>
-            ` : `
+            `
+                : `
               <div class="card" style="text-align:center; margin:40px 0;">
                 <h2 style="color:#8B5A2B; margin-bottom:12px;">Nenhum pedido encontrado</h2>
                 <p>Nenhum pedido foi realizado no período selecionado.</p>
               </div>
-            `}
+            `
+            }
 
             <!-- Observações -->
-            ${reportData.observacoes ? `
+            ${
+              reportData.observacoes
+                ? `
               <h3>Observações</h3>
               <div class="card">
                 <p>${reportData.observacoes}</p>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <!-- Total -->
-            ${reportData.total ? `
+            ${
+              reportData.total
+                ? `
               <div class="total">
                 <p>Total: ${reportData.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <div class="footer">
               <p>Lino's Panificadora - Qualidade e Tradição</p>
@@ -837,7 +924,7 @@ export class PdfService implements OnModuleInit {
       console.log(`[DEBUG][PDF] Trecho do HTML enviado ao Puppeteer:`, html?.substring(0, 300));
       // SALVAR HTML COMPLETO PARA INSPEÇÃO MANUAL DO RELATÓRIO
       try {
-        require('fs').writeFileSync('/tmp/relatorio-teste.html', html);
+        writeFileSync('/tmp/relatorio-teste.html', html);
         console.log('[DEBUG][PDF] HTML do relatório salvo em /tmp/relatorio-teste.html');
       } catch (e) {
         console.error('[DEBUG][PDF] Falha ao salvar HTML do relatório:', e);
@@ -847,7 +934,9 @@ export class PdfService implements OnModuleInit {
       const filename = `relatorio-${reportData.tipo || 'geral'}-${timestamp}.pdf`;
 
       if (this.useSupabase) {
-        this.logger.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${filename}', bufferSize=${html.length}`);
+        this.logger.log(
+          `(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${filename}', bufferSize=${html.length}`,
+        );
         this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
         try {
           // Gerar o PDF como buffer (em memória)
@@ -859,26 +948,33 @@ export class PdfService implements OnModuleInit {
               right: '20px',
               bottom: '20px',
               left: '20px',
-            }
+            },
           });
           console.log(`[DEBUG] Tamanho do PDF gerado: ${pdfBuffer.length} bytes`);
           // Upload para Supabase
           const uploadPath = `relatorios/${filename}`;
-          console.log(`(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`);
+          console.log(
+            `(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${uploadPath}', bufferSize=${pdfBuffer.length}`,
+          );
           const uploadResp = await this.supabaseService.uploadFile(
             uploadPath,
             pdfBuffer,
-            'application/pdf'
+            'application/pdf',
           );
           if (uploadResp) {
             console.log(`Relatório PDF enviado para Supabase: ${uploadResp}`);
             return { path: uploadPath, url: uploadResp };
           } else {
             this.logger.error('Erro ao fazer upload do relatório PDF para Supabase.');
-            throw new InternalServerErrorException('Erro ao fazer upload do relatório PDF para Supabase.');
+            throw new InternalServerErrorException(
+              'Erro ao fazer upload do relatório PDF para Supabase.',
+            );
           }
         } catch (e) {
-          this.logger.error('Erro ao gerar/upload PDF no Supabase:', e instanceof Error ? e.stack || e.message : JSON.stringify(e));
+          this.logger.error(
+            'Erro ao gerar/upload PDF no Supabase:',
+            e instanceof Error ? e.stack || e.message : JSON.stringify(e),
+          );
           throw new InternalServerErrorException('Erro ao gerar/upload PDF no Supabase.');
         }
       } else {
@@ -894,20 +990,26 @@ export class PdfService implements OnModuleInit {
             right: '20px',
             bottom: '20px',
             left: '20px',
-          }
+          },
         });
         this.logger.log(`Relatório PDF gerado com sucesso: ${pdfPath}`);
         return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
       }
     } catch (error) {
-      this.logger.error(`Erro ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      throw new InternalServerErrorException(`Falha ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      this.logger.error(
+        `Erro ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      throw new InternalServerErrorException(
+        `Falha ao gerar PDF do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
     } finally {
       if (browser) {
         try {
           await browser.close();
         } catch (error) {
-          this.logger.warn(`Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          this.logger.warn(
+            `Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          );
         }
       }
     }

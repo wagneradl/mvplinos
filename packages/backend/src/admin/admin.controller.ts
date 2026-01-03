@@ -21,7 +21,7 @@ export class AdminController {
     if (!authorization) {
       throw new UnauthorizedException('Token não fornecido');
     }
-    
+
     return this.adminService.resetDatabase();
   }
 

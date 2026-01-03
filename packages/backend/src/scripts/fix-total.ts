@@ -8,8 +8,8 @@ async function fixTotal() {
     const pedido = await prisma.pedido.findUnique({
       where: { id: 1 },
       include: {
-        itensPedido: true
-      }
+        itensPedido: true,
+      },
     });
 
     if (!pedido) {
@@ -26,8 +26,8 @@ async function fixTotal() {
     const pedidoAtualizado = await prisma.pedido.update({
       where: { id: 1 },
       data: {
-        valor_total: valorTotal
-      }
+        valor_total: valorTotal,
+      },
     });
 
     console.log('Valor total atualizado:', pedidoAtualizado);

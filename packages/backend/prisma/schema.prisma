@@ -11,26 +11,41 @@ datasource db {
 }
 
 model Usuario {
-  id         Int       @id @default(autoincrement())
-  nome       String
-  email      String    @unique
-  senha      String
-  papel_id   Int
-  status     String    @default("ativo")
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  deleted_at DateTime?
-  papel      Papel     @relation(fields: [papel_id], references: [id])
+  id                  Int                  @id @default(autoincrement())
+  nome                String
+  email               String               @unique
+  senha               String
+  papel_id            Int
+  status              String               @default("ativo")
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
+  deleted_at          DateTime?
+  papel               Papel                @relation(fields: [papel_id], references: [id])
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Papel {
   id              Int       @id @default(autoincrement())
   nome            String    @unique
+  codigo          String    @unique  // Ex: 'ADMIN_SISTEMA', 'OPERADOR_PEDIDOS', 'CLIENTE_ADMIN'
   descricao       String
-  permissoes      String    // JSON com as permissões (ex: {"clientes": "read,write", "produtos": "read"})
+  tipo            String    @default("INTERNO")  // 'INTERNO' ou 'CLIENTE'
+  nivel           Int       @default(0)  // Hierarquia: ADMIN_SISTEMA=100, GERENTE_COMERCIAL=80, etc.
+  permissoes      String    // JSON com as permissões (ex: {"clientes": ["listar","ver","criar"], ...})
+  ativo           Boolean   @default(true)
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
   usuarios        Usuario[]
+}
+
+model PasswordResetToken {
+  id         Int       @id @default(autoincrement())
+  usuario_id Int
+  token      String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  usuario    Usuario   @relation(fields: [usuario_id], references: [id])
 }
 
 model Cliente {
