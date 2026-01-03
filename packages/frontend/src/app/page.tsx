@@ -4,25 +4,19 @@
 export const dynamic = 'force-dynamic';
 
 import { useMemo, useState, useEffect } from 'react';
-import { 
-  Box, Grid, Paper, Typography, CircularProgress,
-  Button, Chip, Alert
-} from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Button, Chip, Alert } from '@mui/material';
 import {
   ShoppingCart as PedidosIcon,
   Inventory as ProdutosIcon,
   People as ClientesIcon,
-  Assessment as RelatoriosIcon,
   Add as AddIcon,
   TrendingUp as TrendingUpIcon,
-  ArrowUpward as ArrowUpwardIcon
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePedidos } from '@/hooks/usePedidos';
 import { useClientes } from '@/hooks/useClientes';
 import { useProdutos } from '@/hooks/useProdutos';
 import { formatCurrency } from '@/utils/format';
-import { subDays, format } from 'date-fns';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,16 +25,11 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
-  // Data atual e data de 7 dias atrás para relatórios
-  const hoje = new Date();
-  const dataInicio = format(subDays(hoje, 7), 'yyyy-MM-dd');
-  const dataFim = format(hoje, 'yyyy-MM-dd');
-
   // Hooks para buscar dados com valores padrão seguros
-  const { 
-    pedidos = [], 
-    isLoading: isLoadingPedidos, 
-    error: pedidosError 
+  const {
+    pedidos = [],
+    isLoading: isLoadingPedidos,
+    error: pedidosError,
   } = usePedidos({
     page: 1,
     limit: 5,
@@ -49,16 +38,16 @@ export default function DashboardPage() {
     },
   }) || { pedidos: [], isLoading: true, error: null };
 
-  const { 
-    clientes = [], 
-    isLoading: isLoadingClientes, 
-    error: clientesError 
+  const {
+    clientes = [],
+    isLoading: isLoadingClientes,
+    error: clientesError,
   } = useClientes(1, 100, 'ativo') || { clientes: [], isLoading: true, error: null };
-  
-  const { 
-    produtos = [], 
-    isLoading: isLoadingProdutos, 
-    error: produtosError 
+
+  const {
+    produtos = [],
+    isLoading: isLoadingProdutos,
+    error: produtosError,
   } = useProdutos(1, 100, 'ativo') || { produtos: [], isLoading: true, error: null };
 
   // Atualizar o estado de carregamento global e erros
@@ -67,15 +56,15 @@ export default function DashboardPage() {
     if (authLoading) {
       return;
     }
-    
+
     setIsLoading(isLoadingPedidos || isLoadingClientes || isLoadingProdutos);
-    
+
     const errors = [
       pedidosError && 'Erro ao carregar pedidos',
       clientesError && 'Erro ao carregar clientes',
-      produtosError && 'Erro ao carregar produtos'
+      produtosError && 'Erro ao carregar produtos',
     ].filter(Boolean);
-    
+
     if (errors.length > 0) {
       setError(errors.join('. '));
     } else {
@@ -88,7 +77,7 @@ export default function DashboardPage() {
     pedidosError,
     clientesError,
     produtosError,
-    authLoading
+    authLoading,
   ]);
 
   // Estatísticas básicas
@@ -108,12 +97,14 @@ export default function DashboardPage() {
   // Se ainda estiver carregando a autenticação, mostrar indicador de carregamento
   if (authLoading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -128,12 +119,14 @@ export default function DashboardPage() {
   return (
     <PageContainer title="Dashboard">
       {isLoading ? (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh' 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '50vh',
+          }}
+        >
           <CircularProgress />
         </Box>
       ) : error ? (
@@ -196,13 +189,13 @@ export default function DashboardPage() {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box 
-                    sx={{ 
-                      backgroundColor: 'primary.main', 
-                      borderRadius: '50%', 
+                  <Box
+                    sx={{
+                      backgroundColor: 'primary.main',
+                      borderRadius: '50%',
                       p: 1,
-                      display: 'flex', 
-                      mr: 2 
+                      display: 'flex',
+                      mr: 2,
                     }}
                   >
                     <PedidosIcon sx={{ color: 'white' }} />
@@ -218,11 +211,11 @@ export default function DashboardPage() {
                   Valor Total: {formatCurrency(estatisticas.valorTotalPedidos)}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip 
-                    size="small" 
-                    icon={<TrendingUpIcon fontSize="small" />} 
-                    label="Ver Relatórios" 
-                    component={Link} 
+                  <Chip
+                    size="small"
+                    icon={<TrendingUpIcon fontSize="small" />}
+                    label="Ver Relatórios"
+                    component={Link}
                     href="/relatorios"
                     clickable
                     sx={{ cursor: 'pointer' }}
@@ -246,13 +239,13 @@ export default function DashboardPage() {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box 
-                    sx={{ 
-                      backgroundColor: 'info.main', 
-                      borderRadius: '50%', 
+                  <Box
+                    sx={{
+                      backgroundColor: 'info.main',
+                      borderRadius: '50%',
                       p: 1,
-                      display: 'flex', 
-                      mr: 2 
+                      display: 'flex',
+                      mr: 2,
                     }}
                   >
                     <ClientesIcon sx={{ color: 'white' }} />
@@ -268,11 +261,11 @@ export default function DashboardPage() {
                   Total de clientes ativos
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip 
-                    size="small" 
-                    icon={<AddIcon fontSize="small" />} 
-                    label="Novo Cliente" 
-                    component={Link} 
+                  <Chip
+                    size="small"
+                    icon={<AddIcon fontSize="small" />}
+                    label="Novo Cliente"
+                    component={Link}
                     href="/clientes/novo"
                     clickable
                     sx={{ cursor: 'pointer' }}
@@ -296,13 +289,13 @@ export default function DashboardPage() {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box 
-                    sx={{ 
-                      backgroundColor: 'success.main', 
-                      borderRadius: '50%', 
+                  <Box
+                    sx={{
+                      backgroundColor: 'success.main',
+                      borderRadius: '50%',
                       p: 1,
-                      display: 'flex', 
-                      mr: 2 
+                      display: 'flex',
+                      mr: 2,
                     }}
                   >
                     <ProdutosIcon sx={{ color: 'white' }} />
@@ -318,11 +311,11 @@ export default function DashboardPage() {
                   Total de produtos ativos
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip 
-                    size="small" 
-                    icon={<AddIcon fontSize="small" />} 
-                    label="Novo Produto" 
-                    component={Link} 
+                  <Chip
+                    size="small"
+                    icon={<AddIcon fontSize="small" />}
+                    label="Novo Produto"
+                    component={Link}
                     href="/produtos/novo"
                     clickable
                     sx={{ cursor: 'pointer' }}
@@ -336,18 +329,18 @@ export default function DashboardPage() {
           <Typography variant="h5" sx={{ mb: 2, fontWeight: 'medium' }}>
             Pedidos Recentes
           </Typography>
-          
+
           {/* Conteúdo condicional para pedidos */}
           {pedidos.length === 0 ? (
             <Paper sx={{ p: 3, textAlign: 'center', mb: 4 }}>
               <Typography variant="body1" color="text.secondary">
                 Nenhum pedido recente encontrado.
               </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<AddIcon />} 
-                component={Link} 
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                component={Link}
                 href="/pedidos/novo"
                 sx={{ mt: 2 }}
               >
@@ -376,21 +369,24 @@ export default function DashboardPage() {
                         Cliente: {pedido.cliente?.nome || 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Data: {new Date(pedido.data_pedido || pedido.dataPedido || '').toLocaleDateString('pt-BR')}
+                        Data:{' '}
+                        {new Date(pedido.data_pedido || pedido.dataPedido || '').toLocaleDateString(
+                          'pt-BR'
+                        )}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: { xs: 2, sm: 0 } }}>
                       <Typography variant="h6" color="primary.main" sx={{ mr: 2 }}>
                         {formatCurrency(pedido.valor_total || pedido.valorTotal || 0)}
                       </Typography>
-                      <Chip 
-                        label={pedido.status} 
+                      <Chip
+                        label={pedido.status}
                         color={
-                          pedido.status === 'CONCLUIDO' 
-                            ? 'success' 
-                            : pedido.status === 'CANCELADO' 
-                            ? 'error' 
-                            : 'primary'
+                          pedido.status === 'CONCLUIDO'
+                            ? 'success'
+                            : pedido.status === 'CANCELADO'
+                              ? 'error'
+                              : 'primary'
                         }
                         size="small"
                       />

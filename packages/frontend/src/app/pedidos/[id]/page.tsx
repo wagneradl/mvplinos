@@ -33,7 +33,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePedido, usePedidos } from '@/hooks/usePedidos';
 import { useSnackbar } from 'notistack';
-import { PedidosService } from '@/services/pedidos.service';
 import { ErrorState } from '@/components/ErrorState';
 import { PageContainer } from '@/components/PageContainer';
 
@@ -78,18 +77,21 @@ export default function PedidoDetalhesPage() {
   const handleCopiarPedido = async () => {
     try {
       if (!pedido) return;
-      
+
       // Armazenar os dados do pedido no localStorage para usar na tela de novo pedido
-      localStorage.setItem('pedidoParaCopiar', JSON.stringify({
-        cliente_id: pedido.cliente_id,
-        observacoes: pedido.observacoes, // Incluir observações ao copiar o pedido
-        itens: pedido.itensPedido.map(item => ({
-          produto_id: item.produto_id,
-          quantidade: item.quantidade,
-          produto: item.produto
-        }))
-      }));
-      
+      localStorage.setItem(
+        'pedidoParaCopiar',
+        JSON.stringify({
+          cliente_id: pedido.cliente_id,
+          observacoes: pedido.observacoes, // Incluir observações ao copiar o pedido
+          itens: pedido.itensPedido.map((item) => ({
+            produto_id: item.produto_id,
+            quantidade: item.quantidade,
+            produto: item.produto,
+          })),
+        })
+      );
+
       // Mantemos apenas esta notificação e removemos a duplicada na página de destino
       // Isso evita que o usuário receba duas notificações idênticas
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
@@ -125,7 +127,7 @@ export default function PedidoDetalhesPage() {
   if (error) {
     return (
       <PageContainer title="Detalhes do Pedido">
-        <ErrorState 
+        <ErrorState
           title="Erro ao carregar o pedido"
           message={`Não foi possível carregar os detalhes do pedido: ${error}`}
           retryAction={refetch}
@@ -138,15 +140,13 @@ export default function PedidoDetalhesPage() {
   if (!pedido) {
     return (
       <PageContainer title="Detalhes do Pedido">
-        <ErrorState 
+        <ErrorState
           title="Pedido não encontrado"
           message="O pedido solicitado não foi encontrado ou foi removido."
         />
       </PageContainer>
     );
   }
-
-  const { itensPedido = [] } = pedido;
 
   return (
     <PageContainer title="Detalhes do Pedido">
@@ -165,18 +165,10 @@ export default function PedidoDetalhesPage() {
               sx={{ ml: 2 }}
             />
             <Box sx={{ flexGrow: 1 }} />
-            <Button 
-              startIcon={<FileDownloadIcon />} 
-              variant="outlined" 
-              onClick={handleDownloadPdf}
-            >
+            <Button startIcon={<FileDownloadIcon />} variant="outlined" onClick={handleDownloadPdf}>
               Download PDF
             </Button>
-            <Button 
-              startIcon={<ContentCopyIcon />} 
-              variant="outlined" 
-              onClick={handleCopiarPedido}
-            >
+            <Button startIcon={<ContentCopyIcon />} variant="outlined" onClick={handleCopiarPedido}>
               Copiar Pedido
             </Button>
             {pedido.status === 'ATIVO' && (
@@ -198,10 +190,12 @@ export default function PedidoDetalhesPage() {
                   Informações do Pedido
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Data:</strong> {pedido?.data_pedido ? formatarData(pedido.data_pedido) : '-'}
+                  <strong>Data:</strong>{' '}
+                  {pedido?.data_pedido ? formatarData(pedido.data_pedido) : '-'}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Valor Total:</strong> {pedido?.valor_total ? formatarValor(pedido.valor_total) : '-'}
+                  <strong>Valor Total:</strong>{' '}
+                  {pedido?.valor_total ? formatarValor(pedido.valor_total) : '-'}
                 </Typography>
                 <Typography variant="body1">
                   <strong>Status:</strong> {pedido?.status || '-'}
@@ -232,7 +226,7 @@ export default function PedidoDetalhesPage() {
             <Typography variant="h6" gutterBottom>
               Itens do Pedido
             </Typography>
-            
+
             <TableContainer>
               <Table>
                 <TableHead>
@@ -246,18 +240,26 @@ export default function PedidoDetalhesPage() {
                 <TableBody>
                   {pedido?.itensPedido?.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.produto?.nome || `Produto ID: ${item.produto_id}`}</TableCell>
-                      <TableCell align="right">{item.quantidade} {item.produto?.tipo_medida}</TableCell>
+                      <TableCell>
+                        {item.produto?.nome || `Produto ID: ${item.produto_id}`}
+                      </TableCell>
+                      <TableCell align="right">
+                        {item.quantidade} {item.produto?.tipo_medida}
+                      </TableCell>
                       <TableCell align="right">{formatarValor(item.preco_unitario)}</TableCell>
                       <TableCell align="right">{formatarValor(item.valor_total_item)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={3} align="right">
-                      <Typography variant="subtitle1"><strong>Total:</strong></Typography>
+                      <Typography variant="subtitle1">
+                        <strong>Total:</strong>
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="subtitle1"><strong>{formatarValor(pedido.valor_total)}</strong></Typography>
+                      <Typography variant="subtitle1">
+                        <strong>{formatarValor(pedido.valor_total)}</strong>
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -270,7 +272,9 @@ export default function PedidoDetalhesPage() {
         {pedido?.observacoes && (
           <Box mt={4}>
             <Paper elevation={2} sx={{ p: 2, backgroundColor: '#f7f7fa' }}>
-              <Typography variant="h6" gutterBottom>Observações</Typography>
+              <Typography variant="h6" gutterBottom>
+                Observações
+              </Typography>
               <Typography variant="body1" color="text.secondary">
                 {pedido.observacoes}
               </Typography>

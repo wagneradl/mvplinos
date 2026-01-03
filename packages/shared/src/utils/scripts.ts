@@ -35,7 +35,9 @@ export class ScriptUtils {
         const { stdout } = await this.execute(`Test-Path -Path "${dirPath}" -PathType Container`);
         return stdout.trim() === 'True';
       } else {
-        const { stdout } = await this.execute(`test -d "${dirPath}" && echo "true" || echo "false"`);
+        const { stdout } = await this.execute(
+          `test -d "${dirPath}" && echo "true" || echo "false"`,
+        );
         return stdout.trim() === 'true';
       }
     } catch (error) {
@@ -46,7 +48,11 @@ export class ScriptUtils {
   /**
    * Remove arquivos mais antigos que X dias
    */
-  static async removeOldFiles(directory: string, pattern: string, olderThanDays: number): Promise<void> {
+  static async removeOldFiles(
+    directory: string,
+    pattern: string,
+    olderThanDays: number,
+  ): Promise<void> {
     const normalizedPath = PathUtils.normalize(directory);
 
     if (PathUtils.isWindows()) {
@@ -56,7 +62,9 @@ export class ScriptUtils {
         Remove-Item -Force
       `);
     } else {
-      await this.execute(`find "${normalizedPath}" -name "${pattern}" -mtime +${olderThanDays} -delete`);
+      await this.execute(
+        `find "${normalizedPath}" -name "${pattern}" -mtime +${olderThanDays} -delete`,
+      );
     }
   }
 

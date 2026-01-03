@@ -24,7 +24,13 @@ import {
   InputAdornment,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Block as BlockIcon,
+  Search as SearchIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
 import { useProdutos } from '@/hooks/useProdutos';
 import Link from 'next/link';
@@ -39,28 +45,41 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [inputSearchTerm, setInputSearchTerm] = useState<string>('');
   const queryClient = useQueryClient();
-  
+
   // Aplicar debounce ao termo de busca
   const debouncedSearchTerm = useDebounce(inputSearchTerm, 500);
-  
+
   // Atualizar searchTerm quando o valor debounced mudar
   useEffect(() => {
     setSearchTerm(debouncedSearchTerm);
   }, [debouncedSearchTerm]);
-  
+
   // Valores padrão seguros para evitar erros de referência
-  const { 
-    produtos = [], 
-    meta = { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, 
-    isLoading = false, 
-    deletarProduto, 
-    reativarProduto 
-  } = useProdutos(
-    page + 1, 
-    rowsPerPage,
-    statusFilter,
-    searchTerm
-  ) || { produtos: [], meta: { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, isLoading: true };
+  const {
+    produtos = [],
+    meta = {
+      page: 1,
+      limit: 10,
+      itemCount: 0,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    },
+    isLoading = false,
+    deletarProduto,
+    reativarProduto,
+  } = useProdutos(page + 1, rowsPerPage, statusFilter, searchTerm) || {
+    produtos: [],
+    meta: {
+      page: 1,
+      limit: 10,
+      itemCount: 0,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    },
+    isLoading: true,
+  };
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -72,13 +91,17 @@ export default function ProdutosPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja inativar este produto? Ele não será excluído, apenas ficará inativo.')) {
+    if (
+      window.confirm(
+        'Tem certeza que deseja inativar este produto? Ele não será excluído, apenas ficará inativo.'
+      )
+    ) {
       await deletarProduto(id);
       // Força uma nova busca após inativar
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
     }
   };
-  
+
   const handleReativar = async (id: number) => {
     if (window.confirm('Tem certeza que deseja reativar este produto?')) {
       await reativarProduto(id);
@@ -86,12 +109,12 @@ export default function ProdutosPage() {
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
     }
   };
-  
+
   const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusFilter(event.target.value);
     setPage(0); // Resetar para a primeira página ao mudar o filtro
   };
-  
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputSearchTerm(event.target.value);
     setPage(0); // Resetar para a primeira página ao mudar a busca
@@ -101,7 +124,9 @@ export default function ProdutosPage() {
   if (isLoading) {
     return (
       <PageContainer title="Produtos">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}
+        >
           <CircularProgress />
         </Box>
       </PageContainer>
@@ -112,13 +137,15 @@ export default function ProdutosPage() {
   if (!produtos) {
     return (
       <PageContainer title="Produtos">
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh', 
-          flexDirection: 'column' 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '50vh',
+            flexDirection: 'column',
+          }}
+        >
           <Typography variant="h6" gutterBottom>
             Carregando dados...
           </Typography>
@@ -132,12 +159,7 @@ export default function ProdutosPage() {
     <PageContainer
       title="Produtos"
       actions={
-        <Button
-          component={Link}
-          href="/produtos/novo"
-          variant="contained"
-          startIcon={<AddIcon />}
-        >
+        <Button component={Link} href="/produtos/novo" variant="contained" startIcon={<AddIcon />}>
           Novo Produto
         </Button>
       }
@@ -178,7 +200,7 @@ export default function ProdutosPage() {
           </Grid>
         </Grid>
       </Box>
-      
+
       <TableContainer>
         <Table>
           <TableHead>
@@ -195,9 +217,7 @@ export default function ProdutosPage() {
               <TableRow key={produto.id}>
                 <TableCell>{produto.nome}</TableCell>
                 <TableCell>{produto.tipo_medida}</TableCell>
-                <TableCell align="right">
-                  {formatCurrency(produto.preco_unitario)}
-                </TableCell>
+                <TableCell align="right">{formatCurrency(produto.preco_unitario)}</TableCell>
                 <TableCell>
                   <Chip
                     label={produto.status}
@@ -216,7 +236,7 @@ export default function ProdutosPage() {
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
-                  
+
                   {/* Botão de inativar/reativar dependendo do status */}
                   {produto.status === 'ativo' ? (
                     <Tooltip title="Inativar">

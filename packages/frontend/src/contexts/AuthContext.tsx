@@ -48,13 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Decodificar payload do JWT (segunda parte do token)
       const base64Url = token.split('.')[1];
       if (!base64Url) return false;
-      
+
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(window.atob(base64));
-      
+
       // Verificar expiração
       if (!payload.exp) return false;
-      
+
       // Comparar com o tempo atual (em segundos)
       const now = Math.floor(Date.now() / 1000);
       return payload.exp > now;
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
-      
+
       if (typeof window !== 'undefined') {
         try {
           const token = localStorage.getItem('authToken');
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Só aplicar redirecionamentos se não estivermos carregando
     if (!loading) {
       const currentPath = pathname || '';
-      
+
       // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
       if (isAuthenticated && currentPath === '/login') {
         console.log('Já autenticado, redirecionando para dashboard');
@@ -132,34 +132,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  const login = useCallback(async (token: string, userData: Usuario) => {
-    try {
-      if (typeof window !== 'undefined') {
-        // Primeiro armazenar dados no localStorage de forma síncrona
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userData', JSON.stringify(userData));
-        
-        // Atualizar estado de forma síncrona para garantir consistência
-        setUsuario(userData);
-        setIsAuthenticated(true);
-        
-        console.log('Login bem-sucedido, redirecionando para dashboard...');
-        
-        // Usar o router do Next.js para navegação sem refresh completo
-        router.push('/pedidos');
+  const login = useCallback(
+    async (token: string, userData: Usuario) => {
+      try {
+        if (typeof window !== 'undefined') {
+          // Primeiro armazenar dados no localStorage de forma síncrona
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('userData', JSON.stringify(userData));
+
+          // Atualizar estado de forma síncrona para garantir consistência
+          setUsuario(userData);
+          setIsAuthenticated(true);
+
+          console.log('Login bem-sucedido, redirecionando para dashboard...');
+
+          // Usar o router do Next.js para navegação sem refresh completo
+          router.push('/pedidos');
+        }
+      } catch (error) {
+        console.error('Erro ao realizar login:', error);
+        // Limpar quaisquer dados inconsistentes em caso de erro
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        setUsuario(null);
+        setIsAuthenticated(false);
+        alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao realizar login:', error);
-      // Limpar quaisquer dados inconsistentes em caso de erro
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userData');
-      setUsuario(null);
-      setIsAuthenticated(false);
-      alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+    },
+    [router]
+  );
 
   const hasPermission = (recurso: string, acao: string): boolean => {
     if (!usuario || !usuario.papel || !usuario.papel.permissoes) {

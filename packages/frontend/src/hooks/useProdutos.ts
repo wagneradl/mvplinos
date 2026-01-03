@@ -29,13 +29,18 @@ export function useProdutos(page = 1, limit = 10, status?: string, search?: stri
       const message = error.response?.data?.message || 'Erro ao criar produto';
       showError(message);
     },
-    // Garante que não haja race condition de mensagens
-    throwOnError: true,
   });
 
   const { mutate: atualizarProduto, isPending: isUpdating } = useMutation({
-    mutationFn: ({ id, produto, includeDeleted }: { id: number; produto: Partial<Produto>; includeDeleted?: boolean }) =>
-      ProdutosService.atualizarProduto(id, produto, includeDeleted),
+    mutationFn: ({
+      id,
+      produto,
+      includeDeleted,
+    }: {
+      id: number;
+      produto: Partial<Produto>;
+      includeDeleted?: boolean;
+    }) => ProdutosService.atualizarProduto(id, produto, includeDeleted),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
       showSuccess('Produto atualizado com sucesso!');

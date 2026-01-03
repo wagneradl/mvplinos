@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Box,
   IconButton,
@@ -41,19 +40,19 @@ interface PedidosTableProps {
   onLimitChange: (limit: number) => void;
 }
 
-export function PedidosTable({ 
-  pedidos, 
-  isLoading, 
+export function PedidosTable({
+  pedidos,
+  isLoading,
   totalCount,
   page,
   limit,
   onPageChange,
-  onLimitChange
+  onLimitChange,
 }: PedidosTableProps) {
   const router = useRouter();
   const { enqueueSnackbar } = useSnackbar();
   const { downloadPdf } = usePedidos({ disableNotifications: true });
-  
+
   console.log('PedidosTable recebeu pedidos:', pedidos);
 
   // Convertemos para 0-based para o MUI TablePagination
@@ -74,22 +73,25 @@ export function PedidosTable({
     try {
       // Obter detalhes do pedido para usá-los no novo pedido
       const pedido = await PedidosService.obterPedido(id);
-      
+
       if (!pedido) {
         enqueueSnackbar('Pedido não encontrado', { variant: 'error' });
         return;
       }
-      
+
       // Armazenar os dados do pedido no localStorage para usar na tela de novo pedido
-      localStorage.setItem('pedidoParaCopiar', JSON.stringify({
-        cliente_id: pedido.cliente_id,
-        itens: pedido.itensPedido.map(item => ({
-          produto_id: item.produto_id,
-          quantidade: item.quantidade,
-          produto: item.produto
-        }))
-      }));
-      
+      localStorage.setItem(
+        'pedidoParaCopiar',
+        JSON.stringify({
+          cliente_id: pedido.cliente_id,
+          itens: pedido.itensPedido.map((item) => ({
+            produto_id: item.produto_id,
+            quantidade: item.quantidade,
+            produto: item.produto,
+          })),
+        })
+      );
+
       // Redirecionar para a tela de novo pedido
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
       router.push('/pedidos/novo');
@@ -116,7 +118,7 @@ export function PedidosTable({
             <CircularProgress />
           </Box>
         ) : pedidos.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             title="Nenhum pedido encontrado"
             message="Não há pedidos registrados com os filtros atuais. Você pode criar um novo pedido usando o botão 'Novo Pedido'."
             icon={<ShoppingCartIcon fontSize="large" />}
@@ -144,17 +146,11 @@ export function PedidosTable({
                     })}
                   </TableCell>
                   <TableCell>{pedido.cliente?.nome_fantasia}</TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(pedido.valor_total)}
-                  </TableCell>
+                  <TableCell align="right">{formatCurrency(pedido.valor_total)}</TableCell>
                   <TableCell>
                     <Chip
                       label={pedido.status}
-                      color={
-                        pedido.status === 'ATIVO'
-                          ? 'success'
-                          : 'error'
-                      }
+                      color={pedido.status === 'ATIVO' ? 'success' : 'error'}
                       size="small"
                     />
                   </TableCell>
@@ -169,18 +165,12 @@ export function PedidosTable({
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Copiar Pedido">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleCopiarPedido(pedido.id)}
-                        >
+                        <IconButton size="small" onClick={() => handleCopiarPedido(pedido.id)}>
                           <ContentCopyIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Download PDF">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDownloadPdf(pedido.id)}
-                        >
+                        <IconButton size="small" onClick={() => handleDownloadPdf(pedido.id)}>
                           <DownloadIcon />
                         </IconButton>
                       </Tooltip>

@@ -1,8 +1,8 @@
 /**
  * Render Compatibility Module
- * 
+ *
  * Este arquivo garante a correta exportação e importação de módulos
- * na plataforma Render, resolvendo problemas com aliases (@/) e 
+ * na plataforma Render, resolvendo problemas com aliases (@/) e
  * exportações que podem ocorrer em ambiente de produção.
  */
 
@@ -26,17 +26,17 @@ export {
   usePedido,
   useRelatorio,
   useSnackbar,
-  
+
   // Componentes
   PageContainer,
   Breadcrumbs,
   Navigation,
   LoginContainer,
-  Providers
+  Providers,
 };
 
 // Exportações default para compatibilidade
-export default {
+const RenderCompat = {
   useClientes,
   usePedidos,
   usePedido,
@@ -46,5 +46,7 @@ export default {
   Breadcrumbs,
   Navigation,
   LoginContainer,
-  Providers
+  Providers,
 };
+
+export default RenderCompat;

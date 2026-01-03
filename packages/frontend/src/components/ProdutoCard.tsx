@@ -98,6 +98,5 @@ export function ProdutoCard({ produto, onEdit, onDelete }: ProdutoCardProps) {
   );
 }
 
-
 // Adicionar exportação default para compatibilidade
 export default ProdutoCard;

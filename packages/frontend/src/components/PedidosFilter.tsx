@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Grid,
-  TextField,
-  MenuItem,
-  Paper,
-} from '@mui/material';
+import { Box, Grid, TextField, MenuItem, Paper } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import { Cliente } from '@/types/pedido';
@@ -45,9 +39,9 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
       data_fim: formatarDataParaFiltro(endDate),
       cliente_id: clienteId ? Number(clienteId) : undefined,
       status: status || undefined,
-      ...updatedFilters
+      ...updatedFilters,
     };
-    
+
     console.log('Aplicando filtros:', novosFilters);
     onFilterChange(novosFilters);
   };
@@ -56,7 +50,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
     setStartDate(date);
     console.log('Data Inicial selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
     applyFilters({
-      data_inicio: formatarDataParaFiltro(date)
+      data_inicio: formatarDataParaFiltro(date),
     });
   };
 
@@ -64,14 +58,14 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
     setEndDate(date);
     console.log('Data Final selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
     applyFilters({
-      data_fim: formatarDataParaFiltro(date)
+      data_fim: formatarDataParaFiltro(date),
     });
   };
 
   const handleClienteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setClienteId(event.target.value);
     applyFilters({
-      cliente_id: event.target.value ? Number(event.target.value) : undefined
+      cliente_id: event.target.value ? Number(event.target.value) : undefined,
     });
   };
 
@@ -80,7 +74,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
     setStatus(event.target.value);
     console.log('Status selecionado:', event.target.value || 'nenhum');
     applyFilters({
-      status: event.target.value || undefined
+      status: event.target.value || undefined,
     });
   };
 
@@ -93,13 +87,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
               label="Data Inicial"
               value={startDate}
               onChange={handleStartDateChange}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  size="small"
-                />
-              )}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" />}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
@@ -108,13 +96,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
               value={endDate}
               onChange={handleEndDateChange}
               minDate={startDate || undefined}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  size="small"
-                />
-              )}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" />}
             />
           </Grid>
           <Grid item xs={12} sm={3}>

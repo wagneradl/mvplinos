@@ -10,27 +10,29 @@ import { Navigation } from '@/components/Navigation';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   if (!mounted) {
     return (
       <>
         <CssBaseline />
-        <Box sx={{ 
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
+        >
           <CircularProgress />
         </Box>
       </>
     );
   }
-  
+
   return <AppContent>{children}</AppContent>;
 }
 
@@ -39,18 +41,20 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
-  
+
   // Mostrar tela de carregamento enquanto verifica a autenticação
   if (loading) {
     return (
       <>
         <CssBaseline />
-        <Box sx={{ 
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
+        >
           <CircularProgress />
         </Box>
       </>
@@ -68,37 +72,41 @@ function AppContent({ children }: { children: React.ReactNode }) {
       </>
     );
   }
-  
+
   // Se estiver na página de login (explicitamente) ou já tratada acima
   if (isLoginPage) {
     return (
       <>
         <CssBaseline />
-        <Box sx={{ minHeight: '100vh' }}>
-          {children}
-        </Box>
+        <Box sx={{ minHeight: '100vh' }}>{children}</Box>
       </>
     );
   }
-  
+
   // Mostrar layout completo com navegação apenas quando autenticado
   return (
     <>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <Navigation />
-        <Box component="main" sx={{ 
-          flexGrow: 1,
-          pt: { xs: 7, sm: 2 },
-          px: { xs: 2, sm: 3 },
-          pb: 4,
-          width: '100%',
-          overflow: 'auto'
-        }}>
-          <Container maxWidth="lg" sx={{ 
-            my: 2,
-            height: '100%'
-          }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            pt: { xs: 7, sm: 2 },
+            px: { xs: 2, sm: 3 },
+            pb: 4,
+            width: '100%',
+            overflow: 'auto',
+          }}
+        >
+          <Container
+            maxWidth="lg"
+            sx={{
+              my: 2,
+              height: '100%',
+            }}
+          >
             {children}
           </Container>
         </Box>

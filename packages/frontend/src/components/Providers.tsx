@@ -45,9 +45,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 horizontal: 'right',
               }}
             >
-              <AuthProvider>
-                {children}
-              </AuthProvider>
+              <AuthProvider>{children}</AuthProvider>
             </SnackbarProvider>
           </LocalizationProvider>
         </ThemeProvider>
@@ -55,7 +53,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </AppRouterCacheProvider>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default Providers;

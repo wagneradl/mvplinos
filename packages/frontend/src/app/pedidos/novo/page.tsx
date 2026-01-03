@@ -62,7 +62,7 @@ export default function NovoPedidoPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pedidoCopiado, setPedidoCopiado] = useState<PedidoCopiado | null>(null);
   const { enqueueSnackbar } = useSnackbar();
-  
+
   console.log('Clientes recebidos na página de novo pedido:', clientes);
 
   const {
@@ -70,7 +70,6 @@ export default function NovoPedidoPage() {
     handleSubmit,
     watch,
     setValue,
-    reset,
     formState: { errors },
   } = useForm<PedidoForm>({
     defaultValues: {
@@ -80,7 +79,7 @@ export default function NovoPedidoPage() {
   });
 
   const itens = watch('itens');
-  
+
   // Efeito para carregar dados de pedido copiado ao montar o componente
   useEffect(() => {
     const carregarPedidoCopiado = () => {
@@ -89,54 +88,54 @@ export default function NovoPedidoPage() {
         if (dadosSalvos) {
           const dados = JSON.parse(dadosSalvos) as PedidoCopiado;
           setPedidoCopiado(dados);
-          
+
           // Remover do localStorage para não usar novamente acidentalmente
           localStorage.removeItem('pedidoParaCopiar');
-          
+
           console.log('Pedido copiado carregado:', dados);
           // Removendo notificação duplicada - já exibida na tela anterior
-          // enqueueSnackbar('Dados do pedido anterior carregados. Revise e confirme.', { 
-          //   variant: 'info' 
+          // enqueueSnackbar('Dados do pedido anterior carregados. Revise e confirme.', {
+          //   variant: 'info'
           // });
         }
       } catch (error) {
         console.error('Erro ao carregar pedido copiado:', error);
       }
     };
-    
+
     carregarPedidoCopiado();
   }, [enqueueSnackbar]);
-  
+
   // Efeito para preencher o formulário com os dados do pedido copiado
   // quando produtos e clientes estiverem carregados
   useEffect(() => {
     if (
-      pedidoCopiado && 
-      !isLoadingClientes && 
-      !isLoadingProdutos && 
-      clientes.length > 0 && 
+      pedidoCopiado &&
+      !isLoadingClientes &&
+      !isLoadingProdutos &&
+      clientes.length > 0 &&
       produtos.length > 0
     ) {
       // Verificar se o cliente ainda existe
-      const clienteExiste = clientes.some(c => c.id === pedidoCopiado.cliente_id);
-      
+      const clienteExiste = clientes.some((c) => c.id === pedidoCopiado.cliente_id);
+
       if (clienteExiste) {
         setValue('cliente_id', pedidoCopiado.cliente_id);
       } else {
         enqueueSnackbar('Cliente do pedido original não encontrado', { variant: 'warning' });
       }
-      
+
       // Preparar itens com valores calculados
       const itensCalculados = pedidoCopiado.itens
-        .filter(item => {
+        .filter((item) => {
           // Verificar se o produto ainda existe
-          const produto = produtos.find(p => p.id === item.produto_id);
+          const produto = produtos.find((p) => p.id === item.produto_id);
           return !!produto;
         })
-        .map(item => {
-          const produto = produtos.find(p => p.id === item.produto_id);
+        .map((item) => {
+          const produto = produtos.find((p) => p.id === item.produto_id);
           if (!produto) return null;
-          
+
           return {
             produto_id: produto.id,
             quantidade: item.quantidade,
@@ -147,17 +146,25 @@ export default function NovoPedidoPage() {
           };
         })
         .filter(Boolean) as ItemPedidoForm[];
-      
+
       if (itensCalculados.length > 0) {
         setValue('itens', itensCalculados);
       } else {
         enqueueSnackbar('Produtos do pedido original não encontrados', { variant: 'warning' });
       }
-      
+
       // Limpar pedido copiado para não usar novamente
       setPedidoCopiado(null);
     }
-  }, [pedidoCopiado, clientes, produtos, isLoadingClientes, isLoadingProdutos, setValue, enqueueSnackbar]);
+  }, [
+    pedidoCopiado,
+    clientes,
+    produtos,
+    isLoadingClientes,
+    isLoadingProdutos,
+    setValue,
+    enqueueSnackbar,
+  ]);
 
   const handleAddItem = () => {
     setValue('itens', [
@@ -186,7 +193,7 @@ export default function NovoPedidoPage() {
       // Definir quantidade padrão baseada no tipo do produto
       // 1 para unidades, 0.1 para kg/lt
       const quantidadePadrao = produto.tipo_medida === 'un' ? 1 : 0.1;
-      
+
       const novoItem = {
         ...itens[index],
         produto_id: produto.id,
@@ -203,18 +210,25 @@ export default function NovoPedidoPage() {
 
   const handleQuantidadeChange = (index: number, quantidade: number) => {
     // Garantir que a quantidade seja sempre um número válido
-    let quantidadeValida = isNaN(quantidade) ? 0 : quantidade;
-    
+    const quantidadeValida = isNaN(quantidade) ? 0 : quantidade;
+
     // Verificar se o produto atual é do tipo 'un' ou 'kg'/'lt' para aplicação de regras diferentes
     const produto = itens[index].produto;
     if (produto) {
       if (produto.tipo_medida === 'un' && quantidadeValida < 1) {
         // Para produtos por unidade, quantidade mínima é 1
-        enqueueSnackbar('Para produtos em unidade, a quantidade mínima é 1', { variant: 'warning' });
+        enqueueSnackbar('Para produtos em unidade, a quantidade mínima é 1', {
+          variant: 'warning',
+        });
         return;
-      } else if ((produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') && quantidadeValida < 0.001) {
+      } else if (
+        (produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') &&
+        quantidadeValida < 0.001
+      ) {
         // Para produtos por kg/lt, quantidade mínima é 0.001
-        enqueueSnackbar('Para produtos em kg/lt, a quantidade mínima é 0,001', { variant: 'warning' });
+        enqueueSnackbar('Para produtos em kg/lt, a quantidade mínima é 0,001', {
+          variant: 'warning',
+        });
         return;
       }
     } else if (quantidadeValida <= 0) {
@@ -222,16 +236,16 @@ export default function NovoPedidoPage() {
       enqueueSnackbar('A quantidade deve ser maior que zero', { variant: 'warning' });
       return;
     }
-    
+
     // Formatar a quantidade com base no tipo de medida do produto
     // Produto já foi obtido acima
     let quantidadeFormatada = quantidadeValida;
-    
+
     if (produto) {
       if (produto.tipo_medida === 'kg' || produto.tipo_medida === 'lt') {
         // Para kg ou lt: garantir que seja valor decimal com 3 casas
         quantidadeFormatada = Math.floor(quantidadeValida * 1000) / 1000; // Truncar para 3 casas decimais
-        
+
         // Garantir valor mínimo para kg/lt
         if (quantidadeFormatada < 0.001) {
           quantidadeFormatada = 0.001;
@@ -239,7 +253,7 @@ export default function NovoPedidoPage() {
       } else if (produto.tipo_medida === 'un') {
         // Para unidades: garantir que seja valor inteiro
         quantidadeFormatada = Math.floor(quantidadeValida);
-        
+
         // Garantir valor mínimo para unidades
         if (quantidadeFormatada < 1) {
           quantidadeFormatada = 1;
@@ -249,13 +263,13 @@ export default function NovoPedidoPage() {
       // Se não tiver produto, define um valor padrão
       quantidadeFormatada = 1;
     }
-    
+
     const novoItem = {
       ...itens[index],
       quantidade: quantidadeFormatada,
       valor_total_item: itens[index].preco_unitario * quantidadeFormatada,
     };
-    
+
     const novosItens = [...itens];
     novosItens[index] = novoItem;
     setValue('itens', novosItens);
@@ -268,22 +282,22 @@ export default function NovoPedidoPage() {
         enqueueSnackbar('Selecione um cliente', { variant: 'error' });
         return;
       }
-      
+
       if (data.itens.length === 0) {
         enqueueSnackbar('Adicione pelo menos um item ao pedido', { variant: 'error' });
         return;
       }
-      
+
       // Verificar se todos os produtos estão selecionados
-      const itemInvalido = data.itens.find(item => !item.produto_id || item.produto_id === 0);
+      const itemInvalido = data.itens.find((item) => !item.produto_id || item.produto_id === 0);
       if (itemInvalido) {
         enqueueSnackbar('Selecione um produto para todos os itens', { variant: 'error' });
         return;
       }
-      
+
       setIsSubmitting(true);
       const now = new Date().toISOString();
-      
+
       // Estruturar o pedido de acordo com o esperado pelo backend
       const pedidoData = {
         cliente_id: data.cliente_id,
@@ -296,10 +310,10 @@ export default function NovoPedidoPage() {
           produto_id: item.produto_id,
           quantidade: item.quantidade,
           preco_unitario: item.preco_unitario,
-          valor_total_item: item.valor_total_item
-        }))
+          valor_total_item: item.valor_total_item,
+        })),
       };
-      
+
       // Reconstruir o objeto explicitamente para garantir que apenas os campos necessários sejam enviados
       // Evitando qualquer vazamento de propriedades através do spread operator
       const pedidoFinal = {
@@ -307,34 +321,34 @@ export default function NovoPedidoPage() {
         observacoes: data.observacoes, // Incluir observações no pedido
         itens: pedidoData.itensPedido.map(({ produto_id, quantidade }) => ({
           produto_id,
-          quantidade
-        }))
+          quantidade,
+        })),
       };
-      
+
       // Logar o objeto final para inspeção
       console.log('Objeto pedidoFinal a ser enviado:', JSON.stringify(pedidoFinal, null, 2));
-      
+
       try {
-        // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância 
+        // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância
         // entre o tipo Pedido no frontend (que espera itensPedido) e o que a API realmente aceita (itens)
         const novoPedido = await criarPedido(pedidoFinal as any);
         console.log('Pedido criado com sucesso:', novoPedido);
-        
+
         enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
         router.push('/pedidos');
       } catch (error: any) {
         console.error('Erro ao criar pedido:', error);
-        
+
         // Tratamento específico para erros comuns do backend
         let mensagemErro = 'Erro ao criar pedido. Por favor, tente novamente.';
-        
+
         if (error.response) {
           // Erro com resposta do servidor
           const status = error.response.status;
           const data = error.response.data;
-          
+
           console.log('Detalhes do erro:', { status, data });
-          
+
           // Tratamento específico por status HTTP
           if (status === 400) {
             // Bad Request - validações específicas
@@ -356,15 +370,16 @@ export default function NovoPedidoPage() {
             }
           } else if (status === 500) {
             // Internal Server Error - problemas de processamento
-            mensagemErro = 'Erro interno no servidor. Verifique se o cliente e produtos estão ativos e tente novamente.';
-            
+            mensagemErro =
+              'Erro interno no servidor. Verifique se o cliente e produtos estão ativos e tente novamente.';
+
             // Se tivermos uma mensagem de erro específica do servidor, usamos ela
             if (data && data.message) {
               mensagemErro = data.message;
             }
           }
         }
-        
+
         enqueueSnackbar(mensagemErro, { variant: 'error' });
       }
     } catch (error) {
@@ -376,12 +391,6 @@ export default function NovoPedidoPage() {
   };
 
   const valorTotal = itens.reduce((total, item) => total + item.valor_total_item, 0);
-
-  // Helper para exibir mensagem de ajuda para quantidade
-  const getQuantidadeHelperText = (tipoMedida?: string) => {
-    if (!tipoMedida) return '';
-    return ''; // Removemos as mensagens helper para evitar duplicação na UI
-  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -456,7 +465,11 @@ export default function NovoPedidoPage() {
                               {produtos.map((produto) => (
                                 <MenuItem key={produto.id} value={produto.id}>
                                   {produto.nome}
-                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ ml: 1 }}
+                                  >
                                     ({produto.tipo_medida})
                                   </Typography>
                                 </MenuItem>
@@ -467,11 +480,11 @@ export default function NovoPedidoPage() {
                         <TableCell>
                           <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                             {/* Botão de decremento */}
-                            <IconButton 
-                              size="small" 
+                            <IconButton
+                              size="small"
                               onClick={() => {
                                 if (!item.produto) return;
-                                
+
                                 const isUnidade = item.produto.tipo_medida === 'un';
                                 const step = isUnidade ? 1 : 0.001;
                                 const valorMinimo = isUnidade ? 1 : 0.001;
@@ -481,34 +494,44 @@ export default function NovoPedidoPage() {
                               sx={{ p: 0.5 }}
                               disabled={!item.produto}
                             >
-                              <Box sx={{ 
-                                bgcolor: '#f0f0f0', 
-                                borderRadius: '50%', 
-                                width: 24, 
-                                height: 24, 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                '&:hover': {
-                                  bgcolor: '#e0e0e0'
-                                } 
-                              }}>
+                              <Box
+                                sx={{
+                                  bgcolor: '#f0f0f0',
+                                  borderRadius: '50%',
+                                  width: 24,
+                                  height: 24,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  '&:hover': {
+                                    bgcolor: '#e0e0e0',
+                                  },
+                                }}
+                              >
                                 <Typography>-</Typography>
                               </Box>
                             </IconButton>
                             <TextField
                               type="number"
                               value={item.quantidade}
-                              onChange={(e) => handleQuantidadeChange(index, Number(e.target.value))}
+                              onChange={(e) =>
+                                handleQuantidadeChange(index, Number(e.target.value))
+                              }
                               onBlur={() => {
                                 if (!item.produto) return;
-                                
+
                                 if (item.produto.tipo_medida === 'un') {
                                   // Força valores inteiros para unidades
                                   handleQuantidadeChange(index, Math.floor(item.quantidade));
-                                } else if (item.produto.tipo_medida === 'kg' || item.produto.tipo_medida === 'lt') {
+                                } else if (
+                                  item.produto.tipo_medida === 'kg' ||
+                                  item.produto.tipo_medida === 'lt'
+                                ) {
                                   // Força 3 casas decimais para kg/lt
-                                  handleQuantidadeChange(index, Math.floor(item.quantidade * 1000) / 1000);
+                                  handleQuantidadeChange(
+                                    index,
+                                    Math.floor(item.quantidade * 1000) / 1000
+                                  );
                                 }
                               }}
                               fullWidth
@@ -516,9 +539,14 @@ export default function NovoPedidoPage() {
                               inputProps={{
                                 // Não usamos min aqui para evitar validações nativas do browser que podem ser confusas
                                 // A validação acontece no handler de onChange
-                                step: (item.produto?.tipo_medida === 'kg' || item.produto?.tipo_medida === 'lt') ? 0.001 : 1,
+                                step:
+                                  item.produto?.tipo_medida === 'kg' ||
+                                  item.produto?.tipo_medida === 'lt'
+                                    ? 0.001
+                                    : 1,
                                 // Impede entrada de decimais para produtos tipo 'un'
-                                inputMode: item.produto?.tipo_medida === 'un' ? 'numeric' : 'decimal'
+                                inputMode:
+                                  item.produto?.tipo_medida === 'un' ? 'numeric' : 'decimal',
                               }}
                               InputProps={{
                                 endAdornment: (
@@ -530,7 +558,7 @@ export default function NovoPedidoPage() {
                                 ),
                               }}
                               sx={{
-                                mx: 1, 
+                                mx: 1,
                                 width: 100,
                                 '& .MuiFormHelperText-root': {
                                   position: 'absolute',
@@ -540,21 +568,21 @@ export default function NovoPedidoPage() {
                                   width: '100%',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
-                                  textOverflow: 'ellipsis'
-                                }
+                                  textOverflow: 'ellipsis',
+                                },
                               }}
                               FormHelperTextProps={{
-                                sx: { m: 0 }
+                                sx: { m: 0 },
                               }}
                               // Removido helperText para evitar problemas de exibição
                               disabled={!item.produto}
                             />
                             {/* Botão de incremento */}
-                            <IconButton 
+                            <IconButton
                               size="small"
                               onClick={() => {
                                 if (!item.produto) return;
-                                
+
                                 const isUnidade = item.produto.tipo_medida === 'un';
                                 const step = isUnidade ? 1 : 0.001;
                                 handleQuantidadeChange(index, item.quantidade + step);
@@ -562,39 +590,43 @@ export default function NovoPedidoPage() {
                               sx={{ p: 0.5 }}
                               disabled={!item.produto}
                             >
-                              <Box sx={{ 
-                                bgcolor: '#f0f0f0', 
-                                borderRadius: '50%', 
-                                width: 24, 
-                                height: 24, 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                '&:hover': {
-                                  bgcolor: '#e0e0e0'
-                                } 
-                              }}>
+                              <Box
+                                sx={{
+                                  bgcolor: '#f0f0f0',
+                                  borderRadius: '50%',
+                                  width: 24,
+                                  height: 24,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  '&:hover': {
+                                    bgcolor: '#e0e0e0',
+                                  },
+                                }}
+                              >
                                 <Typography>+</Typography>
                               </Box>
                             </IconButton>
-                            
+
                             {item.produto && (
-                              <Typography 
-                                variant="caption" 
+                              <Typography
+                                variant="caption"
                                 color="text.secondary"
-                                sx={{ 
-                                  display: 'block', 
+                                sx={{
+                                  display: 'block',
                                   position: 'absolute',
                                   bottom: -15,
                                   left: 0,
                                   right: 0,
                                   fontSize: '9px',
-                                  textAlign: 'center'
+                                  textAlign: 'center',
                                 }}
                               >
-                                {item.produto.tipo_medida === 'kg' ? 'Use até 3 decimais (1,286)' : 
-                                 item.produto.tipo_medida === 'lt' ? 'Use até 3 decimais (1,286)' : 
-                                 'Apenas números inteiros'}
+                                {item.produto.tipo_medida === 'kg'
+                                  ? 'Use até 3 decimais (1,286)'
+                                  : item.produto.tipo_medida === 'lt'
+                                    ? 'Use até 3 decimais (1,286)'
+                                    : 'Apenas números inteiros'}
                               </Typography>
                             )}
                           </Box>
@@ -622,7 +654,8 @@ export default function NovoPedidoPage() {
                       <TableRow>
                         <TableCell colSpan={5} align="center">
                           <Typography variant="body2" color="text.secondary">
-                            Nenhum item adicionado. Clique em "Adicionar Item" para começar.
+                            Nenhum item adicionado. Clique em &quot;Adicionar Item&quot; para
+                            começar.
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -647,12 +680,7 @@ export default function NovoPedidoPage() {
                 </Table>
               </TableContainer>
 
-              <Button 
-                variant="outlined" 
-                onClick={handleAddItem} 
-                sx={{ mt: 2 }}
-                startIcon={<>+</>}
-              >
+              <Button variant="outlined" onClick={handleAddItem} sx={{ mt: 2 }} startIcon={<>+</>}>
                 Adicionar Item
               </Button>
             </Box>
@@ -688,9 +716,9 @@ export default function NovoPedidoPage() {
               <Button variant="outlined" onClick={() => router.push('/pedidos')}>
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
-                variant="contained" 
+              <Button
+                type="submit"
+                variant="contained"
                 disabled={isSubmitting || itens.length === 0}
                 startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
               >

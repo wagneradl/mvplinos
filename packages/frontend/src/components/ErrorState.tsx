@@ -14,21 +14,21 @@ interface ErrorStateProps {
 /**
  * Componente para exibir mensagens de erro com opção de tentar novamente
  */
-export function ErrorState({ 
-  title = 'Erro ao carregar dados', 
-  message, 
+export function ErrorState({
+  title = 'Erro ao carregar dados',
+  message,
   retryAction,
-  icon, 
-  sx 
+  icon,
+  sx,
 }: ErrorStateProps) {
   return (
-    <Paper 
+    <Paper
       elevation={0}
-      sx={{ 
-        p: 4, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
+      sx={{
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         bgcolor: 'error.light',
         color: 'error.contrastText',
@@ -37,12 +37,10 @@ export function ErrorState({
         borderRadius: 2,
         textAlign: 'center',
         opacity: 0.9,
-        ...sx
+        ...sx,
       }}
     >
-      <Box sx={{ mb: 2, color: 'inherit' }}>
-        {icon || <ErrorIcon fontSize="large" />}
-      </Box>
+      <Box sx={{ mb: 2, color: 'inherit' }}>{icon || <ErrorIcon fontSize="large" />}</Box>
       <Typography variant="h6" color="inherit" gutterBottom>
         {title}
       </Typography>
@@ -50,15 +48,15 @@ export function ErrorState({
         {message}
       </Typography>
       {retryAction && (
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           onClick={retryAction}
-          sx={{ 
-            bgcolor: 'background.paper', 
+          sx={{
+            bgcolor: 'background.paper',
             color: 'error.main',
             '&:hover': {
               bgcolor: 'background.default',
-            }
+            },
           }}
         >
           Tentar novamente

@@ -1,4 +1,3 @@
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 type HealthResponse = {
@@ -13,10 +12,7 @@ type HealthResponse = {
  * Handler para verificar a saúde do frontend
  * Esta rota não depende mais do backend para funcionar
  */
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<HealthResponse>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<HealthResponse>) {
   // Sempre retornar um status OK para o health check do Render
   // Isso é importante para que o deploy possa ser concluído
   res.status(200).json({
@@ -24,6 +20,6 @@ export default async function handler(
     timestamp: new Date().toISOString(),
     service: 'linos-frontend',
     environment: process.env.NODE_ENV || 'production',
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
   });
 }

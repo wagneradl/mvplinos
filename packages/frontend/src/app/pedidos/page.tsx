@@ -9,7 +9,6 @@ import { PedidosFilter } from '@/components/PedidosFilter';
 import { PedidosTable } from '@/components/PedidosTable';
 import { useClientes } from '@/hooks/useClientes';
 import { usePedidos } from '@/hooks/usePedidos';
-import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 
 export default function PedidosPage() {
@@ -24,26 +23,23 @@ export default function PedidosPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { clientes = [], isLoading: isLoadingClientes, error: clientesError } = useClientes(1, 100);
-  const { 
-    pedidos, 
+  const {
+    pedidos,
     isLoading: isLoadingPedidos,
     totalCount,
-    page,
-    limit,
-    totalPages,
     refetch,
-    error: pedidosError
+    error: pedidosError,
   } = usePedidos({
     page: currentPage,
     limit: itemsPerPage,
-    filters
+    filters,
   });
-  
+
   // Forçar refetch quando a página ou itens por página mudam
   useEffect(() => {
     refetch();
   }, [currentPage, itemsPerPage, refetch]);
-  
+
   // Combinar os erros
   useEffect(() => {
     if (clientesError) {
@@ -70,10 +66,7 @@ export default function PedidosPage() {
   if (error) {
     return (
       <PageContainer title="Pedidos">
-        <ErrorState 
-          message={error}
-          retryAction={refetch}
-        />
+        <ErrorState message={error} retryAction={refetch} />
       </PageContainer>
     );
   }
@@ -82,20 +75,12 @@ export default function PedidosPage() {
     <PageContainer
       title="Pedidos"
       actions={
-        <Button
-          component={Link}
-          href="/pedidos/novo"
-          variant="contained"
-          startIcon={<AddIcon />}
-        >
+        <Button component={Link} href="/pedidos/novo" variant="contained" startIcon={<AddIcon />}>
           Novo Pedido
         </Button>
       }
     >
-      <PedidosFilter
-        clientes={clientes}
-        onFilterChange={setFilters}
-      />
+      <PedidosFilter clientes={clientes} onFilterChange={setFilters} />
       <PedidosTable
         pedidos={pedidos}
         isLoading={isLoadingPedidos}

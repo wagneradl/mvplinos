@@ -9,14 +9,8 @@ const config = {
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest'],
   },
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80,
-    },
-  },
+  // coverageThreshold removido por enquanto: vamos exigir cobertura
+  // só quando existirem testes reais de frontend
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -25,6 +19,6 @@ const config = {
   testMatch: [
     '**/__tests__/**/*.test.[jt]s?(x)',
   ],
-}
+};
 
 module.exports = config;

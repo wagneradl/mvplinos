@@ -23,7 +23,16 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     queryKey: ['clientes', page, limit, status, search],
     queryFn: async () => {
       try {
-        console.log('Buscando clientes com page:', page, 'limit:', limit, 'status:', status, 'search:', search);
+        console.log(
+          'Buscando clientes com page:',
+          page,
+          'limit:',
+          limit,
+          'status:',
+          status,
+          'search:',
+          search
+        );
         const response = await ClientesService.listarClientes(page, limit, status, search);
         console.log('Resposta da API de clientes:', response);
         return response;
@@ -45,20 +54,31 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     },
     onError: (err) => {
       console.error('Erro ao criar cliente:', err);
-      showError(`Erro ao criar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      showError(
+        `Erro ao criar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
     },
   });
 
   const { mutate: atualizarCliente } = useMutation({
-    mutationFn: ({ id, cliente, includeDeleted = true }: { id: number; cliente: Partial<Cliente>; includeDeleted?: boolean }) =>
-      ClientesService.atualizarCliente(id, cliente, includeDeleted),
+    mutationFn: ({
+      id,
+      cliente,
+      includeDeleted = true,
+    }: {
+      id: number;
+      cliente: Partial<Cliente>;
+      includeDeleted?: boolean;
+    }) => ClientesService.atualizarCliente(id, cliente, includeDeleted),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       showSuccess('Cliente atualizado com sucesso!');
     },
     onError: (err) => {
       console.error('Erro ao atualizar cliente:', err);
-      showError(`Erro ao atualizar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      showError(
+        `Erro ao atualizar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
     },
   });
 
@@ -70,10 +90,12 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     },
     onError: (err) => {
       console.error('Erro ao inativar cliente:', err);
-      showError(`Erro ao inativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      showError(
+        `Erro ao inativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
     },
   });
-  
+
   const { mutate: reativarCliente } = useMutation({
     mutationFn: ClientesService.reativarCliente,
     onSuccess: () => {
@@ -82,7 +104,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     },
     onError: (err) => {
       console.error('Erro ao reativar cliente:', err);
-      showError(`Erro ao reativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      showError(
+        `Erro ao reativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
     },
   });
 
@@ -98,9 +122,9 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     deletarCliente,
     reativarCliente,
   };
-  
+
   console.log('useClientes retornando:', returnValue);
-  
+
   return returnValue;
 }
 

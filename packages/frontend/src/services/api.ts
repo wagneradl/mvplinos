@@ -15,15 +15,15 @@ const getApiBaseUrl = () => {
     console.log('[API] Ambiente de desenvolvimento, usando proxy local');
     return '/api';
   }
-  
+
   // Em produção, usar a URL da API configurada nas variáveis de ambiente
   let url = process.env.NEXT_PUBLIC_API_URL || 'https://linos-backend.onrender.com';
-  
+
   // Verificar se a URL tem o protocolo correto
   if (url && !url.startsWith('http')) {
     url = `https://${url}`;
   }
-  
+
   console.log(`[API] Ambiente de produção, URL da API:`, url);
   return url;
 };
@@ -53,7 +53,7 @@ const getAuthToken = (): string | null => {
 api.interceptors.request.use(
   (config) => {
     const { method, url, params, data } = config;
-    
+
     // Adicionar token de autenticação se disponível
     const token = getAuthToken();
     if (token) {
@@ -63,13 +63,13 @@ api.interceptors.request.use(
     } else {
       apiLogger.debug('Requisição sem token de autenticação');
     }
-    
+
     // Log detalhado para debug
-    apiLogger.debug(`Requisição ${method?.toUpperCase()} para ${url}`, { 
-      params: params || {}, 
-      data: method !== 'get' ? data : undefined 
+    apiLogger.debug(`Requisição ${method?.toUpperCase()} para ${url}`, {
+      params: params || {},
+      data: method !== 'get' ? data : undefined,
     });
-    
+
     return config;
   },
   (error) => {
@@ -83,13 +83,13 @@ api.interceptors.response.use(
   (response) => {
     const { status, config, data } = response;
     const { method, url } = config;
-    
+
     // Log básico da resposta bem-sucedida
     apiLogger.debug(`Resposta ${status} de ${method?.toUpperCase()} ${url}`, {
       dataSize: JSON.stringify(data).length,
-      timing: response.headers['x-response-time'] // Se o backend fornecer
+      timing: response.headers['x-response-time'], // Se o backend fornecer
     });
-    
+
     return response;
   },
   (error: AxiosError<ApiErrorResponse>) => {
@@ -99,15 +99,15 @@ api.interceptors.response.use(
         url: error.config?.url,
         method: error.config?.method,
         params: error.config?.params,
-        data: error.config?.data
+        data: error.config?.data,
       },
       response: {
         status: error.response?.status,
         statusText: error.response?.statusText,
-        data: error.response?.data
+        data: error.response?.data,
       },
       message: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
 
     // Tratar erros de rede para melhor feedback ao usuário
@@ -117,10 +117,14 @@ api.interceptors.response.use(
         // Simular uma notificação com alert para fins de demonstração
         // Em produção, usar um sistema de notificação mais elegante como toast
         try {
-          const message = "Erro de conexão com o servidor. Verifique sua internet e tente novamente.";
+          const message =
+            'Erro de conexão com o servidor. Verifique sua internet e tente novamente.';
           console.error(message);
           // Evitar múltiplos alertas - mostrar apenas um a cada 5 segundos
-          if (!window.__lastNetworkErrorAlert || Date.now() - window.__lastNetworkErrorAlert > 5000) {
+          if (
+            !window.__lastNetworkErrorAlert ||
+            Date.now() - window.__lastNetworkErrorAlert > 5000
+          ) {
             window.__lastNetworkErrorAlert = Date.now();
             setTimeout(() => {
               alert(message);
@@ -136,19 +140,19 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expirado ou inválido
       apiLogger.warn('Token inválido ou expirado, redirecionando para login');
-      
+
       // Limpar dados de autenticação
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        
+
         // Mostrar feedback ao usuário
         console.warn('Sessão expirada. Você será redirecionado para o login.');
-        
+
         // Evitar múltiplos alertas/redirecionamentos
         if (!window.__authRedirectInProgress) {
           window.__authRedirectInProgress = true;
-          
+
           // Mostrar mensagem antes de redirecionar
           if (!window.location.pathname.includes('/login')) {
             alert('Sua sessão expirou. Você será redirecionado para a página de login.');
@@ -161,15 +165,13 @@ api.interceptors.response.use(
     // Criar um erro mais amigável com informações estruturadas
     const enhancedError: any = new Error();
     enhancedError.isApiError = true;
-    
+
     // Padronizar estrutura da mensagem de erro
     if (error.response?.data) {
       const { message, error: errorType } = error.response.data;
-      
+
       enhancedError.statusCode = error.response.status;
-      enhancedError.message = Array.isArray(message) 
-        ? message[0] 
-        : message || 'Erro desconhecido';
+      enhancedError.message = Array.isArray(message) ? message[0] : message || 'Erro desconhecido';
       enhancedError.errorType = errorType;
       enhancedError.messages = Array.isArray(message) ? message : [message];
       enhancedError.originalError = error;
@@ -223,12 +225,12 @@ export const extractErrorMessage = (error: any): string => {
     }
     return error.message;
   }
-  
+
   // Erro padrão do JavaScript
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   // Fallback
   return 'Ocorreu um erro inesperado';
 };
@@ -236,43 +238,45 @@ export const extractErrorMessage = (error: any): string => {
 // Função para converter erros de API em sugestões para o usuário
 export const getErrorSuggestions = (error: any): string[] => {
   const suggestions: string[] = [];
-  
+
   // Erros comuns com sugestões específicas
   if (error.isApiError) {
     // Erro 400 - Bad Request
     if (error.statusCode === 400) {
       suggestions.push('Verifique se todos os campos foram preenchidos corretamente.');
-      suggestions.push('Certifique-se de que os formatos de dados estão corretos (ex: CNPJ, data, etc).');
+      suggestions.push(
+        'Certifique-se de que os formatos de dados estão corretos (ex: CNPJ, data, etc).'
+      );
     }
-    
+
     // Erro 401 - Unauthorized
     else if (error.statusCode === 401) {
       suggestions.push('Sua sessão pode ter expirado. Tente fazer login novamente.');
       suggestions.push('Verifique suas credenciais de acesso.');
     }
-    
+
     // Erro 403 - Forbidden
     else if (error.statusCode === 403) {
       suggestions.push('Você não tem permissão para acessar este recurso.');
       suggestions.push('Contate o administrador do sistema para solicitar acesso.');
     }
-    
+
     // Erro 404 - Not Found
     else if (error.statusCode === 404) {
       suggestions.push('Verifique se o recurso que você está buscando realmente existe.');
       suggestions.push('O item pode ter sido excluído ou movido.');
     }
-    
+
     // Erro 409 - Conflict
     else if (error.statusCode === 409) {
       suggestions.push('Tente com um nome ou identificador diferente.');
       suggestions.push('O recurso que você está tentando criar já existe no sistema.');
     }
-    
+
     // Erro 422 - Unprocessable Entity
     else if (error.statusCode === 422) {
       suggestions.push('Revise os dados informados para garantir que estão no formato correto.');
-      
+
       // Sugestões específicas baseadas na mensagem
       if (error.message.includes('CNPJ')) {
         suggestions.push('O CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX.');
@@ -284,13 +288,13 @@ export const getErrorSuggestions = (error: any): string[] => {
         suggestions.push('Verifique se o email está em um formato válido.');
       }
     }
-    
+
     // Erro 500 - Server Error
     else if (error.statusCode === 500) {
       suggestions.push('Tente novamente mais tarde.');
       suggestions.push('Se o problema persistir, entre em contato com o suporte.');
     }
-    
+
     // Erro de rede
     else if (error.errorType === 'NETWORK_ERROR') {
       suggestions.push('Verifique sua conexão com a internet.');
@@ -298,26 +302,26 @@ export const getErrorSuggestions = (error: any): string[] => {
       suggestions.push('Tente recarregar a página após alguns segundos.');
     }
   }
-  
+
   // Sugestões gerais se não houver sugestões específicas
   if (suggestions.length === 0) {
     suggestions.push('Tente recarregar a página e tentar novamente.');
     suggestions.push('Se o problema persistir, entre em contato com o suporte.');
   }
-  
+
   return suggestions;
 };
 
 // Função para extrair detalhes técnicos de erro para logs ou debug
 export const getErrorDetails = (error: any): string => {
   let details = '';
-  
+
   if (error.isApiError) {
     details += `Status: ${error.statusCode || 'Desconhecido'}\n`;
     details += `Tipo: ${error.errorType || 'Desconhecido'}\n`;
     details += `Mensagem: ${error.message || 'Nenhuma mensagem disponível'}\n`;
     details += `Endpoint: ${error.endpoint || 'Desconhecido'}\n`;
-    
+
     if (error.messages && error.messages.length > 1) {
       details += 'Detalhes:\n';
       error.messages.forEach((msg: string, idx: number) => {
@@ -333,6 +337,6 @@ export const getErrorDetails = (error: any): string => {
   } else {
     details += `Erro desconhecido: ${JSON.stringify(error)}`;
   }
-  
+
   return details;
 };

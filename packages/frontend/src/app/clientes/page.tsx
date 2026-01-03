@@ -24,7 +24,14 @@ import {
   InputAdornment,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Block as BlockIcon, Search as SearchIcon, CheckCircle as CheckCircleIcon, People as PeopleIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Block as BlockIcon,
+  Search as SearchIcon,
+  CheckCircle as CheckCircleIcon,
+  People as PeopleIcon,
+} from '@mui/icons-material';
 import { PageContainer } from '@/components/PageContainer';
 import { useClientes } from '@/hooks/useClientes';
 import Link from 'next/link';
@@ -59,20 +66,33 @@ export default function ClientesPage() {
   }, [debouncedSearchTerm]);
 
   // Adiciona valores padrão seguros para evitar erros de referência
-  const { 
-    clientes = [], 
-    meta = { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, 
+  const {
+    clientes = [],
+    meta = {
+      page: 1,
+      limit: 10,
+      itemCount: 0,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    },
     isLoading = false,
     error = null,
     refetch,
-    deletarCliente, 
-    reativarCliente 
-  } = useClientes(
-    page + 1, 
-    rowsPerPage,
-    statusFilter,
-    searchTerm
-  ) || { clientes: [], meta: { page: 1, limit: 10, itemCount: 0, pageCount: 1, hasPreviousPage: false, hasNextPage: false }, isLoading: true };
+    deletarCliente,
+    reativarCliente,
+  } = useClientes(page + 1, rowsPerPage, statusFilter, searchTerm) || {
+    clientes: [],
+    meta: {
+      page: 1,
+      limit: 10,
+      itemCount: 0,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    },
+    isLoading: true,
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -99,7 +119,9 @@ export default function ClientesPage() {
   if (isLoading) {
     return (
       <PageContainer title="Clientes">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}
+        >
           <CircularProgress />
         </Box>
       </PageContainer>
@@ -110,10 +132,7 @@ export default function ClientesPage() {
   if (error) {
     return (
       <PageContainer title="Clientes">
-        <ErrorState 
-          message={`Erro ao carregar clientes: ${error}`}
-          retryAction={refetch}
-        />
+        <ErrorState message={`Erro ao carregar clientes: ${error}`} retryAction={refetch} />
       </PageContainer>
     );
   }
@@ -122,13 +141,15 @@ export default function ClientesPage() {
   if (!clientes) {
     return (
       <PageContainer title="Clientes">
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh', 
-          flexDirection: 'column' 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '50vh',
+            flexDirection: 'column',
+          }}
+        >
           <Typography variant="h6" gutterBottom>
             Carregando dados...
           </Typography>
@@ -142,12 +163,7 @@ export default function ClientesPage() {
     <PageContainer
       title="Clientes"
       actions={
-        <Button
-          component={Link}
-          href="/clientes/novo"
-          variant="contained"
-          startIcon={<AddIcon />}
-        >
+        <Button component={Link} href="/clientes/novo" variant="contained" startIcon={<AddIcon />}>
           Novo Cliente
         </Button>
       }
@@ -161,7 +177,9 @@ export default function ClientesPage() {
               variant="outlined"
               fullWidth
               value={inputSearchTerm}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setInputSearchTerm(event.target.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                setInputSearchTerm(event.target.value)
+              }
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -179,7 +197,9 @@ export default function ClientesPage() {
               variant="outlined"
               fullWidth
               value={statusFilter}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setStatusFilter(event.target.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                setStatusFilter(event.target.value)
+              }
             >
               <MenuItem value="">Todos</MenuItem>
               <MenuItem value="ativo">Ativos</MenuItem>
@@ -188,10 +208,10 @@ export default function ClientesPage() {
           </Grid>
         </Grid>
       </Box>
-      
+
       <TableContainer>
         {clientes.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             title="Nenhum cliente encontrado"
             message="Não há clientes registrados com os filtros atuais. Você pode adicionar um novo cliente usando o botão 'Novo Cliente'."
             icon={<PeopleIcon fontSize="large" />}
@@ -239,23 +259,17 @@ export default function ClientesPage() {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    
+
                     {/* Mostra o botão de inativar ou reativar, dependendo do status atual */}
                     {cliente.status === 'ativo' ? (
                       <Tooltip title="Inativar">
-                        <IconButton 
-                          size="small"
-                          onClick={() => handleDelete(cliente.id)}
-                        >
+                        <IconButton size="small" onClick={() => handleDelete(cliente.id)}>
                           <BlockIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     ) : (
                       <Tooltip title="Reativar">
-                        <IconButton 
-                          size="small"
-                          onClick={() => handleReativar(cliente.id)}
-                        >
+                        <IconButton size="small" onClick={() => handleReativar(cliente.id)}>
                           <CheckCircleIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

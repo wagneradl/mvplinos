@@ -1,4 +1,4 @@
-import { useSnackbar as useNotistackSnackbar, VariantType, OptionsObject } from 'notistack';
+import { useSnackbar as useNotistackSnackbar, OptionsObject } from 'notistack';
 
 export interface SnackbarOptions extends Partial<OptionsObject> {
   duration?: number;
@@ -43,7 +43,7 @@ export function useSnackbar() {
   // Utilitário para lidar com erros de API com mensagens mais amigáveis
   const showApiError = (error: any, fallbackMessage = 'Ocorreu um erro inesperado') => {
     let errorMessage = fallbackMessage;
-    
+
     // Erro aprimorado pela nossa API
     if (error.isApiError) {
       if (error.statusCode === 400) {
@@ -58,7 +58,7 @@ export function useSnackbar() {
     } else if (error instanceof Error) {
       errorMessage = error.message;
     }
-    
+
     return showError(errorMessage, {
       persist: error.statusCode === 500, // Erros 500 são mais críticos, persistem na tela
     });

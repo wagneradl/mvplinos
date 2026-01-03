@@ -12,16 +12,16 @@ interface LoginContainerProps {
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
 }
 
-export function LoginContainer({ 
-  children, 
+export function LoginContainer({
+  children,
   fullHeight = true,
-  maxWidth = 'sm'
+  maxWidth = 'sm',
 }: LoginContainerProps) {
   return (
     <Providers>
       <CssBaseline />
       {/* Substituindo div com classes Tailwind por componentes do MUI para garantir consistência */}
-      <Box 
+      <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
@@ -30,37 +30,37 @@ export function LoginContainer({
           minHeight: fullHeight ? '100vh' : 'auto',
           py: 4,
           px: 2,
-          backgroundColor: 'background.default'
+          backgroundColor: 'background.default',
         }}
       >
         <Container maxWidth={maxWidth} sx={{ my: 2 }}>
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              mb: 4
+              mb: 4,
             }}
           >
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Box 
-                component="h1" 
-                sx={{ 
+              <Box
+                component="h1"
+                sx={{
                   fontSize: '1.875rem',
                   fontWeight: 800,
                   color: 'text.primary',
-                  mb: 1
+                  mb: 1,
                 }}
               >
                 Lino&apos;s Panificadora
               </Box>
-              <Box 
-                component="p" 
-                sx={{ 
+              <Box
+                component="p"
+                sx={{
                   mt: 1,
                   fontSize: '0.875rem',
-                  color: 'text.secondary'
+                  color: 'text.secondary',
                 }}
               >
                 Sistema de gerenciamento

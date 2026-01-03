@@ -13,32 +13,30 @@ interface EmptyStateProps {
 /**
  * Componente para exibir mensagem quando não há dados para mostrar
  */
-export function EmptyState({ 
-  title = 'Nenhum item encontrado', 
-  message, 
-  icon, 
-  sx 
+export function EmptyState({
+  title = 'Nenhum item encontrado',
+  message,
+  icon,
+  sx,
 }: EmptyStateProps) {
   return (
-    <Paper 
+    <Paper
       elevation={0}
-      sx={{ 
-        p: 4, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
+      sx={{
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         bgcolor: 'background.default',
         border: '1px dashed',
         borderColor: 'divider',
         borderRadius: 2,
         textAlign: 'center',
-        ...sx
+        ...sx,
       }}
     >
-      <Box sx={{ mb: 2, color: 'text.secondary' }}>
-        {icon || <EmptyIcon fontSize="large" />}
-      </Box>
+      <Box sx={{ mb: 2, color: 'text.secondary' }}>{icon || <EmptyIcon fontSize="large" />}</Box>
       <Typography variant="h6" color="text.primary" gutterBottom>
         {title}
       </Typography>

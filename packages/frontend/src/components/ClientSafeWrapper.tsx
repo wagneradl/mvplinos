@@ -9,10 +9,13 @@ interface ClientSafeWrapperProps {
 
 /**
  * Um componente wrapper que garante que seu conteúdo só seja renderizado no cliente.
- * Previne erros durante a fase de build do Next.js quando componentes tentam 
+ * Previne erros durante a fase de build do Next.js quando componentes tentam
  * acessar recursos disponíveis apenas no cliente.
  */
-export function ClientSafeWrapper({ children, fallback = <div>Carregando...</div> }: ClientSafeWrapperProps) {
+export function ClientSafeWrapper({
+  children,
+  fallback = <div>Carregando...</div>,
+}: ClientSafeWrapperProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {

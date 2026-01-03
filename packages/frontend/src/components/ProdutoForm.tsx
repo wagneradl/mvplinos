@@ -25,20 +25,22 @@ import { useSnackbar } from '@/hooks/useSnackbar';
 
 // Schema com validações avançadas para casos de borda
 const produtoSchema = z.object({
-  nome: z.string()
+  nome: z
+    .string()
     .min(1, 'Nome é obrigatório')
     .max(100, 'Nome não pode exceder 100 caracteres')
-    .refine(val => val.trim().length > 0, 'Nome não pode ser apenas espaços')
+    .refine((val) => val.trim().length > 0, 'Nome não pode ser apenas espaços')
     .transform((val) => val.trim()),
-  preco_unitario: z.string()
+  preco_unitario: z
+    .string()
     .min(1, 'Preço é obrigatório')
     .regex(/^\d+(?:,\d{0,2})?$/, 'Formato inválido. Use 0,00')
-    .refine(val => {
+    .refine((val) => {
       const numeroLimpo = val.replace(/\s/g, '').replace(',', '.');
       const numero = Number(numeroLimpo);
       return !isNaN(numero) && numero > 0;
     }, 'Preço deve ser maior que zero')
-    .refine(val => {
+    .refine((val) => {
       const numeroLimpo = val.replace(/\s/g, '').replace(',', '.');
       const numero = Number(numeroLimpo);
       return numero <= 100000;
@@ -47,12 +49,12 @@ const produtoSchema = z.object({
       // Remove todos os espaços e converte para número
       const numeroLimpo = val.replace(/\s/g, '').replace(',', '.');
       const numero = Number(numeroLimpo);
-      
+
       // Validação adicional para garantir número válido
       if (isNaN(numero)) {
         throw new Error('Valor inválido');
       }
-      
+
       // Garante que temos no máximo 2 casas decimais
       return parseFloat(numero.toFixed(2));
     }),
@@ -76,20 +78,24 @@ const tiposMedida = [
   { value: 'lt', label: 'Litro' },
 ];
 
-export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = false }: ProdutoFormProps) {
+export function ProdutoForm({
+  produto,
+  onSubmit: submitHandler,
+  isLoading = false,
+}: ProdutoFormProps) {
   // Usar diretamente o status do produto em vez de um state separado
-  const [statusProduto, setStatusProduto] = useState<'ativo' | 'inativo'>(produto?.status || 'ativo');
+  const [statusProduto, setStatusProduto] = useState<'ativo' | 'inativo'>(
+    produto?.status || 'ativo'
+  );
   const [errorAlert, setErrorAlert] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { showError, showSuccess, showWarning } = useSnackbar();
+  const { showError } = useSnackbar();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue,
-    trigger
   } = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
     mode: 'onChange', // Validação ao mudar qualquer campo
@@ -100,7 +106,7 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
       status: (produto?.status as 'ativo' | 'inativo') || 'ativo',
     },
   });
-  
+
   // Atualizar o estado quando o produto mudar (por exemplo, após reativação/inativação)
   useEffect(() => {
     if (produto?.status) {
@@ -114,14 +120,16 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
       setIsSubmitting(true);
       setErrorAlert(null);
       // Verificação adicional do preço
-      const validacaoPreco = ProdutosService.validarPreco(parseFloat(data.preco_unitario.toString()));
+      const validacaoPreco = ProdutosService.validarPreco(
+        parseFloat(data.preco_unitario.toString())
+      );
       if (!validacaoPreco.valido) {
         setErrorAlert(validacaoPreco.mensagem || 'Preço inválido');
         return;
       }
-      
+
       console.log('Dados do formulário validados:', data);
-      
+
       // Convert string price to number for API
       const produtoData: CreateProdutoDto = {
         nome: data.nome,
@@ -129,7 +137,7 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
         status: statusProduto,
         preco_unitario: parseFloat(data.preco_unitario.toString()),
       };
-      
+
       console.log('Dados convertidos:', produtoData);
       await submitHandler(produtoData);
       // Limpa erro após sucesso
@@ -170,11 +178,7 @@ export function ProdutoForm({ produto, onSubmit: submitHandler, isLoading = fals
     <Box component="form" onSubmit={onFormSubmit} noValidate>
       {/* Alerta de erro */}
       <Collapse in={!!errorAlert}>
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-          onClose={() => setErrorAlert(null)}
-        >
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorAlert(null)}>
           {errorAlert}
         </Alert>
       </Collapse>

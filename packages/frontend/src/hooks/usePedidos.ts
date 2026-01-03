@@ -68,7 +68,7 @@ export function usePedidos(params?: PedidosParams) {
       // Invalidar todas as queries relacionadas a pedidos com mais força
       await queryClient.invalidateQueries({ queryKey: ['pedidos'] });
       await queryClient.refetchQueries({ queryKey: ['pedidos'] });
-      
+
       // Exibir notificação apenas se não estiver desabilitado
       if (!disableNotifications) {
         enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
@@ -77,7 +77,10 @@ export function usePedidos(params?: PedidosParams) {
     onError: (err) => {
       console.error('Erro ao criar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar(`Erro ao criar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
+        enqueueSnackbar(
+          `Erro ao criar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+          { variant: 'error' }
+        );
       }
     },
   });
@@ -87,7 +90,7 @@ export function usePedidos(params?: PedidosParams) {
       PedidosService.atualizarPedido(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-      
+
       if (!disableNotifications) {
         enqueueSnackbar('Pedido atualizado com sucesso!', { variant: 'success' });
       }
@@ -95,7 +98,10 @@ export function usePedidos(params?: PedidosParams) {
     onError: (err) => {
       console.error('Erro ao atualizar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar(`Erro ao atualizar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
+        enqueueSnackbar(
+          `Erro ao atualizar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+          { variant: 'error' }
+        );
       }
     },
   });
@@ -104,7 +110,7 @@ export function usePedidos(params?: PedidosParams) {
     mutationFn: (id: number) => PedidosService.deletarPedido(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-      
+
       if (!disableNotifications) {
         enqueueSnackbar('Pedido deletado com sucesso!', { variant: 'success' });
       }
@@ -112,7 +118,10 @@ export function usePedidos(params?: PedidosParams) {
     onError: (err) => {
       console.error('Erro ao deletar pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar(`Erro ao deletar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
+        enqueueSnackbar(
+          `Erro ao deletar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+          { variant: 'error' }
+        );
       }
     },
   });
@@ -121,17 +130,20 @@ export function usePedidos(params?: PedidosParams) {
     mutationFn: (id: number) => PedidosService.repetirPedido(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-      
+
       if (!disableNotifications) {
         enqueueSnackbar('Pedido repetido com sucesso!', { variant: 'success' });
       }
-      
+
       return data;
     },
     onError: (err) => {
       console.error('Erro ao repetir pedido:', err);
       if (!disableNotifications) {
-        enqueueSnackbar(`Erro ao repetir pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, { variant: 'error' });
+        enqueueSnackbar(
+          `Erro ao repetir pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+          { variant: 'error' }
+        );
       }
     },
   });
@@ -156,16 +168,14 @@ export function usePedidos(params?: PedidosParams) {
     repetirPedido: repetirPedidoMutation.mutateAsync,
     downloadPdf: PedidosService.downloadPdf,
     // Funções auxiliares
-    refetch
+    refetch,
   };
-  
+
   console.log('usePedidos retornando:', returnValue);
   return returnValue;
 }
 
 export function usePedido(id: number) {
-  const { enqueueSnackbar } = useSnackbar();
-
   const pedidoQuery = useQuery<Pedido, Error>({
     queryKey: ['pedido', id],
     queryFn: async () => {
@@ -183,7 +193,7 @@ export function usePedido(id: number) {
     pedido: pedidoQuery.data,
     isLoading: pedidoQuery.isLoading,
     error: pedidoQuery.error ? pedidoQuery.error.message : null,
-    refetch: pedidoQuery.refetch
+    refetch: pedidoQuery.refetch,
   };
 
   return returnValue;
@@ -196,7 +206,7 @@ export function useRelatorio(filtros: {
   enabled?: boolean;
 }) {
   const { enqueueSnackbar } = useSnackbar();
-  
+
   // Adapta filtros para camelCase ao chamar o backend
   const adaptedFiltros = {
     dataInicio: filtros.startDate,

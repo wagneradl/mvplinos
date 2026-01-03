@@ -52,7 +52,7 @@ export const PedidosService = {
         if (params.filters.cliente_id) {
           searchParams.append('clienteId', params.filters.cliente_id.toString());
         }
-        
+
         // Filtro de datas
         if (params.filters.data_inicio) {
           const startDate = params.filters.data_inicio.substring(0, 10);
@@ -64,7 +64,7 @@ export const PedidosService = {
           searchParams.append('endDate', endDate);
           console.log('Frontend - endDate:', endDate);
         }
-        
+
         // Filtro de status
         if (params.filters.status) {
           searchParams.append('status', params.filters.status);
@@ -80,10 +80,12 @@ export const PedidosService = {
         startDate: params?.filters?.data_inicio,
         endDate: params?.filters?.data_fim,
         clienteId: params?.filters?.cliente_id,
-        status: params?.filters?.status
+        status: params?.filters?.status,
       });
-      
-      const response = await api.get<PaginatedResponse<Pedido>>(`/pedidos?${searchParams.toString()}`);
+
+      const response = await api.get<PaginatedResponse<Pedido>>(
+        `/pedidos?${searchParams.toString()}`
+      );
       console.log('Resposta da API listarPedidos:', response.data);
       return response.data;
     } catch (error) {

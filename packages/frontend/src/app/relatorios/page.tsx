@@ -1,20 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  Grid,
-  TextField,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Button, Grid, TextField, MenuItem, CircularProgress } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { PageContainer } from '@/components/PageContainer';
 import { RelatorioVendas } from '@/components/RelatorioVendas';
 import { useClientes } from '@/hooks/useClientes';
 import { useSummaryRelatorio } from '@/hooks/usePedidos';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
+
+// Função de formatação segura que não quebra com datas inválidas
+function formatSafe(date: Date | null | undefined, pattern: string): string | undefined {
+  if (!date || !isValid(date)) {
+    return undefined;
+  }
+  return format(date, pattern);
+}
 import { useSnackbar } from 'notistack';
 
 export default function RelatoriosPage() {
@@ -24,13 +25,10 @@ export default function RelatoriosPage() {
   const [showReport, setShowReport] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
-  const { clientes = [], isLoading: isLoadingClientes } = useClientes(1, 100);
-  const {
-    data: relatorio,
-    isLoading: isLoadingRelatorio,
-  } = useSummaryRelatorio({
-    startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-    endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+  const { clientes = [] } = useClientes(1, 100);
+  const { data: relatorio, isLoading: isLoadingRelatorio } = useSummaryRelatorio({
+    startDate: formatSafe(startDate, 'yyyy-MM-dd'),
+    endDate: formatSafe(endDate, 'yyyy-MM-dd'),
     clienteId: clienteId ? Number(clienteId) : undefined,
     enabled: showReport,
   });
@@ -52,8 +50,8 @@ export default function RelatoriosPage() {
   // Função para exportar PDF com log dos filtros atuais
   const handleExportPdf = async () => {
     const filtros = {
-      data_inicio: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-      data_fim: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+      data_inicio: formatSafe(startDate, 'yyyy-MM-dd'),
+      data_fim: formatSafe(endDate, 'yyyy-MM-dd'),
       cliente_id: clienteId ? Number(clienteId) : undefined,
     };
     console.log('Exportando PDF com filtros (snake_case):', filtros);
@@ -76,14 +74,7 @@ export default function RelatoriosPage() {
               label="Data Inicial"
               value={startDate}
               onChange={setStartDate}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  size="small"
-                  required
-                />
-              )}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" required />}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -92,14 +83,7 @@ export default function RelatoriosPage() {
               value={endDate}
               onChange={setEndDate}
               minDate={startDate || undefined}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  size="small"
-                  required
-                />
-              )}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" required />}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -139,7 +123,12 @@ export default function RelatoriosPage() {
 
       {showReport && (
         <RelatorioVendas
-          data={relatorio || { data: [], summary: { total_orders: 0, total_value: 0, average_value: 0 } }}
+          data={
+            relatorio || {
+              data: [],
+              summary: { total_orders: 0, total_value: 0, average_value: 0 },
+            }
+          }
           isLoading={isLoadingRelatorio}
           onExportPdf={handleExportPdf}
         />

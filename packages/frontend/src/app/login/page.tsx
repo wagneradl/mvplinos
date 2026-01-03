@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Button, 
-  TextField, 
-  Typography, 
-  Paper, 
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
   Alert,
   CircularProgress,
   Fade,
-  Container
+  Container,
 } from '@mui/material';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,38 +36,44 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Erro de login:', error);
       setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   if (isAuthenticated) {
     return (
-      <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Container
+        maxWidth="sm"
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
         <CircularProgress />
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="sm" sx={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      py: 4
-    }}>
+    <Container
+      maxWidth="sm"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        py: 4,
+      }}
+    >
       <Fade in={true} timeout={800}>
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 4, 
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
             width: '100%',
-            display: 'flex', 
-            flexDirection: 'column', 
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             borderRadius: 2,
-            mb: 4
+            mb: 4,
           }}
         >
           <Box sx={{ mb: 3, textAlign: 'center' }}>
@@ -88,11 +94,7 @@ export default function LoginPage() {
               Sistema de Gestão
             </Typography>
           </Box>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ mt: 2, width: '100%' }}
-          >
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: '100%' }}>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
@@ -133,16 +135,12 @@ export default function LoginPage() {
               sx={{ mt: 3, mb: 2, py: 1.5 }}
               disabled={loading}
             >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'Entrar'
-              )}
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
             </Button>
           </Box>
         </Paper>
       </Fade>
-      
+
       <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
         Lino&apos;s Panificadora &copy; {new Date().getFullYear()}
       </Typography>

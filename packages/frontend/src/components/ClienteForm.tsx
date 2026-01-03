@@ -13,7 +13,7 @@ import {
   Typography,
   FormControl,
   InputLabel,
-  Select
+  Select,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,22 +24,24 @@ import { ClientesService } from '@/services/clientes.service';
 
 // Schema com validações aprimoradas
 const clienteSchema = z.object({
-  cnpj: z.string()
+  cnpj: z
+    .string()
     .min(18, 'CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX')
     .max(18, 'CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX')
     .regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX'),
-  razao_social: z.string()
+  razao_social: z
+    .string()
     .min(1, 'Razão Social é obrigatória')
     .max(100, 'Razão Social deve ter no máximo 100 caracteres')
-    .refine(val => val.trim().length > 0, 'Razão Social não pode ser apenas espaços'),
-  nome_fantasia: z.string()
+    .refine((val) => val.trim().length > 0, 'Razão Social não pode ser apenas espaços'),
+  nome_fantasia: z
+    .string()
     .min(1, 'Nome Fantasia é obrigatório')
     .max(100, 'Nome Fantasia deve ter no máximo 100 caracteres')
-    .refine(val => val.trim().length > 0, 'Nome Fantasia não pode ser apenas espaços'),
-  email: z.string()
-    .email('Email inválido')
-    .max(100, 'Email deve ter no máximo 100 caracteres'),
-  telefone: z.string()
+    .refine((val) => val.trim().length > 0, 'Nome Fantasia não pode ser apenas espaços'),
+  email: z.string().email('Email inválido').max(100, 'Email deve ter no máximo 100 caracteres'),
+  telefone: z
+    .string()
     .min(14, 'Telefone deve estar no formato (XX) XXXXX-XXXX')
     .max(15, 'Telefone deve estar no formato (XX) XXXXX-XXXX')
     .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, 'Telefone deve estar no formato (XX) XXXXX-XXXX'),
@@ -58,12 +60,12 @@ interface ClienteFormProps {
 function formatarCNPJ(value: string): string {
   // Remove tudo que não é dígito
   const cnpjSoNumeros = value.replace(/\D/g, '');
-  
+
   if (cnpjSoNumeros.length === 0) return '';
-  
+
   // Aplicar máscara
   let cnpjFormatado = '';
-  
+
   if (cnpjSoNumeros.length > 0) {
     cnpjFormatado = cnpjSoNumeros.substring(0, 2);
   }
@@ -79,7 +81,7 @@ function formatarCNPJ(value: string): string {
   if (cnpjSoNumeros.length > 12) {
     cnpjFormatado += '-' + cnpjSoNumeros.substring(12, 14);
   }
-  
+
   return cnpjFormatado;
 }
 
@@ -87,12 +89,12 @@ function formatarCNPJ(value: string): string {
 function formatarTelefone(value: string): string {
   // Remove tudo que não é dígito
   const telefoneSoNumeros = value.replace(/\D/g, '');
-  
+
   if (telefoneSoNumeros.length === 0) return '';
-  
+
   // Aplicar máscara
   let telefoneFormatado = '';
-  
+
   if (telefoneSoNumeros.length > 0) {
     telefoneFormatado = '(' + telefoneSoNumeros.substring(0, 2);
   }
@@ -102,7 +104,7 @@ function formatarTelefone(value: string): string {
   if (telefoneSoNumeros.length > 7) {
     telefoneFormatado += '-' + telefoneSoNumeros.substring(7, 11);
   }
-  
+
   return telefoneFormatado;
 }
 
@@ -113,25 +115,25 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
   const [cnpjDuplicadoAlerta, setCnpjDuplicadoAlerta] = useState(false);
   const [isSoftDeleted, setIsSoftDeleted] = useState<boolean>(false);
   const { showError, showWarning } = useSnackbar();
-  
+
   // Verificar se o cliente foi soft-deleted e sincronizar o estado do switch
   useEffect(() => {
     if (cliente) {
       // Se o cliente tem deleted_at, ele foi soft-deleted
       setIsSoftDeleted(!!cliente.deleted_at);
-      
+
       // Sincronizar o estado do switch com o status do cliente
       setIsAtivo(cliente.status === 'ativo');
-      
+
       console.log('ClienteForm: cliente atualizado', {
         id: cliente.id,
         status: cliente.status,
         deleted_at: cliente.deleted_at,
-        isAtivo: cliente.status === 'ativo'
+        isAtivo: cliente.status === 'ativo',
       });
     }
   }, [cliente]);
-  
+
   // Adicionar um efeito para forçar a atualização do estado quando o formulário é renderizado
   useEffect(() => {
     // Este efeito garante que o estado do switch seja sempre sincronizado
@@ -139,14 +141,14 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     if (cliente) {
       setIsAtivo(cliente.status === 'ativo');
     }
-  }, [cliente?.status]);
+  }, [cliente]);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
-    setValue
+    setValue,
   } = useForm<ClienteFormData>({
     resolver: zodResolver(clienteSchema),
     mode: 'onChange', // Validação ao mudar qualquer campo
@@ -159,18 +161,18 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
       status: cliente?.status || 'ativo',
     },
   });
-  
+
   // Efeito para sincronizar o status do formulário com o status do cliente
   useEffect(() => {
     if (cliente) {
       console.log('Sincronizando status do formulário:', {
         clienteStatus: cliente.status,
-        formStatus: watch('status')
+        formStatus: watch('status'),
       });
-      
+
       // Forçar a atualização do campo status no formulário
       setValue('status', cliente.status);
-      
+
       // Atualizar também o estado local
       setIsAtivo(cliente.status === 'ativo');
     }
@@ -178,19 +180,17 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
 
   // Observar o campo CNPJ para validação de duplicidade
   const cnpj = watch('cnpj');
-  
+
   // Efeito para validar CNPJ duplicado
   useEffect(() => {
     const validarCNPJDuplicado = async () => {
-      if (cnpj && cnpj.length === 18) { // Só valida se tiver o formato completo
+      if (cnpj && cnpj.length === 18) {
+        // Só valida se tiver o formato completo
         try {
-          const isDuplicado = await ClientesService.verificarCNPJDuplicado(
-            cnpj, 
-            cliente?.id
-          );
-          
+          const isDuplicado = await ClientesService.verificarCNPJDuplicado(cnpj, cliente?.id);
+
           setCnpjDuplicadoAlerta(isDuplicado);
-          
+
           if (isDuplicado) {
             showWarning('Já existe um cliente com este CNPJ');
           }
@@ -202,7 +202,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
         setCnpjDuplicadoAlerta(false);
       }
     };
-    
+
     // Debounce para não fazer muitas requisições
     const timeoutId = setTimeout(validarCNPJDuplicado, 500);
     return () => clearTimeout(timeoutId);
@@ -212,13 +212,13 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     try {
       setIsSubmitting(true);
       setErrorAlert(null);
-      
+
       // Validação adicional para duplicidade de CNPJ
       if (cnpjDuplicadoAlerta) {
         setErrorAlert('Já existe um cliente cadastrado com este CNPJ. Por favor, verifique.');
         return;
       }
-      
+
       // Validações adicionais específicas
       try {
         ClientesService.validarCNPJ(data.cnpj);
@@ -230,22 +230,22 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
           return;
         }
       }
-      
+
       const clienteData = {
         ...data,
         status: isAtivo ? 'ativo' : 'inativo',
         // Garantir que não há espaços extras
         razao_social: data.razao_social.trim(),
         nome_fantasia: data.nome_fantasia.trim(),
-        email: data.email.trim()
+        email: data.email.trim(),
       };
-      
+
       await onSubmit(clienteData);
-      
+
       // Não mostramos notificação de sucesso aqui, pois já é mostrada no hook useClientes
     } catch (error) {
       console.error('Erro ao processar formulário:', error);
-      
+
       // Mostrar erro detalhado
       if (error instanceof Error) {
         setErrorAlert(error.message);
@@ -263,35 +263,27 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
       {/* Alerta de erro */}
       <Collapse in={!!errorAlert}>
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-          onClose={() => setErrorAlert(null)}
-        >
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorAlert(null)}>
           {errorAlert}
         </Alert>
       </Collapse>
-      
+
       {/* Alerta de CNPJ duplicado */}
       <Collapse in={cnpjDuplicadoAlerta}>
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 2 }}
-        >
-          Este CNPJ já está cadastrado no sistema. Verifique a lista de clientes inativos, pois o cliente pode ter sido excluído anteriormente.
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Este CNPJ já está cadastrado no sistema. Verifique a lista de clientes inativos, pois o
+          cliente pode ter sido excluído anteriormente.
         </Alert>
       </Collapse>
-      
+
       {/* Alerta para cliente soft-deleted */}
       <Collapse in={isSoftDeleted}>
-        <Alert 
-          severity="info" 
-          sx={{ mb: 2 }}
-        >
-          Este cliente foi excluído anteriormente. Para reativá-lo, selecione o status "Ativo" e salve as alterações.
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Este cliente foi excluído anteriormente. Para reativá-lo, selecione o status
+          &quot;Ativo&quot; e salve as alterações.
         </Alert>
       </Collapse>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6}>
           <Controller
@@ -304,9 +296,12 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
                 fullWidth
                 onChange={(e) => field.onChange(formatarCNPJ(e.target.value))}
                 error={!!errors.cnpj || cnpjDuplicadoAlerta}
-                helperText={errors.cnpj?.message || (cnpjDuplicadoAlerta ? 'CNPJ já cadastrado' : 'Formato: XX.XXX.XXX/XXXX-XX')}
+                helperText={
+                  errors.cnpj?.message ||
+                  (cnpjDuplicadoAlerta ? 'CNPJ já cadastrado' : 'Formato: XX.XXX.XXX/XXXX-XX')
+                }
                 inputProps={{
-                  maxLength: 18
+                  maxLength: 18,
                 }}
                 disabled={isSubmitting}
               />
@@ -327,7 +322,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
                 error={!!errors.telefone}
                 helperText={errors.telefone?.message || 'Formato: (XX) XXXXX-XXXX'}
                 inputProps={{
-                  maxLength: 15
+                  maxLength: 15,
                 }}
                 disabled={isSubmitting}
               />
@@ -408,7 +403,8 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
           </FormControl>
           {isSoftDeleted && (
             <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
-              Este cliente foi excluído anteriormente. Para reativá-lo, selecione "Ativo" e salve as alterações.
+              Este cliente foi excluído anteriormente. Para reativá-lo, selecione &quot;Ativo&quot;
+              e salve as alterações.
             </Typography>
           )}
         </Grid>
@@ -430,7 +426,6 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
     </Box>
   );
 }
-
 
 // Adicionar exportação default para compatibilidade
 export default ClienteForm;

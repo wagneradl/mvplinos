@@ -16,8 +16,6 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/utils/format';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
@@ -70,9 +68,7 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
               <Typography color="text.secondary" gutterBottom>
                 Pedidos
               </Typography>
-              <Typography variant="h4">
-                {data.resumo?.total_orders ?? 0}
-              </Typography>
+              <Typography variant="h4">{data.resumo?.total_orders ?? 0}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -82,9 +78,7 @@ export function RelatorioVendas({ data, isLoading, onExportPdf }: RelatorioVenda
               <Typography color="text.secondary" gutterBottom>
                 Valor Total
               </Typography>
-              <Typography variant="h4">
-                {formatCurrency(data.resumo?.total_value ?? 0)}
-              </Typography>
+              <Typography variant="h4">{formatCurrency(data.resumo?.total_value ?? 0)}</Typography>
             </CardContent>
           </Card>
         </Grid>

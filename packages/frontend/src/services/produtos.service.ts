@@ -1,5 +1,5 @@
 import { Produto } from '@/types/produto';
-import { api, extractErrorMessage } from './api';
+import { api } from './api';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -22,7 +22,12 @@ export interface CreateProdutoDto {
 }
 
 export const ProdutosService = {
-  async listarProdutos(page = 1, limit = 10, status?: string, search?: string): Promise<PaginatedResponse<Produto>> {
+  async listarProdutos(
+    page = 1,
+    limit = 10,
+    status?: string,
+    search?: string
+  ): Promise<PaginatedResponse<Produto>> {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -66,7 +71,11 @@ export const ProdutosService = {
         throw new Error('Nome do produto é obrigatório');
       }
 
-      if (typeof produto.preco_unitario !== 'number' || isNaN(produto.preco_unitario) || produto.preco_unitario <= 0) {
+      if (
+        typeof produto.preco_unitario !== 'number' ||
+        isNaN(produto.preco_unitario) ||
+        produto.preco_unitario <= 0
+      ) {
         throw new Error('Preço unitário deve ser um número positivo');
       }
 
@@ -83,9 +92,9 @@ export const ProdutosService = {
         ...produto,
         nome: produto.nome.trim(),
         descricao: produto.descricao?.trim(),
-        preco_unitario: Number(produto.preco_unitario)
+        preco_unitario: Number(produto.preco_unitario),
       };
-      
+
       console.log('Enviando produto para API:', produtoPayload);
       const response = await api.post<Produto>('/produtos', produtoPayload);
       return response.data;
@@ -95,17 +104,23 @@ export const ProdutosService = {
     }
   },
 
-  async atualizarProduto(id: number, produto: Partial<Produto>, includeDeleted = false): Promise<Produto> {
+  async atualizarProduto(
+    id: number,
+    produto: Partial<Produto>,
+    includeDeleted = false
+  ): Promise<Produto> {
     try {
       // Validações para campos fornecidos
       if (produto.nome !== undefined && !produto.nome.trim()) {
         throw new Error('Nome do produto não pode ser vazio');
       }
 
-      if (produto.preco_unitario !== undefined && 
-          (typeof produto.preco_unitario !== 'number' || 
-           isNaN(produto.preco_unitario) || 
-           produto.preco_unitario <= 0)) {
+      if (
+        produto.preco_unitario !== undefined &&
+        (typeof produto.preco_unitario !== 'number' ||
+          isNaN(produto.preco_unitario) ||
+          produto.preco_unitario <= 0)
+      ) {
         throw new Error('Preço unitário deve ser um número positivo');
       }
 
@@ -114,7 +129,8 @@ export const ProdutosService = {
         ...produto,
         nome: produto.nome?.trim(),
         descricao: produto.descricao?.trim(),
-        preco_unitario: produto.preco_unitario !== undefined ? Number(produto.preco_unitario) : undefined
+        preco_unitario:
+          produto.preco_unitario !== undefined ? Number(produto.preco_unitario) : undefined,
       };
 
       const params = includeDeleted ? '?includeDeleted=true' : '';
@@ -129,8 +145,8 @@ export const ProdutosService = {
   async deletarProduto(id: number): Promise<void> {
     try {
       // Em vez de DELETE, usamos PATCH para alterar o status para inativo (soft delete)
-      await api.patch(`/produtos/${id}`, { 
-        status: 'inativo'
+      await api.patch(`/produtos/${id}`, {
+        status: 'inativo',
       });
     } catch (error) {
       console.error(`Erro ao inativar produto ${id}:`, error);
@@ -142,8 +158,8 @@ export const ProdutosService = {
     try {
       // Reativar produto alterando o status para ativo
       // Incluir o parâmetro includeDeleted=true para permitir atualizar produtos soft-deleted
-      const response = await api.patch(`/produtos/${id}?includeDeleted=true`, { 
-        status: 'ativo'
+      const response = await api.patch(`/produtos/${id}?includeDeleted=true`, {
+        status: 'ativo',
       });
       return response.data;
     } catch (error) {
@@ -159,14 +175,15 @@ export const ProdutosService = {
       const response = await api.get<PaginatedResponse<Produto>>('/produtos', {
         params: {
           limit: 100,
-          nome: nome.trim()
-        }
+          nome: nome.trim(),
+        },
       });
-      
+
       // Verifica se algum produto com esse nome já existe (excluindo o próprio produto no caso de edição)
-      return response.data.data.some(produto => 
-        produto.nome.toLowerCase() === nome.trim().toLowerCase() && 
-        (excluirId === undefined || produto.id !== excluirId)
+      return response.data.data.some(
+        (produto) =>
+          produto.nome.toLowerCase() === nome.trim().toLowerCase() &&
+          (excluirId === undefined || produto.id !== excluirId)
       );
     } catch (error) {
       console.error('Erro ao verificar nome duplicado:', error);
@@ -182,28 +199,28 @@ export const ProdutosService = {
     if (typeof preco !== 'number' || isNaN(preco)) {
       return { valido: false, mensagem: 'O preço deve ser um número válido' };
     }
-    
+
     // Verifica valor negativo
     if (preco < 0) {
       return { valido: false, mensagem: 'O preço não pode ser negativo' };
     }
-    
+
     // Verifica valor zero
     if (preco === 0) {
       return { valido: false, mensagem: 'O preço não pode ser zero' };
     }
-    
+
     // Verifica valores muito altos (possível erro de digitação)
     if (preco > 100000) {
       return { valido: false, mensagem: 'O preço parece muito alto. Verifique se está correto' };
     }
-    
+
     // Verifica precisão da casa decimal (evita erros de arredondamento)
     const precision = (preco.toString().split('.')[1] || '').length;
     if (precision > 2) {
       return { valido: false, mensagem: 'O preço deve ter no máximo duas casas decimais' };
     }
-    
+
     return { valido: true };
-  }
+  },
 };

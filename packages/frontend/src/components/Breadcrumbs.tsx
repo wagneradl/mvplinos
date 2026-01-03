@@ -24,43 +24,45 @@ export function Breadcrumbs() {
 
   const breadcrumbs = useMemo(() => {
     const paths = pathname?.split('/').filter(Boolean) || [];
-    return paths.map((path, index) => {
-      const href = `/${paths.slice(0, index + 1).join('/')}`;
-      
-      // Se for um ID numérico, não criar um link para ele
-      // Em vez disso, redirecionar para a página pai
-      if (isNumericId(path)) {
-        // Se o próximo caminho for "editar", estamos em uma página de edição
-        // Neste caso, não mostrar o ID como um breadcrumb separado
-        if (index + 1 < paths.length && paths[index + 1] === 'editar') {
-          return null;
+    return paths
+      .map((path, index) => {
+        const href = `/${paths.slice(0, index + 1).join('/')}`;
+
+        // Se for um ID numérico, não criar um link para ele
+        // Em vez disso, redirecionar para a página pai
+        if (isNumericId(path)) {
+          // Se o próximo caminho for "editar", estamos em uma página de edição
+          // Neste caso, não mostrar o ID como um breadcrumb separado
+          if (index + 1 < paths.length && paths[index + 1] === 'editar') {
+            return null;
+          }
+
+          // Para outros casos, mostrar o ID mas sem link
+          return (
+            <Typography key={href} color="text.secondary">
+              ID: {path}
+            </Typography>
+          );
         }
-        
-        // Para outros casos, mostrar o ID mas sem link
-        return (
-          <Typography key={href} color="text.secondary">
-            ID: {path}
-          </Typography>
-        );
-      }
-      
-      const label = routeLabels[path] || path;
-      const isLast = index === paths.length - 1;
 
-      if (isLast) {
+        const label = routeLabels[path] || path;
+        const isLast = index === paths.length - 1;
+
+        if (isLast) {
+          return (
+            <Typography key={href} color="text.primary">
+              {label}
+            </Typography>
+          );
+        }
+
         return (
-          <Typography key={href} color="text.primary">
+          <Link key={href} component={NextLink} href={href} underline="hover" color="inherit">
             {label}
-          </Typography>
+          </Link>
         );
-      }
-
-      return (
-        <Link key={href} component={NextLink} href={href} underline="hover" color="inherit">
-          {label}
-        </Link>
-      );
-    }).filter(Boolean); // Remover itens nulos
+      })
+      .filter(Boolean); // Remover itens nulos
   }, [pathname]);
 
   if (!breadcrumbs?.length) return null;

@@ -17,11 +17,7 @@ export function PageContainer({ title, actions, children }: PageContainerProps) 
         <Box component="h1" sx={{ typography: 'h5', fontWeight: 'bold', m: 0 }}>
           {title}
         </Box>
-        {actions && (
-          <Box>
-            {actions}
-          </Box>
-        )}
+        {actions && <Box>{actions}</Box>}
       </Box>
       <Paper sx={{ p: 3 }}>{children}</Paper>
     </>
