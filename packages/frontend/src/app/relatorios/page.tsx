@@ -8,6 +8,10 @@ import { RelatorioVendas } from '@/components/RelatorioVendas';
 import { useClientes } from '@/hooks/useClientes';
 import { useSummaryRelatorio } from '@/hooks/usePedidos';
 import { format, isValid } from 'date-fns';
+import { loggers } from '@/utils/logger';
+import { useSnackbar } from 'notistack';
+
+const logger = loggers.pedidos;
 
 // Função de formatação segura que não quebra com datas inválidas
 function formatSafe(date: Date | null | undefined, pattern: string): string | undefined {
@@ -16,7 +20,6 @@ function formatSafe(date: Date | null | undefined, pattern: string): string | un
   }
   return format(date, pattern);
 }
-import { useSnackbar } from 'notistack';
 
 export default function RelatoriosPage() {
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -54,14 +57,14 @@ export default function RelatoriosPage() {
       data_fim: formatSafe(endDate, 'yyyy-MM-dd'),
       cliente_id: clienteId ? Number(clienteId) : undefined,
     };
-    console.log('Exportando PDF com filtros (snake_case):', filtros);
+    logger.debug('Exportando PDF com filtros (snake_case):', filtros);
     try {
       await import('@/services/pedidos.service').then(({ PedidosService }) =>
         PedidosService.downloadRelatorioPdf(filtros)
       );
     } catch (error) {
       enqueueSnackbar('Erro ao exportar PDF do relatório', { variant: 'error' });
-      console.error('Erro ao exportar PDF:', error);
+      logger.error('Erro ao exportar PDF:', error);
     }
   };
 
