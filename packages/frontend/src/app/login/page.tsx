@@ -16,6 +16,9 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { extractErrorMessage } from '@/services/api';
 import { authService } from '@/services/auth.service';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.auth;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -34,7 +37,7 @@ export default function LoginPage() {
       const data = await authService.login({ email, senha });
       login(data.token, data.usuario);
     } catch (error) {
-      console.error('Erro de login:', error);
+      logger.error('Erro de login:', error);
       setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');
       setLoading(false);
     }

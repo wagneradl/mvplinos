@@ -1,5 +1,8 @@
 import { Cliente } from '@/types/pedido';
 import { api } from './api';
+import { loggers } from '@/utils/logger';
+
+const clientesLogger = loggers.clientes;
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -36,12 +39,12 @@ export const ClientesService = {
         params.append('search', search);
       }
 
-      console.log(`Fazendo requisição para /clientes?${params}`);
+      clientesLogger.debug(`Fazendo requisição para /clientes?${params}`);
       const response = await api.get(`/clientes?${params}`);
-      console.log('Resposta da API de listarClientes:', response.data);
+      clientesLogger.debug('Resposta da API de listarClientes:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Erro ao listar clientes:', error);
+      clientesLogger.error('Erro ao listar clientes:', error);
       throw error;
     }
   },
@@ -64,7 +67,7 @@ export const ClientesService = {
       const response = await api.get(`/clientes?${params}`);
       return response.data.data;
     } catch (error) {
-      console.error('Erro ao listar todos os clientes:', error);
+      clientesLogger.error('Erro ao listar todos os clientes:', error);
       throw error;
     }
   },
@@ -75,7 +78,7 @@ export const ClientesService = {
       const response = await api.get(`/clientes/${id}?includeDeleted=${includeDeleted}`);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao obter cliente ${id}:`, error);
+      clientesLogger.error(`Erro ao obter cliente ${id}:`, error);
       throw error;
     }
   },
@@ -85,11 +88,11 @@ export const ClientesService = {
       // Validações avançadas
       ClientesService.validarCliente(cliente);
 
-      console.log('Enviando cliente para o backend:', cliente);
+      clientesLogger.debug('Enviando cliente para o backend:', cliente);
       const response = await api.post('/clientes', cliente);
       return response.data;
     } catch (error) {
-      console.error('Erro ao criar cliente:', error);
+      clientesLogger.error('Erro ao criar cliente:', error);
       throw error;
     }
   },
@@ -113,12 +116,12 @@ export const ClientesService = {
         ClientesService.validarEmail(cliente.email);
       }
 
-      console.log('Atualizando cliente:', id, cliente);
+      clientesLogger.debug('Atualizando cliente:', id, cliente);
       // Incluir o parâmetro includeDeleted para permitir atualizar clientes soft-deleted
       const response = await api.patch(`/clientes/${id}?includeDeleted=${includeDeleted}`, cliente);
       return response.data;
     } catch (error) {
-      console.error('Erro ao atualizar cliente:', error);
+      clientesLogger.error('Erro ao atualizar cliente:', error);
       throw error;
     }
   },
@@ -127,7 +130,7 @@ export const ClientesService = {
     try {
       await api.delete(`/clientes/${id}`);
     } catch (error) {
-      console.error(`Erro ao inativar cliente ${id}:`, error);
+      clientesLogger.error(`Erro ao inativar cliente ${id}:`, error);
       throw error;
     }
   },
@@ -139,7 +142,7 @@ export const ClientesService = {
       const response = await api.patch(`/clientes/${id}?includeDeleted=true`, { status: 'ativo' });
       return response.data;
     } catch (error) {
-      console.error(`Erro ao reativar cliente ${id}:`, error);
+      clientesLogger.error(`Erro ao reativar cliente ${id}:`, error);
       throw error;
     }
   },
@@ -246,12 +249,12 @@ export const ClientesService = {
       );
 
       if (clienteExistente) {
-        console.log('CNPJ duplicado encontrado. Verifique a lista de clientes inativos.');
+        clientesLogger.debug('CNPJ duplicado encontrado. Verifique a lista de clientes inativos.');
       }
 
       return clienteExistente;
     } catch (error) {
-      console.error('Erro ao verificar CNPJ duplicado:', error);
+      clientesLogger.error('Erro ao verificar CNPJ duplicado:', error);
       return false;
     }
   },

@@ -66,7 +66,7 @@ export class AuthService {
   async validateToken(token: string) {
     try {
       return this.jwtService.verify(token);
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException('Token inválido ou expirado');
     }
   }

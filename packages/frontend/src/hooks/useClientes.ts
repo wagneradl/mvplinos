@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClientesService } from '@/services/clientes.service';
 import { Cliente } from '@/types/pedido';
 import { useSnackbar } from './useSnackbar';
+import { loggers } from '@/utils/logger';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -18,26 +19,20 @@ interface PaginatedResponse<T> {
 export function useClientes(page = 1, limit = 10, status?: string, search?: string) {
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useSnackbar();
+  const logger = loggers.clientes;
 
   const { data, isLoading, error, refetch } = useQuery<PaginatedResponse<Cliente>, Error>({
     queryKey: ['clientes', page, limit, status, search],
     queryFn: async () => {
       try {
-        console.log(
-          'Buscando clientes com page:',
-          page,
-          'limit:',
-          limit,
-          'status:',
-          status,
-          'search:',
-          search
+        logger.debug(
+          `Buscando clientes: page=${page}, limit=${limit}, status=${status}, search=${search}`
         );
         const response = await ClientesService.listarClientes(page, limit, status, search);
-        console.log('Resposta da API de clientes:', response);
+        logger.debug('Resposta da API de clientes:', response);
         return response;
       } catch (err) {
-        console.error('Erro ao buscar clientes:', err);
+        logger.error('Erro ao buscar clientes:', err);
         throw err;
       }
     },
@@ -53,7 +48,7 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       showSuccess('Cliente criado com sucesso!');
     },
     onError: (err) => {
-      console.error('Erro ao criar cliente:', err);
+      logger.error('Erro ao criar cliente:', err);
       showError(
         `Erro ao criar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
       );
@@ -75,7 +70,7 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       showSuccess('Cliente atualizado com sucesso!');
     },
     onError: (err) => {
-      console.error('Erro ao atualizar cliente:', err);
+      logger.error('Erro ao atualizar cliente:', err);
       showError(
         `Erro ao atualizar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
       );
@@ -89,7 +84,7 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       showSuccess('Cliente inativado com sucesso!');
     },
     onError: (err) => {
-      console.error('Erro ao inativar cliente:', err);
+      logger.error('Erro ao inativar cliente:', err);
       showError(
         `Erro ao inativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
       );
@@ -103,7 +98,7 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
       showSuccess('Cliente reativado com sucesso!');
     },
     onError: (err) => {
-      console.error('Erro ao reativar cliente:', err);
+      logger.error('Erro ao reativar cliente:', err);
       showError(
         `Erro ao reativar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
       );
@@ -123,7 +118,7 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     reativarCliente,
   };
 
-  console.log('useClientes retornando:', returnValue);
+  logger.debug('useClientes retornando:', returnValue);
 
   return returnValue;
 }

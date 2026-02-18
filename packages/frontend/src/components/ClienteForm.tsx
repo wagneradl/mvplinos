@@ -21,6 +21,9 @@ import { z } from 'zod';
 import { Cliente } from '@/types/pedido';
 import { useSnackbar } from '@/hooks/useSnackbar';
 import { ClientesService } from '@/services/clientes.service';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.forms;
 
 // Schema com validações aprimoradas
 const clienteSchema = z.object({
@@ -125,7 +128,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
       // Sincronizar o estado do switch com o status do cliente
       setIsAtivo(cliente.status === 'ativo');
 
-      console.log('ClienteForm: cliente atualizado', {
+      logger.debug('ClienteForm: cliente atualizado', {
         id: cliente.id,
         status: cliente.status,
         deleted_at: cliente.deleted_at,
@@ -165,7 +168,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
   // Efeito para sincronizar o status do formulário com o status do cliente
   useEffect(() => {
     if (cliente) {
-      console.log('Sincronizando status do formulário:', {
+      logger.debug('Sincronizando status do formulário:', {
         clienteStatus: cliente.status,
         formStatus: watch('status'),
       });
@@ -196,7 +199,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
           }
         } catch (error) {
           // Ignora erros de validação - log apenas para diagnóstico
-          console.error('Erro ao verificar CNPJ duplicado:', error);
+          logger.error('Erro ao verificar CNPJ duplicado:', error);
         }
       } else {
         setCnpjDuplicadoAlerta(false);
@@ -244,7 +247,7 @@ export function ClienteForm({ cliente, onSubmit, isLoading = false }: ClienteFor
 
       // Não mostramos notificação de sucesso aqui, pois já é mostrada no hook useClientes
     } catch (error) {
-      console.error('Erro ao processar formulário:', error);
+      logger.error('Erro ao processar formulário:', error);
 
       // Mostrar erro detalhado
       if (error instanceof Error) {

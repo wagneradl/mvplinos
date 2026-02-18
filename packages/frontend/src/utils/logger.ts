@@ -71,6 +71,15 @@ export class Logger {
    * Verifica se o nível de log deve ser mostrado
    */
   private shouldLog(level: LogLevel): boolean {
+    // Se for debug, só mostra se estiver em ambiente de desenvolvimento ou se a flag NEXT_PUBLIC_DEBUG estiver ativa
+    if (level === 'debug') {
+      const isDev = process.env.NODE_ENV !== 'production';
+      const isDebugEnabled = process.env.NEXT_PUBLIC_DEBUG === '1';
+      if (!isDev && !isDebugEnabled) {
+        return false;
+      }
+    }
+
     return LOG_LEVELS[level] >= LOG_LEVELS[this.minLevel];
   }
 
@@ -80,6 +89,7 @@ export class Logger {
   debug(message: string, ...args: any[]): void {
     if (!this.shouldLog('debug')) return;
 
+    // eslint-disable-next-line no-console
     console.debug(this.formatMessage(message), ...args);
   }
 
@@ -89,6 +99,7 @@ export class Logger {
   info(message: string, ...args: any[]): void {
     if (!this.shouldLog('info')) return;
 
+    // eslint-disable-next-line no-console
     console.info(this.formatMessage(message), ...args);
   }
 
@@ -98,15 +109,17 @@ export class Logger {
   warn(message: string, ...args: any[]): void {
     if (!this.shouldLog('warn')) return;
 
+    // eslint-disable-next-line no-console
     console.warn(this.formatMessage(message), ...args);
   }
 
   /**
    * Log de nível error (erros)
    */
-  error(message: string, error?: any, ...args: any[]): void {
+  error(message: string, error?: unknown, ...args: any[]): void {
     if (!this.shouldLog('error')) return;
 
+    // eslint-disable-next-line no-console
     console.error(this.formatMessage(message), error, ...args);
 
     // Registro detalhado de erros para diagnóstico
@@ -126,40 +139,37 @@ export class Logger {
   private logErrorDetails(error: any): void {
     if (!error) return;
 
-    console.group('Detalhes do Erro:');
-
+    // Simplificado para evitar console.group e reduzir ruído
     if (error instanceof Error) {
-      console.error('Mensagem:', error.message);
-      console.error('Nome:', error.name);
-      console.error('Stack:', error.stack);
+      // eslint-disable-next-line no-console
+      console.error(`[Error Details] ${error.name}: ${error.message}`);
+      if (error.stack) {
+        // eslint-disable-next-line no-console
+        console.debug(`[Error Stack] ${error.stack}`);
+      }
     }
 
     // Log de propriedades adicionais (útil para erros de API)
     if (error.isApiError) {
-      console.error('Código:', error.statusCode);
-      console.error('Tipo:', error.errorType);
-
+      // eslint-disable-next-line no-console
+      console.error(`[API Error] Code: ${error.statusCode}, Type: ${error.errorType}`);
       if (Array.isArray(error.messages)) {
-        console.error('Mensagens:', error.messages);
+        // eslint-disable-next-line no-console
+        console.error(`[API Messages] ${error.messages.join(', ')}`);
       }
     }
 
     // Se for erro de API do Axios
     if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Dados:', error.response.data);
-      console.error('Headers:', error.response.headers);
-    } else if (error.request) {
-      console.error('Requisição sem resposta:', error.request);
+      // eslint-disable-next-line no-console
+      console.error(`[Axios Error] Status: ${error.response.status}`);
     }
-
-    console.groupEnd();
   }
 
   /**
    * Envia erro para servidor de monitoramento (implementação futura)
    */
-  private reportErrorToServer(_message: string, _error: any): void {
+  private reportErrorToServer(_message: string, _error: unknown): void {
     // TODO: Implementar envio para servidor de monitoramento
     // Por exemplo: integração com Sentry, LogRocket, etc.
   }
@@ -172,10 +182,12 @@ export class Logger {
       return operation();
     }
 
+    // eslint-disable-next-line no-console
     console.time(this.formatMessage(label));
     try {
       return operation();
     } finally {
+      // eslint-disable-next-line no-console
       console.timeEnd(this.formatMessage(label));
     }
   }
@@ -188,10 +200,12 @@ export class Logger {
       return operation();
     }
 
+    // eslint-disable-next-line no-console
     console.time(this.formatMessage(label));
     try {
       return await operation();
     } finally {
+      // eslint-disable-next-line no-console
       console.timeEnd(this.formatMessage(label));
     }
   }

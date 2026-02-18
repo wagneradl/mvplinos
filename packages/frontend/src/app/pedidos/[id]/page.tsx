@@ -35,6 +35,9 @@ import { usePedido, usePedidos } from '@/hooks/usePedidos';
 import { useSnackbar } from 'notistack';
 import { ErrorState } from '@/components/ErrorState';
 import { PageContainer } from '@/components/PageContainer';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.pedidos;
 
 export default function PedidoDetalhesPage() {
   const router = useRouter();
@@ -65,7 +68,7 @@ export default function PedidoDetalhesPage() {
       enqueueSnackbar('Pedido cancelado com sucesso', { variant: 'success' });
       router.push('/pedidos');
     } catch (error) {
-      console.error('Erro ao cancelar pedido:', error);
+      logger.error('Erro ao cancelar pedido:', error);
       enqueueSnackbar('Erro ao cancelar pedido', { variant: 'error' });
     } finally {
       setIsDeleting(false);
@@ -97,7 +100,7 @@ export default function PedidoDetalhesPage() {
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
       router.push('/pedidos/novo');
     } catch (error) {
-      console.error('Erro ao copiar pedido:', error);
+      logger.error('Erro ao copiar pedido:', error);
       enqueueSnackbar('Erro ao copiar pedido', { variant: 'error' });
     }
   };
@@ -107,7 +110,7 @@ export default function PedidoDetalhesPage() {
       await downloadPdf(pedidoId);
       enqueueSnackbar('PDF gerado com sucesso', { variant: 'success' });
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
+      logger.error('Erro ao gerar PDF:', error);
       enqueueSnackbar('Erro ao gerar PDF', { variant: 'error' });
     }
   };

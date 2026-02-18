@@ -127,7 +127,7 @@ export class ProdutosService {
           hasNextPage: page < totalPages,
         },
       };
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Erro ao listar produtos');
     }
   }

@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+import { debugLog } from '../../common/utils/debug-log';
 
 // Constantes de configuração
 const TOKEN_EXPIRATION_MINUTES = 15;
@@ -59,7 +60,10 @@ export class PasswordResetService {
       // Se usuário não existe ou está inativo, retorna sucesso sem fazer nada
       // Isso evita enumeração de usuários
       if (!usuario || usuario.status !== 'ativo') {
-        this.logger.warn(`Tentativa de reset para email inexistente ou inativo: ${email}`);
+        debugLog(
+          'PasswordResetService',
+          `Tentativa de reset para email inexistente ou inativo: ${email}`,
+        );
         return { sucesso: true, mensagem: mensagemNeutra };
       }
 
@@ -79,7 +83,7 @@ export class PasswordResetService {
         },
       });
 
-      this.logger.log(`Token de reset criado para usuário ${usuario.id}`);
+      debugLog('PasswordResetService', `Token de reset criado para usuário ${usuario.id}`);
 
       // Emite evento para possível envio de email (não implementado agora)
       const event: PasswordResetRequestedEvent = {
@@ -115,19 +119,19 @@ export class PasswordResetService {
       });
 
       if (!tokenRecord) {
-        this.logger.warn(`Token de reset não encontrado`);
+        debugLog('PasswordResetService', `Token de reset não encontrado`);
         return { valido: false };
       }
 
       // Verifica se já foi usado
       if (tokenRecord.used_at) {
-        this.logger.warn(`Token de reset já utilizado: ${tokenRecord.id}`);
+        debugLog('PasswordResetService', `Token de reset já utilizado: ${tokenRecord.id}`);
         return { valido: false };
       }
 
       // Verifica se expirou
       if (new Date() > tokenRecord.expires_at) {
-        this.logger.warn(`Token de reset expirado: ${tokenRecord.id}`);
+        debugLog('PasswordResetService', `Token de reset expirado: ${tokenRecord.id}`);
         return { valido: false };
       }
 
@@ -203,7 +207,10 @@ export class PasswordResetService {
         }),
       ]);
 
-      this.logger.log(`Senha redefinida com sucesso para usuário ${tokenRecord.usuario_id}`);
+      debugLog(
+        'PasswordResetService',
+        `Senha redefinida com sucesso para usuário ${tokenRecord.usuario_id}`,
+      );
 
       // Emite evento de senha alterada
       this.eventEmitter.emit('password.reset.completed', {
@@ -241,7 +248,8 @@ export class PasswordResetService {
     });
 
     if (result.count > 0) {
-      this.logger.log(
+      debugLog(
+        'PasswordResetService',
         `${result.count} token(s) anterior(es) invalidado(s) para usuário ${usuarioId}`,
       );
     }
@@ -258,7 +266,7 @@ export class PasswordResetService {
     });
 
     if (result.count > 0) {
-      this.logger.log(`${result.count} token(s) expirado(s)/usado(s) removido(s)`);
+      debugLog('PasswordResetService', `${result.count} token(s) expirado(s)/usado(s) removido(s)`);
     }
 
     return result.count;

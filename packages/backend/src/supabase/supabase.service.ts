@@ -1,6 +1,7 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseUploadResultDto } from './dto/supabase-upload.dto';
+import { debugLog } from '../common/utils/debug-log';
 
 // Interface para os erros de storage do Supabase
 interface SupabaseServiceError extends Error {
@@ -27,13 +28,14 @@ export class SupabaseService {
     const bucketName = process.env.SUPABASE_BUCKET || 'pedidos-pdfs';
 
     // Log detalhado das configurações (sem mostrar as chaves completas)
-    this.logger.log(`[SUPABASE] Inicializando serviço com as seguintes configurações:`);
-    this.logger.log(`[SUPABASE] URL: ${supabaseUrl || 'NÃO CONFIGURADA'}`);
-    this.logger.log(
+    debugLog('SupabaseService', `[SUPABASE] Inicializando serviço com as seguintes configurações:`);
+    debugLog('SupabaseService', `[SUPABASE] URL: ${supabaseUrl || 'NÃO CONFIGURADA'}`);
+    debugLog(
+      'SupabaseService',
       `[SUPABASE] SERVICE_ROLE_KEY: ${supabaseKey ? 'Configurada' : 'NÃO CONFIGURADA'}`,
     );
-    this.logger.log(`[SUPABASE] Bucket: ${bucketName}`);
-    this.logger.log(`[SUPABASE] Ambiente: ${process.env.NODE_ENV || 'não definido'}`);
+    debugLog('SupabaseService', `[SUPABASE] Bucket: ${bucketName}`);
+    debugLog('SupabaseService', `[SUPABASE] Ambiente: ${process.env.NODE_ENV || 'não definido'}`);
 
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error(
@@ -42,17 +44,20 @@ export class SupabaseService {
     } else {
       try {
         this.supabase = createClient(supabaseUrl, supabaseKey);
-        this.logger.log(`[SUPABASE] Cliente inicializado com sucesso para URL: ${supabaseUrl}`);
+        debugLog(
+          'SupabaseService',
+          `[SUPABASE] Cliente inicializado com sucesso para URL: ${supabaseUrl}`,
+        );
 
         // Adiciona log para depuração da sessão
         if (this.supabase && this.supabase.auth && this.supabase.auth.getSession) {
           this.supabase.auth
             .getSession()
             .then((sess) => {
-              this.logger.log(`[SUPABASE] Sessão atual:`, sess);
+              debugLog('SupabaseService', `[SUPABASE] Sessão atual:`, sess);
             })
             .catch((e) => {
-              this.logger.warn(`[SUPABASE] Erro ao obter sessão: ${e}`);
+              debugLog('SupabaseService', `[SUPABASE] Erro ao obter sessão: ${e}`);
             });
         }
       } catch (error) {
@@ -62,11 +67,11 @@ export class SupabaseService {
       }
       // Tentar criar o bucket se ele não existir, usando políticas públicas
       this.initializeBucket(bucketName).catch((error) => {
-        this.logger.warn(`Failed to initialize bucket: ${error.message}`);
+        debugLog('SupabaseService', `Failed to initialize bucket: ${error.message}`);
       });
     }
     this.bucketName = bucketName;
-    this.logger.log(`Using bucket: ${this.bucketName}`);
+    debugLog('SupabaseService', `Using bucket: ${this.bucketName}`);
   }
 
   /**
@@ -80,7 +85,7 @@ export class SupabaseService {
       const { data: buckets } = await this.supabase.storage.listBuckets();
 
       if (!buckets || !buckets.find((b) => b.name === bucketName)) {
-        this.logger.log(`Bucket ${bucketName} not found, attempting to create it...`);
+        debugLog('SupabaseService', `Bucket ${bucketName} not found, attempting to create it...`);
 
         // Criar o bucket com opções de acesso público
         const { error } = await this.supabase.storage.createBucket(bucketName, {
@@ -91,15 +96,19 @@ export class SupabaseService {
           throw error;
         }
 
-        this.logger.log(`Bucket ${bucketName} created successfully`);
+        debugLog('SupabaseService', `Bucket ${bucketName} created successfully`);
       } else {
-        this.logger.log(`Bucket ${bucketName} already exists`);
+        debugLog('SupabaseService', `Bucket ${bucketName} already exists`);
 
         // Como não podemos alterar as políticas via API cliente, informamos ao usuário
-        this.logger.warn(
+        debugLog(
+          'SupabaseService',
           `Make sure the bucket ${bucketName} has public access or appropriate RLS policies`,
         );
-        this.logger.warn(`You may need to configure this in the Supabase dashboard manually`);
+        debugLog(
+          'SupabaseService',
+          `You may need to configure this in the Supabase dashboard manually`,
+        );
       }
     } catch (error: any) {
       this.logger.error(
@@ -150,7 +159,10 @@ export class SupabaseService {
         this.logger.error(`Error creating signed URL: ${error?.message || 'Unknown error'}`);
         throw new Error('Failed to get signed URL for uploaded file');
       }
-      this.logger.log(`File uploaded successfully to Supabase Storage: ${data.signedUrl}`);
+      debugLog(
+        'SupabaseService',
+        `File uploaded successfully to Supabase Storage: ${data.signedUrl}`,
+      );
       return data.signedUrl;
     } catch (error) {
       // Se for um erro que já tratamos, repassar
@@ -164,7 +176,10 @@ export class SupabaseService {
       );
       // Modo de desenvolvimento/teste: gerar URL local temporária
       if (process.env.NODE_ENV !== 'production') {
-        this.logger.warn('Using local development fallback for file URL due to Supabase error');
+        debugLog(
+          'SupabaseService',
+          'Using local development fallback for file URL due to Supabase error',
+        );
         // Extrair o nome do arquivo do caminho
         const fileName = filePath.split('/').pop() || 'unknownfile';
         return `/uploads/pdfs/${fileName}`;

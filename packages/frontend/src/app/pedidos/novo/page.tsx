@@ -32,6 +32,9 @@ import { useProdutos } from '@/hooks/useProdutos';
 import { usePedidos } from '@/hooks/usePedidos';
 import { useSnackbar } from 'notistack';
 import { Produto, ItemPedido } from '@/types/produto';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.pedidos;
 
 interface ItemPedidoForm extends Omit<ItemPedido, 'id' | 'pedido_id'> {
   produto?: Produto;
@@ -63,7 +66,7 @@ export default function NovoPedidoPage() {
   const [pedidoCopiado, setPedidoCopiado] = useState<PedidoCopiado | null>(null);
   const { enqueueSnackbar } = useSnackbar();
 
-  console.log('Clientes recebidos na página de novo pedido:', clientes);
+  logger.debug('Clientes recebidos na página de novo pedido:', clientes);
 
   const {
     control,
@@ -92,14 +95,14 @@ export default function NovoPedidoPage() {
           // Remover do localStorage para não usar novamente acidentalmente
           localStorage.removeItem('pedidoParaCopiar');
 
-          console.log('Pedido copiado carregado:', dados);
+          logger.debug('Pedido copiado carregado:', dados);
           // Removendo notificação duplicada - já exibida na tela anterior
           // enqueueSnackbar('Dados do pedido anterior carregados. Revise e confirme.', {
           //   variant: 'info'
           // });
         }
       } catch (error) {
-        console.error('Erro ao carregar pedido copiado:', error);
+        logger.error('Erro ao carregar pedido copiado:', error);
       }
     };
 
@@ -326,18 +329,18 @@ export default function NovoPedidoPage() {
       };
 
       // Logar o objeto final para inspeção
-      console.log('Objeto pedidoFinal a ser enviado:', JSON.stringify(pedidoFinal, null, 2));
+      logger.debug('Objeto pedidoFinal a ser enviado:', JSON.stringify(pedidoFinal, null, 2));
 
       try {
         // Usando 'as any' para contornar a verificação de tipos, já que há uma discrepância
         // entre o tipo Pedido no frontend (que espera itensPedido) e o que a API realmente aceita (itens)
         const novoPedido = await criarPedido(pedidoFinal as any);
-        console.log('Pedido criado com sucesso:', novoPedido);
+        logger.debug('Pedido criado com sucesso:', novoPedido);
 
         enqueueSnackbar('Pedido criado com sucesso!', { variant: 'success' });
         router.push('/pedidos');
       } catch (error: any) {
-        console.error('Erro ao criar pedido:', error);
+        logger.error('Erro ao criar pedido:', error);
 
         // Tratamento específico para erros comuns do backend
         let mensagemErro = 'Erro ao criar pedido. Por favor, tente novamente.';
@@ -347,7 +350,7 @@ export default function NovoPedidoPage() {
           const status = error.response.status;
           const data = error.response.data;
 
-          console.log('Detalhes do erro:', { status, data });
+          logger.debug('Detalhes do erro:', { status, data });
 
           // Tratamento específico por status HTTP
           if (status === 400) {
@@ -383,7 +386,7 @@ export default function NovoPedidoPage() {
         enqueueSnackbar(mensagemErro, { variant: 'error' });
       }
     } catch (error) {
-      console.error('Erro ao criar pedido:', error);
+      logger.error('Erro ao criar pedido:', error);
       enqueueSnackbar('Erro ao criar pedido', { variant: 'error' });
     } finally {
       setIsSubmitting(false);

@@ -40,7 +40,7 @@ export class ScriptUtils {
         );
         return stdout.trim() === 'true';
       }
-    } catch (error) {
+    } catch {
       return false;
     }
   }

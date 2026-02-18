@@ -1,5 +1,8 @@
 import { Pedido } from '@/types/pedido';
 import { api } from './api';
+import { loggers } from '@/utils/logger';
+
+const pedidosLogger = loggers.pedidos;
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -57,24 +60,24 @@ export const PedidosService = {
         if (params.filters.data_inicio) {
           const startDate = params.filters.data_inicio.substring(0, 10);
           searchParams.append('startDate', startDate);
-          console.log('Frontend - startDate:', startDate);
+          pedidosLogger.debug('Frontend - startDate:', startDate);
         }
         if (params.filters.data_fim) {
           const endDate = params.filters.data_fim.substring(0, 10);
           searchParams.append('endDate', endDate);
-          console.log('Frontend - endDate:', endDate);
+          pedidosLogger.debug('Frontend - endDate:', endDate);
         }
 
         // Filtro de status
         if (params.filters.status) {
           searchParams.append('status', params.filters.status);
-          console.log('Frontend - status:', params.filters.status);
+          pedidosLogger.debug('Frontend - status:', params.filters.status);
         }
       }
 
       // Log detalhado da requisição
-      console.log(`Fazendo requisição para /pedidos?${searchParams.toString()}`);
-      console.log('Parâmetros de filtro completos:', {
+      pedidosLogger.debug(`Fazendo requisição para /pedidos?${searchParams.toString()}`);
+      pedidosLogger.debug('Parâmetros de filtro completos:', {
         page: params?.page || 1,
         limit: params?.limit || 10,
         startDate: params?.filters?.data_inicio,
@@ -86,10 +89,10 @@ export const PedidosService = {
       const response = await api.get<PaginatedResponse<Pedido>>(
         `/pedidos?${searchParams.toString()}`
       );
-      console.log('Resposta da API listarPedidos:', response.data);
+      pedidosLogger.debug('Resposta da API listarPedidos:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Erro ao listar pedidos:', error);
+      pedidosLogger.error('Erro ao listar pedidos:', error);
       throw error;
     }
   },
@@ -168,7 +171,7 @@ export const PedidosService = {
       if (filtros.cliente_id) {
         params.append('cliente_id', filtros.cliente_id.toString());
       }
-      console.log('Parâmetros para download do PDF:', params.toString());
+      pedidosLogger.debug('Parâmetros para download do PDF:', params.toString());
       const response = await api.get(`/pedidos/reports/pdf?${params.toString()}`);
       if (response.data?.url) {
         window.open(response.data.url, '_blank');
@@ -176,7 +179,7 @@ export const PedidosService = {
         throw new Error('URL do PDF não encontrada na resposta');
       }
     } catch (error) {
-      console.error('Erro ao baixar PDF do relatório:', error);
+      pedidosLogger.error('Erro ao baixar PDF do relatório:', error);
       throw error;
     }
   },

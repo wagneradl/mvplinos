@@ -2,10 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProdutosService, CreateProdutoDto } from '@/services/produtos.service';
 import { Produto } from '@/types/produto';
 import { useSnackbar } from './useSnackbar';
+import { loggers } from '@/utils/logger';
 
 export function useProdutos(page = 1, limit = 10, status?: string, search?: string) {
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useSnackbar();
+  const logger = loggers.produtos;
 
   const { data, isLoading } = useQuery({
     queryKey: ['produtos', page, limit, status, search],
@@ -16,11 +18,11 @@ export function useProdutos(page = 1, limit = 10, status?: string, search?: stri
 
   const { mutate: criarProduto, isPending: isCreating } = useMutation({
     mutationFn: (produto: CreateProdutoDto) => {
-      console.log('Mutation - Dados enviados:', produto);
+      logger.debug('Mutation - Dados enviados:', produto);
       return ProdutosService.criarProduto(produto);
     },
     onSuccess: (data) => {
-      console.log('Mutation - Sucesso:', data);
+      logger.debug('Mutation - Sucesso:', data);
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
       showSuccess('Produto criado com sucesso!');
     },

@@ -28,6 +28,7 @@ import { formatCurrency } from '@/utils/format';
 import { usePedidos } from '@/hooks/usePedidos';
 import { PedidosService } from '@/services/pedidos.service';
 import { useSnackbar } from 'notistack';
+import { logger } from '@/utils/logger';
 import { EmptyState } from './EmptyState';
 
 interface PedidosTableProps {
@@ -53,7 +54,7 @@ export function PedidosTable({
   const { enqueueSnackbar } = useSnackbar();
   const { downloadPdf } = usePedidos({ disableNotifications: true });
 
-  console.log('PedidosTable recebeu pedidos:', pedidos);
+  logger.debug('PedidosTable recebeu pedidos:', pedidos);
 
   // Convertemos para 0-based para o MUI TablePagination
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -96,7 +97,7 @@ export function PedidosTable({
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
       router.push('/pedidos/novo');
     } catch (error) {
-      console.error('Erro ao copiar pedido:', error);
+      logger.error('Erro ao copiar pedido:', error);
       enqueueSnackbar('Erro ao copiar pedido', { variant: 'error' });
     }
   };
@@ -105,7 +106,7 @@ export function PedidosTable({
     try {
       await downloadPdf(id);
       enqueueSnackbar('PDF baixado com sucesso', { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Erro ao baixar PDF', { variant: 'error' });
     }
   };

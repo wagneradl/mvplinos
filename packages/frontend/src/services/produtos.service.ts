@@ -1,5 +1,8 @@
 import { Produto } from '@/types/produto';
 import { api } from './api';
+import { loggers } from '@/utils/logger';
+
+const produtosLogger = loggers.produtos;
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -44,11 +47,11 @@ export const ProdutosService = {
         params.append('search', search);
       }
 
-      console.log(`Fazendo requisição para /produtos?${params}`);
+      produtosLogger.debug(`Fazendo requisição para /produtos?${params}`);
       const response = await api.get<PaginatedResponse<Produto>>(`/produtos?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Erro ao listar produtos:', error);
+      produtosLogger.error('Erro ao listar produtos:', error);
       throw error; // O interceptor já tratou o erro
     }
   },
@@ -59,7 +62,7 @@ export const ProdutosService = {
       const response = await api.get(`/produtos/${id}${params}`);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao obter produto ${id}:`, error);
+      produtosLogger.error(`Erro ao obter produto ${id}:`, error);
       throw error;
     }
   },
@@ -95,11 +98,11 @@ export const ProdutosService = {
         preco_unitario: Number(produto.preco_unitario),
       };
 
-      console.log('Enviando produto para API:', produtoPayload);
+      produtosLogger.debug('Enviando produto para API:', produtoPayload);
       const response = await api.post<Produto>('/produtos', produtoPayload);
       return response.data;
     } catch (error) {
-      console.error('Erro ao criar produto:', error);
+      produtosLogger.error('Erro ao criar produto:', error);
       throw error;
     }
   },
@@ -137,7 +140,7 @@ export const ProdutosService = {
       const response = await api.patch(`/produtos/${id}${params}`, produtoPayload);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao atualizar produto ${id}:`, error);
+      produtosLogger.error(`Erro ao atualizar produto ${id}:`, error);
       throw error;
     }
   },
@@ -149,7 +152,7 @@ export const ProdutosService = {
         status: 'inativo',
       });
     } catch (error) {
-      console.error(`Erro ao inativar produto ${id}:`, error);
+      produtosLogger.error(`Erro ao inativar produto ${id}:`, error);
       throw error;
     }
   },
@@ -163,7 +166,7 @@ export const ProdutosService = {
       });
       return response.data;
     } catch (error) {
-      console.error(`Erro ao reativar produto ${id}:`, error);
+      produtosLogger.error(`Erro ao reativar produto ${id}:`, error);
       throw error;
     }
   },
@@ -186,7 +189,7 @@ export const ProdutosService = {
           (excluirId === undefined || produto.id !== excluirId)
       );
     } catch (error) {
-      console.error('Erro ao verificar nome duplicado:', error);
+      produtosLogger.error('Erro ao verificar nome duplicado:', error);
       // Em caso de erro na validação, retorna false para não bloquear o usuário
       // mas registra o erro para diagnóstico
       return false;

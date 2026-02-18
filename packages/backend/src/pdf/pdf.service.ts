@@ -47,8 +47,8 @@ export class PdfService implements OnModuleInit {
     this.logoPath = join(uploadsPath, 'static', 'logo.png');
 
     // Log detalhado dos caminhos para diagnóstico
-    this.logger.log(`[PDF_PATHS] PDF Storage Path: ${this.pdfDir}`);
-    this.logger.log(`[PDF_PATHS] Logo Path: ${this.logoPath}`);
+    debugLog('PdfService', `[PDF_PATHS] PDF Storage Path: ${this.pdfDir}`);
+    debugLog('PdfService', `[PDF_PATHS] Logo Path: ${this.logoPath}`);
 
     // Verificar se as variáveis de ambiente do Supabase estão presentes
     this.useSupabase = Boolean(
@@ -58,12 +58,14 @@ export class PdfService implements OnModuleInit {
     );
 
     if (this.useSupabase) {
-      this.logger.log(
+      debugLog(
+        'PdfService',
         `[STORAGE] Usando Supabase Storage (${process.env.SUPABASE_URL}) para armazenamento de PDFs`,
       );
-      this.logger.log(`[STORAGE] Bucket: ${process.env.SUPABASE_BUCKET}`);
+      debugLog('PdfService', `[STORAGE] Bucket: ${process.env.SUPABASE_BUCKET}`);
     } else {
-      this.logger.log(
+      debugLog(
+        'PdfService',
         `[STORAGE] ATENÇÃO: Usando armazenamento local para PDFs. Supabase não configurado.`,
       );
     }
@@ -75,7 +77,7 @@ export class PdfService implements OnModuleInit {
       try {
         await mkdir(this.pdfDir, { recursive: true });
         await mkdir(join(this.pdfDir, '..', 'static'), { recursive: true });
-        this.logger.log(`Diretórios inicializados: ${this.pdfDir}`);
+        debugLog('PdfService', `Diretórios inicializados: ${this.pdfDir}`);
       } catch (error) {
         this.logger.error(
           `Erro ao criar diretórios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
@@ -83,7 +85,7 @@ export class PdfService implements OnModuleInit {
       }
     }
 
-    this.logger.log(`Logo path: ${this.logoPath}`);
+    debugLog('PdfService', `Logo path: ${this.logoPath}`);
 
     // NOVO: Copiar logo automaticamente se não existir
     if (!existsSync(this.logoPath)) {
@@ -91,14 +93,15 @@ export class PdfService implements OnModuleInit {
         const srcLogo = join(__dirname, '../assets/static/logo.png');
         mkdirSync(dirname(this.logoPath), { recursive: true });
         copyFileSync(srcLogo, this.logoPath);
-        this.logger.log(`Logo copiada automaticamente para: ${this.logoPath}`);
+        debugLog('PdfService', `Logo copiada automaticamente para: ${this.logoPath}`);
       } catch (e) {
-        this.logger.warn(
+        debugLog(
+          'PdfService',
           `Logo não encontrada e falha ao copiar automaticamente: ${e instanceof Error ? e.message : e}`,
         );
       }
     } else {
-      this.logger.log(`Logo encontrada em: ${this.logoPath}`);
+      debugLog('PdfService', `Logo encontrada em: ${this.logoPath}`);
     }
   }
 
@@ -110,7 +113,7 @@ export class PdfService implements OnModuleInit {
   async generatePedidoPdf(pedidoData: any): Promise<PdfResult | string> {
     let browser;
     try {
-      this.logger.log(`Iniciando geração de PDF para pedido ${pedidoData.id}`);
+      debugLog('PdfService', `Iniciando geração de PDF para pedido ${pedidoData.id}`);
 
       // Validar dados do pedido (sempre validar, independente do ambiente)
       if (!pedidoData || !pedidoData.cliente || !pedidoData.itensPedido) {
@@ -150,9 +153,9 @@ export class PdfService implements OnModuleInit {
       try {
         const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-        this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
+        debugLog('PdfService', `Logo carregada com sucesso de: ${this.logoPath}`);
         // Logar o início do base64 para debug
-        this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
+        debugLog('PdfService', `Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         this.logger.error(`Erro ao carregar logo: ${errorMessage}`);
@@ -189,7 +192,7 @@ export class PdfService implements OnModuleInit {
 
       if (this.useSupabase) {
         // === OPÇÃO SUPABASE: GERAR PDF E FAZER UPLOAD PARA SUPABASE ===
-        this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
+        debugLog('PdfService', `Gerando PDF para upload no Supabase: ${filename}`);
 
         try {
           // Gerar o PDF como buffer (em memória)
@@ -229,7 +232,7 @@ export class PdfService implements OnModuleInit {
             'application/pdf',
           );
           debugLog('PdfService', `[DEBUG][PDF] URL retornada pelo Supabase: ${pdfUrl}`);
-          this.logger.log(`PDF enviado para o Supabase: ${pdfUrl}`);
+          debugLog('PdfService', `PDF enviado para o Supabase: ${pdfUrl}`);
 
           // Retornar caminho e URL
           return {
@@ -245,7 +248,7 @@ export class PdfService implements OnModuleInit {
           try {
             // Gerar nome do arquivo local
             const pdfPath = join(this.pdfDir, filename);
-            this.logger.log(`Tentando fallback local para: ${pdfPath}`);
+            debugLog('PdfService', `Tentando fallback local para: ${pdfPath}`);
 
             // Garantir que o diretório existe
             await mkdir(this.pdfDir, { recursive: true });
@@ -267,7 +270,7 @@ export class PdfService implements OnModuleInit {
             const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
             const localUrl = `http://localhost:${process.env.PORT || 3001}/${relativePath}`;
 
-            this.logger.log(`Fallback para PDF local concluído: ${localUrl}`);
+            debugLog('PdfService', `Fallback para PDF local concluído: ${localUrl}`);
 
             // Retornar informações do PDF local
             return {
@@ -286,7 +289,7 @@ export class PdfService implements OnModuleInit {
       } else {
         // === OPÇÃO LOCAL: SALVAR PDF LOCALMENTE (comportamento original) ===
         const pdfPath = join(this.pdfDir, filename);
-        this.logger.log(`Gerando PDF em: ${pdfPath}`);
+        debugLog('PdfService', `Gerando PDF em: ${pdfPath}`);
 
         try {
           // Garantir que o diretório existe
@@ -303,7 +306,10 @@ export class PdfService implements OnModuleInit {
             },
           });
 
-          this.logger.log(`PDF gerado com sucesso para pedido ${pedidoData.id}-${timestamp}`);
+          debugLog(
+            'PdfService',
+            `PDF gerado com sucesso para pedido ${pedidoData.id}-${timestamp}`,
+          );
 
           // Retornar caminho relativo (comportamento original)
           return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
@@ -334,8 +340,9 @@ export class PdfService implements OnModuleInit {
         try {
           await browser.close();
         } catch (error) {
-          this.logger.warn(
-            `Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          debugLog(
+            'PdfService',
+            `[WARN] Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
           );
         }
       }
@@ -596,7 +603,7 @@ export class PdfService implements OnModuleInit {
   async generateReportPdf(reportData: any, clienteData?: any): Promise<PdfResult | string> {
     let browser;
     try {
-      this.logger.log('Iniciando geração de PDF para relatório');
+      debugLog('PdfService', 'Iniciando geração de PDF para relatório');
 
       // LOG DETALHADO PARA DEBUG DE RELATÓRIO
       debugLog(
@@ -653,7 +660,8 @@ export class PdfService implements OnModuleInit {
         throw new InternalServerErrorException('Dados do relatório inválidos ou incompletos');
       }
       if (reportData.itens.length === 0) {
-        this.logger.warn(
+        debugLog(
+          'PdfService',
           '[AVISO][PDF][RELATORIO] Relatório gerado sem itens. Será criado um PDF vazio (sem pedidos no período).',
         );
       }
@@ -700,8 +708,8 @@ export class PdfService implements OnModuleInit {
       try {
         const logoBuffer = readFileSync(this.logoPath);
         logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-        this.logger.log(`Logo carregada com sucesso de: ${this.logoPath}`);
-        this.logger.log(`Logo base64 start: ${logoBase64.substring(0, 50)}`);
+        debugLog('PdfService', `Logo carregada com sucesso de: ${this.logoPath}`);
+        debugLog('PdfService', `Logo base64 start: ${logoBase64.substring(0, 50)}`);
       } catch (error) {
         this.logger.error(
           `Erro ao carregar logo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
@@ -971,7 +979,7 @@ export class PdfService implements OnModuleInit {
           'PdfService',
           `(DEBUG) [Relatório] Upload Supabase: bucket='${process.env.SUPABASE_BUCKET}', path='${filename}', bufferSize=${html.length}`,
         );
-        this.logger.log(`Gerando PDF para upload no Supabase: ${filename}`);
+        debugLog('PdfService', `Gerando PDF para upload no Supabase: ${filename}`);
         try {
           // Gerar o PDF como buffer (em memória)
           const pdfBuffer = await page.pdf({
@@ -1027,7 +1035,7 @@ export class PdfService implements OnModuleInit {
             left: '20px',
           },
         });
-        this.logger.log(`Relatório PDF gerado com sucesso: ${pdfPath}`);
+        debugLog('PdfService', `Relatório PDF gerado com sucesso: ${pdfPath}`);
         return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
       }
     } catch (error) {
@@ -1042,8 +1050,9 @@ export class PdfService implements OnModuleInit {
         try {
           await browser.close();
         } catch (error) {
-          this.logger.warn(
-            `Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          debugLog(
+            'PdfService',
+            `[WARN] Erro ao fechar navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
           );
         }
       }

@@ -12,7 +12,7 @@ export interface ApiErrorResponse {
 const getApiBaseUrl = () => {
   // Em desenvolvimento, usar o proxy configurado no Next.js para evitar CORS
   if (process.env.NODE_ENV === 'development') {
-    console.log('[API] Ambiente de desenvolvimento, usando proxy local');
+    apiLogger.debug('[API] Ambiente de desenvolvimento, usando proxy local');
     return '/api';
   }
 
@@ -24,7 +24,7 @@ const getApiBaseUrl = () => {
     url = `https://${url}`;
   }
 
-  console.log(`[API] Ambiente de produção, URL da API:`, url);
+  apiLogger.debug(`[API] Ambiente de produção, URL da API:`, url);
   return url;
 };
 
@@ -42,7 +42,7 @@ const getAuthToken = (): string | null => {
     try {
       return localStorage.getItem('authToken');
     } catch (error) {
-      console.error('Erro ao acessar localStorage:', error);
+      apiLogger.error('Erro ao acessar localStorage:', error);
       return null;
     }
   }
@@ -119,7 +119,7 @@ api.interceptors.response.use(
         try {
           const message =
             'Erro de conexão com o servidor. Verifique sua internet e tente novamente.';
-          console.error(message);
+          apiLogger.error(message);
           // Evitar múltiplos alertas - mostrar apenas um a cada 5 segundos
           if (
             !window.__lastNetworkErrorAlert ||
@@ -131,7 +131,7 @@ api.interceptors.response.use(
             }, 100);
           }
         } catch (err) {
-          console.error('Erro ao exibir notificação:', err);
+          apiLogger.error('Erro ao exibir notificação:', err);
         }
       }
     }
@@ -147,7 +147,7 @@ api.interceptors.response.use(
         localStorage.removeItem('userData');
 
         // Mostrar feedback ao usuário
-        console.warn('Sessão expirada. Você será redirecionado para o login.');
+        apiLogger.warn('Sessão expirada. Você será redirecionado para o login.');
 
         // Evitar múltiplos alertas/redirecionamentos
         if (!window.__authRedirectInProgress) {

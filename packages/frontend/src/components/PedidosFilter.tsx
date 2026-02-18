@@ -5,6 +5,9 @@ import { Box, Grid, TextField, MenuItem, Paper } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import { Cliente } from '@/types/pedido';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.pedidos;
 
 interface PedidosFilterProps {
   clientes: Cliente[];
@@ -28,7 +31,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
       // Garante que a data esteja no formato YYYY-MM-DD sem componentes de hora
       return format(date, 'yyyy-MM-dd');
     } catch (error) {
-      console.error('Erro ao formatar data:', error);
+      logger.error('Erro ao formatar data:', error);
       return undefined;
     }
   };
@@ -42,13 +45,13 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
       ...updatedFilters,
     };
 
-    console.log('Aplicando filtros:', novosFilters);
+    logger.debug('Aplicando filtros:', novosFilters);
     onFilterChange(novosFilters);
   };
 
   const handleStartDateChange = (date: Date | null) => {
     setStartDate(date);
-    console.log('Data Inicial selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
+    logger.debug('Data Inicial selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
     applyFilters({
       data_inicio: formatarDataParaFiltro(date),
     });
@@ -56,7 +59,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
 
   const handleEndDateChange = (date: Date | null) => {
     setEndDate(date);
-    console.log('Data Final selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
+    logger.debug('Data Final selecionada:', formatarDataParaFiltro(date) || 'nenhuma');
     applyFilters({
       data_fim: formatarDataParaFiltro(date),
     });
@@ -72,7 +75,7 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
   // Quando qualquer filtro mudar, aplicamos todos juntos
   const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setStatus(event.target.value);
-    console.log('Status selecionado:', event.target.value || 'nenhum');
+    logger.debug('Status selecionado:', event.target.value || 'nenhum');
     applyFilters({
       status: event.target.value || undefined,
     });

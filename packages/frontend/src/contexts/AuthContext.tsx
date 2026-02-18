@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { loggers } from '@/utils/logger';
+
+const authLogger = loggers.auth;
 
 interface Usuario {
   id: number;
@@ -59,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const now = Math.floor(Date.now() / 1000);
       return payload.exp > now;
     } catch (error) {
-      console.error('Erro ao validar token:', error);
+      authLogger.error('Erro ao validar token:', error);
       return false;
     }
   }, []);
@@ -82,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUsuario(parsedUser);
                 setIsAuthenticated(true);
               } catch (error) {
-                console.error('Erro ao processar dados do usuário:', error);
+                authLogger.error('Erro ao processar dados do usuário:', error);
                 // Limpar dados inválidos
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
@@ -91,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             } else {
               // Token expirado, fazer logout
-              console.warn('Token expirado ou inválido');
+              authLogger.warn('Token expirado ou inválido');
               localStorage.removeItem('authToken');
               localStorage.removeItem('userData');
               setIsAuthenticated(false);
@@ -103,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUsuario(null);
           }
         } catch (error) {
-          console.error('Erro ao verificar autenticação:', error);
+          authLogger.error('Erro ao verificar autenticação:', error);
           setIsAuthenticated(false);
           setUsuario(null);
         } finally {
@@ -126,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
       if (isAuthenticated && currentPath === '/login') {
-        console.log('Já autenticado, redirecionando para dashboard');
+        authLogger.debug('Já autenticado, redirecionando para dashboard');
         router.push('/pedidos');
       }
     }
@@ -144,13 +147,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUsuario(userData);
           setIsAuthenticated(true);
 
-          console.log('Login bem-sucedido, redirecionando para dashboard...');
+          authLogger.debug('Login bem-sucedido, redirecionando para dashboard...');
 
           // Usar o router do Next.js para navegação sem refresh completo
           router.push('/pedidos');
         }
       } catch (error) {
-        console.error('Erro ao realizar login:', error);
+        authLogger.error('Erro ao realizar login:', error);
         // Limpar quaisquer dados inconsistentes em caso de erro
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');

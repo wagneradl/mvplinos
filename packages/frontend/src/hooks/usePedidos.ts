@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PedidosService } from '@/services/pedidos.service';
 import { Pedido } from '@/types/pedido';
 import { useSnackbar } from 'notistack';
+import { loggers } from '@/utils/logger';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -44,17 +45,18 @@ export function usePedidos(params?: PedidosParams) {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   const disableNotifications = params?.disableNotifications || false;
+  const logger = loggers.pedidos;
 
   const pedidosQuery = useQuery<PaginatedResponse<Pedido>, Error>({
     queryKey: ['pedidos', params?.page, params?.limit, params?.filters],
     queryFn: async () => {
       try {
-        console.log('Buscando pedidos com params:', params);
+        logger.debug('Buscando pedidos com params:', params);
         const response = await PedidosService.listarPedidos(params);
-        console.log('Resposta da API de pedidos:', response);
+        logger.debug('Resposta da API de pedidos:', response);
         return response;
       } catch (err) {
-        console.error('Erro ao buscar pedidos:', err);
+        logger.error('Erro ao buscar pedidos:', err);
         throw err;
       }
     },
@@ -75,7 +77,7 @@ export function usePedidos(params?: PedidosParams) {
       }
     },
     onError: (err) => {
-      console.error('Erro ao criar pedido:', err);
+      logger.error('Erro ao criar pedido:', err);
       if (!disableNotifications) {
         enqueueSnackbar(
           `Erro ao criar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
@@ -96,7 +98,7 @@ export function usePedidos(params?: PedidosParams) {
       }
     },
     onError: (err) => {
-      console.error('Erro ao atualizar pedido:', err);
+      logger.error('Erro ao atualizar pedido:', err);
       if (!disableNotifications) {
         enqueueSnackbar(
           `Erro ao atualizar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
@@ -116,7 +118,7 @@ export function usePedidos(params?: PedidosParams) {
       }
     },
     onError: (err) => {
-      console.error('Erro ao deletar pedido:', err);
+      logger.error('Erro ao deletar pedido:', err);
       if (!disableNotifications) {
         enqueueSnackbar(
           `Erro ao deletar pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
@@ -138,7 +140,7 @@ export function usePedidos(params?: PedidosParams) {
       return data;
     },
     onError: (err) => {
-      console.error('Erro ao repetir pedido:', err);
+      logger.error('Erro ao repetir pedido:', err);
       if (!disableNotifications) {
         enqueueSnackbar(
           `Erro ao repetir pedido: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
@@ -171,18 +173,19 @@ export function usePedidos(params?: PedidosParams) {
     refetch,
   };
 
-  console.log('usePedidos retornando:', returnValue);
+  logger.debug('usePedidos retornando:', returnValue);
   return returnValue;
 }
 
 export function usePedido(id: number) {
+  const logger = loggers.pedidos;
   const pedidoQuery = useQuery<Pedido, Error>({
     queryKey: ['pedido', id],
     queryFn: async () => {
       try {
         return await PedidosService.obterPedido(id);
       } catch (err) {
-        console.error(`Erro ao carregar pedido #${id}:`, err);
+        logger.error(`Erro ao carregar pedido #${id}:`, err);
         throw err;
       }
     },
@@ -206,6 +209,7 @@ export function useRelatorio(filtros: {
   enabled?: boolean;
 }) {
   const { enqueueSnackbar } = useSnackbar();
+  const logger = loggers.pedidos;
 
   // Adapta filtros para camelCase ao chamar o backend
   const adaptedFiltros = {
@@ -241,7 +245,7 @@ export function useRelatorio(filtros: {
       });
       enqueueSnackbar('Relatório PDF gerado com sucesso!', { variant: 'success' });
     } catch (error) {
-      console.error('Erro ao baixar PDF do relatório:', error);
+      logger.error('Erro ao baixar PDF do relatório:', error);
       // Não exibimos notificação de erro aqui, pois o erro já é tratado pelo interceptor da API
     }
   };
@@ -260,6 +264,7 @@ export function useSummaryRelatorio(filtros: {
   enabled?: boolean;
 }) {
   const { enqueueSnackbar } = useSnackbar();
+  const logger = loggers.pedidos;
 
   // Adapta filtros para snake_case para o summary
   const adaptedFiltros = {
@@ -274,7 +279,7 @@ export function useSummaryRelatorio(filtros: {
       try {
         return await PedidosService.gerarRelatorio(adaptedFiltros);
       } catch (error) {
-        console.error('Erro ao buscar summary do relatório:', error);
+        logger.error('Erro ao buscar summary do relatório:', error);
         enqueueSnackbar('Erro ao buscar resumo do relatório', { variant: 'error' });
         throw error;
       }

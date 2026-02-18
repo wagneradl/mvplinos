@@ -22,6 +22,9 @@ import { z } from 'zod';
 import { Produto } from '@/types/produto';
 import { CreateProdutoDto, ProdutosService } from '@/services/produtos.service';
 import { useSnackbar } from '@/hooks/useSnackbar';
+import { loggers } from '@/utils/logger';
+
+const logger = loggers.forms;
 
 // Schema com validações avançadas para casos de borda
 const produtoSchema = z.object({
@@ -128,7 +131,7 @@ export function ProdutoForm({
         return;
       }
 
-      console.log('Dados do formulário validados:', data);
+      logger.debug('Dados do formulário validados:', data);
 
       // Convert string price to number for API
       const produtoData: CreateProdutoDto = {
@@ -138,13 +141,13 @@ export function ProdutoForm({
         preco_unitario: parseFloat(data.preco_unitario.toString()),
       };
 
-      console.log('Dados convertidos:', produtoData);
+      logger.debug('Dados convertidos:', produtoData);
       await submitHandler(produtoData);
       // Limpa erro após sucesso
       setErrorAlert(null);
       // O feedback de sucesso já é mostrado pelo hook useProdutos
     } catch (error) {
-      console.error('Erro completo:', error);
+      logger.error('Erro completo:', error);
       // Mostrar erro detalhado
       if (error instanceof Error) {
         setErrorAlert(error.message);

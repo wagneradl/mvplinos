@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { PAPEL_ADMIN_SISTEMA, PAPEL_OPERADOR_PEDIDOS, NIVEIS_PAPEL } from '../auth/roles.constants';
+import { debugLog } from '../common/utils/debug-log';
 
 // Configuração dos papéis essenciais para o seed via API
 const PAPEIS_ESSENCIAIS = [
@@ -44,7 +45,7 @@ export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   async executeSeed() {
-    this.logger.log('Iniciando seed manual...');
+    debugLog('AdminService', 'Iniciando seed manual...');
     try {
       const papeisMap: Record<string, { id: number; codigo: string }> = {};
 
@@ -71,7 +72,7 @@ export class AdminService {
           },
         });
         papeisMap[papelConfig.codigo] = { id: papel.id, codigo: papel.codigo };
-        this.logger.log(`Papel ${papelConfig.codigo}: ${papel.id}`);
+        debugLog('AdminService', `Papel ${papelConfig.codigo}: ${papel.id}`);
       }
 
       // Criar usuário admin apenas se variáveis de ambiente estiverem definidas
@@ -96,9 +97,12 @@ export class AdminService {
             status: 'ativo',
           },
         });
-        this.logger.log(`Usuário admin criado/atualizado: ${adminEmail}`);
+        debugLog('AdminService', `Usuário admin criado/atualizado: ${adminEmail}`);
       } else {
-        this.logger.warn('ADMIN_EMAIL ou ADMIN_PASSWORD não definidos - usuário admin não criado');
+        debugLog(
+          'AdminService',
+          'ADMIN_EMAIL ou ADMIN_PASSWORD não definidos - usuário admin não criado',
+        );
       }
 
       // Criar usuário operador apenas se variáveis de ambiente estiverem definidas
@@ -123,9 +127,10 @@ export class AdminService {
             status: 'ativo',
           },
         });
-        this.logger.log(`Usuário operador criado/atualizado: ${operadorEmail}`);
+        debugLog('AdminService', `Usuário operador criado/atualizado: ${operadorEmail}`);
       } else {
-        this.logger.warn(
+        debugLog(
+          'AdminService',
           'OPERADOR_EMAIL ou OPERADOR_PASSWORD não definidos - usuário operador não criado',
         );
       }
@@ -149,7 +154,7 @@ export class AdminService {
   }
 
   async resetDatabase() {
-    this.logger.log('Iniciando reset do banco de dados...');
+    debugLog('AdminService', 'Iniciando reset do banco de dados...');
     try {
       // Remove todos usuários exceto admin e operador
       await this.prisma.usuario.deleteMany({
@@ -159,7 +164,7 @@ export class AdminService {
           },
         },
       });
-      this.logger.log('Usuários não essenciais removidos');
+      debugLog('AdminService', 'Usuários não essenciais removidos');
 
       // Execute o seed para garantir que admin e operador estejam atualizados
       await this.executeSeed();
@@ -182,25 +187,25 @@ export class AdminService {
   }
 
   async cleanTestData() {
-    this.logger.log('Iniciando limpeza de dados de teste...');
+    debugLog('AdminService', 'Iniciando limpeza de dados de teste...');
     try {
       // Devido às relações de chave estrangeira, precisamos excluir na ordem correta
 
       // 1. Primeiro removemos os itens de pedido (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "ItemPedido"`;
-      this.logger.log('Itens de pedido removidos (incluindo soft-deleted)');
+      debugLog('AdminService', 'Itens de pedido removidos (incluindo soft-deleted)');
 
       // 2. Depois removemos os pedidos (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Pedido"`;
-      this.logger.log('Pedidos removidos (incluindo soft-deleted)');
+      debugLog('AdminService', 'Pedidos removidos (incluindo soft-deleted)');
 
       // 3. Agora podemos remover produtos (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Produto"`;
-      this.logger.log('Produtos removidos (incluindo soft-deleted)');
+      debugLog('AdminService', 'Produtos removidos (incluindo soft-deleted)');
 
       // 4. Por fim, removemos os clientes (incluindo soft-deleted)
       await this.prisma.$executeRaw`DELETE FROM "Cliente"`;
-      this.logger.log('Clientes removidos (incluindo soft-deleted)');
+      debugLog('AdminService', 'Clientes removidos (incluindo soft-deleted)');
 
       // 5. Execute o seed para garantir que admin e operador estejam atualizados
       await this.executeSeed();
