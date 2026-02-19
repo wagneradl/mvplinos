@@ -21,7 +21,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@ne
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @ApiTags('produtos')
 @Controller('produtos')
 @UseGuards(JwtAuthGuard, PermissoesGuard)

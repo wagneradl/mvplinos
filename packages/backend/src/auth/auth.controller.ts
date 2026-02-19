@@ -11,6 +11,7 @@ import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordResetService } from './services/password-reset.service';
 import { Request } from 'express';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('Autenticação')
 @Controller('auth')
@@ -21,6 +22,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @Throttle({ login: {} })
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
@@ -29,6 +31,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Obter informações do usuário logado' })
   @ApiResponse({ status: 200, description: 'Informações do usuário retornadas com sucesso' })
@@ -43,6 +46,7 @@ export class AuthController {
   // =========================================================================
 
   @Post('reset-solicitar')
+  @Throttle({ reset: {} })
   @ApiOperation({
     summary: 'Solicitar redefinição de senha',
     description:
@@ -58,6 +62,7 @@ export class AuthController {
   }
 
   @Get('reset-validar/:token')
+  @Throttle({ login: {} })
   @ApiOperation({
     summary: 'Validar token de redefinição',
     description: 'Verifica se o token de redefinição é válido (existe, não expirou, não foi usado)',
@@ -77,6 +82,7 @@ export class AuthController {
   }
 
   @Post('reset-confirmar')
+  @Throttle({ login: {} })
   @ApiOperation({
     summary: 'Confirmar redefinição de senha',
     description: 'Redefine a senha do usuário usando o token válido',

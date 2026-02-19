@@ -36,7 +36,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
 import { debugLog } from '../common/utils/debug-log';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @ApiTags('pedidos')
 @Controller('pedidos')
 @UseGuards(JwtAuthGuard, PermissoesGuard)

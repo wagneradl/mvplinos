@@ -7,12 +7,14 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   PAPEL_ADMIN_SISTEMA,
   PAPEL_GERENTE_COMERCIAL,
   PAPEL_CLIENTE_ADMIN,
 } from '../auth/roles.constants';
 
+@SkipThrottle()
 @ApiTags('Usuários')
 @Controller('usuarios')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissoesGuard)

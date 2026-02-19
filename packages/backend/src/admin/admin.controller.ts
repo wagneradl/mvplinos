@@ -2,7 +2,9 @@ import { Controller, Post, UseGuards, Headers, UnauthorizedException } from '@ne
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 export class AdminController {
