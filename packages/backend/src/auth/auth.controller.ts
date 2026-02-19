@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, AuthResponseDto } from './dto/auth.dto';
+import { LoginDto, AuthResponseDto, RefreshTokenDto, LogoutDto } from './dto/auth.dto';
 import { SolicitarResetDto, SolicitarResetResponseDto } from './dto/solicitar-reset.dto';
 import {
   ConfirmarResetDto,
@@ -26,8 +26,31 @@ export class AuthController {
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: Request): Promise<AuthResponseDto> {
+    const ipAddress = req.ip || req.socket?.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    return this.authService.login(loginDto, ipAddress, userAgent);
+  }
+
+  @Post('refresh')
+  @Throttle({ login: {} })
+  @ApiOperation({ summary: 'Renovar tokens de autenticação' })
+  @ApiResponse({ status: 200, description: 'Tokens renovados com sucesso', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Refresh token inválido, expirado ou revogado' })
+  async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request): Promise<AuthResponseDto> {
+    const ipAddress = req.ip || req.socket?.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    return this.authService.refresh(dto.refresh_token, ipAddress, userAgent);
+  }
+
+  @Post('logout')
+  @SkipThrottle()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Revogar refresh token (logout)' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
+  async logout(@Body() dto: LogoutDto) {
+    return this.authService.logout(dto.refresh_token);
   }
 
   @Get('me')

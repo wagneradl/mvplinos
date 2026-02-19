@@ -23,7 +23,7 @@ import { PasswordResetService } from './services/password-reset.service';
         }
         return {
           secret: jwtSecret,
-          signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '8h' },
+          signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION') || '15m' },
         };
       },
       inject: [ConfigService],

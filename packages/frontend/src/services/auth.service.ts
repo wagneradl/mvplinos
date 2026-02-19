@@ -30,12 +30,17 @@ export interface Usuario {
   papel: {
     id: number;
     nome: string;
+    codigo: string;
+    tipo: string;
+    nivel: number;
     permissoes: Record<string, string[]>;
   };
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
   usuario: Usuario;
 }
 
@@ -80,7 +85,7 @@ export const authService = {
       }
 
       const data = await response.json();
-      authLogger.debug('Login bem-sucedido, token recebido');
+      authLogger.debug('Login bem-sucedido, tokens recebidos');
       return data;
     } catch (error) {
       authLogger.error('Erro detalhado no login:', error);
@@ -88,6 +93,46 @@ export const authService = {
         authLogger.error('Erro de rede no fetch. Possível problema de CORS ou servidor offline.');
       }
       throw error;
+    }
+  },
+
+  async refresh(refreshToken: string): Promise<LoginResponse> {
+    const response = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Falha ao renovar token';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  },
+
+  async serverLogout(accessToken: string, refreshToken: string): Promise<void> {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+    } catch (error) {
+      // Logout no servidor é best-effort; não bloquear o logout local
+      authLogger.warn('Erro ao revogar token no servidor:', error);
     }
   },
 
@@ -120,6 +165,14 @@ export const authService = {
     localStorage.setItem('authToken', token);
   },
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  },
+
+  saveRefreshToken(token: string): void {
+    localStorage.setItem('refreshToken', token);
+  },
+
   saveUserData(userData: Usuario): void {
     localStorage.setItem('userData', JSON.stringify(userData));
   },
@@ -131,6 +184,7 @@ export const authService = {
 
   logout(): void {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
   },
 

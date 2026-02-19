@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { authService } from '@/services/auth.service';
 import { loggers } from '@/utils/logger';
 
 const authLogger = loggers.auth;
@@ -21,7 +22,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   usuario: Usuario | null;
   loading: boolean;
-  login: (token: string, usuario: Usuario) => void;
+  login: (accessToken: string, refreshToken: string, usuario: Usuario) => void;
   logout: () => void;
   hasPermission: (recurso: string, acao: string) => boolean;
 }
@@ -35,9 +36,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Tentar revogar o token no servidor (best-effort)
     if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('authToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (accessToken && refreshToken) {
+        await authService.serverLogout(accessToken, refreshToken);
+      }
+
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('userData');
     }
     setUsuario(null);
@@ -75,26 +84,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         try {
           const token = localStorage.getItem('authToken');
+          const refreshToken = localStorage.getItem('refreshToken');
           const userData = localStorage.getItem('userData');
 
           if (token && userData) {
-            // Verificar se o token não está expirado
             if (isTokenValid(token)) {
+              // Access token válido — usar normalmente
               try {
                 const parsedUser = JSON.parse(userData);
                 setUsuario(parsedUser);
                 setIsAuthenticated(true);
               } catch (error) {
                 authLogger.error('Erro ao processar dados do usuário:', error);
-                // Limpar dados inválidos
                 localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('userData');
+                setIsAuthenticated(false);
+                setUsuario(null);
+              }
+            } else if (refreshToken) {
+              // Access token expirado, mas temos refresh token — tentar renovar
+              try {
+                authLogger.debug('Access token expirado, tentando refresh...');
+                const data = await authService.refresh(refreshToken);
+                authService.saveToken(data.access_token);
+                authService.saveRefreshToken(data.refresh_token);
+                authService.saveUserData(data.usuario);
+                setUsuario(data.usuario);
+                setIsAuthenticated(true);
+                authLogger.debug('Token renovado com sucesso no checkAuth');
+              } catch (error) {
+                authLogger.warn('Falha ao renovar token no checkAuth:', error);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
                 localStorage.removeItem('userData');
                 setIsAuthenticated(false);
                 setUsuario(null);
               }
             } else {
-              // Token expirado, fazer logout
-              authLogger.warn('Token expirado ou inválido');
+              // Token expirado e sem refresh token
+              authLogger.warn('Token expirado e sem refresh token');
               localStorage.removeItem('authToken');
               localStorage.removeItem('userData');
               setIsAuthenticated(false);
@@ -136,11 +165,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, loading, pathname, router]);
 
   const login = useCallback(
-    async (token: string, userData: Usuario) => {
+    async (accessToken: string, refreshToken: string, userData: Usuario) => {
       try {
         if (typeof window !== 'undefined') {
           // Primeiro armazenar dados no localStorage de forma síncrona
-          localStorage.setItem('authToken', token);
+          localStorage.setItem('authToken', accessToken);
+          localStorage.setItem('refreshToken', refreshToken);
           localStorage.setItem('userData', JSON.stringify(userData));
 
           // Atualizar estado de forma síncrona para garantir consistência
@@ -156,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authLogger.error('Erro ao realizar login:', error);
         // Limpar quaisquer dados inconsistentes em caso de erro
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userData');
         setUsuario(null);
         setIsAuthenticated(false);

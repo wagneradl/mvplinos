@@ -35,7 +35,7 @@ export default function LoginPage() {
     try {
       // Usar o serviço de autenticação em vez de fetch direto
       const data = await authService.login({ email, senha });
-      login(data.token, data.usuario);
+      login(data.access_token, data.refresh_token, data.usuario);
     } catch (error) {
       logger.error('Erro de login:', error);
       setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');

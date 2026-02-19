@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { loggers } from '@/utils/logger';
+import { authService } from './auth.service';
 
 const apiLogger = loggers.api;
 
@@ -78,6 +79,23 @@ api.interceptors.request.use(
   }
 );
 
+// Mutex para evitar múltiplas tentativas de refresh simultâneas
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshSuccess(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function onRefreshFailure() {
+  refreshSubscribers = [];
+}
+
 // Interceptor para formatação de erros da API e logs de respostas
 api.interceptors.response.use(
   (response) => {
@@ -92,7 +110,80 @@ api.interceptors.response.use(
 
     return response;
   },
-  (error: AxiosError<ApiErrorResponse>) => {
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const originalRequest = error.config as any;
+
+    // Tentar refresh se recebeu 401 e não é a própria request de refresh/login
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/login') &&
+      !originalRequest.url?.includes('/auth/refresh')
+    ) {
+      if (isRefreshing) {
+        // Já está refreshing — enfileirar esta request
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken: string) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+
+      if (refreshToken) {
+        try {
+          const data = await authService.refresh(refreshToken);
+
+          // Salvar novos tokens
+          authService.saveToken(data.access_token);
+          authService.saveRefreshToken(data.refresh_token);
+          authService.saveUserData(data.usuario);
+
+          // Atualizar header da request original
+          originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+
+          // Notificar requests enfileiradas
+          onRefreshSuccess(data.access_token);
+          isRefreshing = false;
+
+          apiLogger.debug('Token renovado com sucesso via refresh');
+          return api(originalRequest);
+        } catch (refreshError) {
+          apiLogger.warn('Falha ao renovar token, redirecionando para login');
+          onRefreshFailure();
+          isRefreshing = false;
+
+          // Limpar dados de autenticação
+          if (typeof window !== 'undefined') {
+            authService.logout();
+
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/login?expired=true';
+            }
+          }
+
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // Sem refresh token — limpar e redirecionar
+        isRefreshing = false;
+
+        if (typeof window !== 'undefined') {
+          authService.logout();
+
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login?expired=true';
+          }
+        }
+      }
+    }
+
     // Log detalhado do erro para diagnóstico
     apiLogger.error('Erro na requisição API:', {
       config: {
@@ -114,8 +205,6 @@ api.interceptors.response.use(
     if (!error.response) {
       // Mostrar notificação ao usuário se disponível
       if (typeof window !== 'undefined') {
-        // Simular uma notificação com alert para fins de demonstração
-        // Em produção, usar um sistema de notificação mais elegante como toast
         try {
           const message =
             'Erro de conexão com o servidor. Verifique sua internet e tente novamente.';
@@ -132,32 +221,6 @@ api.interceptors.response.use(
           }
         } catch (err) {
           apiLogger.error('Erro ao exibir notificação:', err);
-        }
-      }
-    }
-
-    // Tratamento especial para erros de autenticação
-    if (error.response?.status === 401) {
-      // Token expirado ou inválido
-      apiLogger.warn('Token inválido ou expirado, redirecionando para login');
-
-      // Limpar dados de autenticação
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
-
-        // Mostrar feedback ao usuário
-        apiLogger.warn('Sessão expirada. Você será redirecionado para o login.');
-
-        // Evitar múltiplos alertas/redirecionamentos
-        if (!window.__authRedirectInProgress) {
-          window.__authRedirectInProgress = true;
-
-          // Mostrar mensagem antes de redirecionar
-          if (!window.location.pathname.includes('/login')) {
-            alert('Sua sessão expirou. Você será redirecionado para a página de login.');
-            window.location.href = '/login?expired=true';
-          }
         }
       }
     }
