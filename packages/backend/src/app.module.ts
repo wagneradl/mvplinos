@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { ConfigModule } from '@nestjs/config';
 import { AdminModule } from './admin/admin.module';
+import { EmailModule } from './email/email.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -24,6 +25,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthModule,
     UsuariosModule,
     AdminModule,
+    EmailModule,
   ],
 })
 export class AppModule {}
