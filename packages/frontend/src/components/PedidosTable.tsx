@@ -12,7 +12,6 @@ import {
   TablePagination,
   Tooltip,
   CircularProgress,
-  Chip,
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
@@ -30,6 +29,7 @@ import { PedidosService } from '@/services/pedidos.service';
 import { useSnackbar } from 'notistack';
 import { logger } from '@/utils/logger';
 import { EmptyState } from './EmptyState';
+import { StatusChip } from './StatusChip';
 
 interface PedidosTableProps {
   pedidos: Pedido[];
@@ -149,11 +149,7 @@ export function PedidosTable({
                   <TableCell>{pedido.cliente?.nome_fantasia}</TableCell>
                   <TableCell align="right">{formatCurrency(pedido.valor_total)}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={pedido.status}
-                      color={pedido.status === 'ATIVO' ? 'success' : 'error'}
-                      size="small"
-                    />
+                    <StatusChip status={pedido.status} />
                   </TableCell>
                   <TableCell align="center">
                     <Box display="flex" justifyContent="center" gap={1}>

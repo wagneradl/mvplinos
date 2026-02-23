@@ -14,7 +14,7 @@ interface PaginatedResponse<T> {
   };
 }
 
-interface ReportData {
+export interface ReportData {
   data: {
     date: string;
     total_orders: number;
@@ -109,6 +109,12 @@ export const PedidosService = {
 
   async atualizarPedido(id: number, status: string): Promise<Pedido> {
     const response = await api.patch<Pedido>(`/pedidos/${id}`, { status });
+    return response.data;
+  },
+
+  /** Atualizar status via endpoint dedicado PATCH /pedidos/:id/status */
+  async atualizarStatus(id: number, novoStatus: string): Promise<Pedido> {
+    const response = await api.patch<Pedido>(`/pedidos/${id}/status`, { status: novoStatus });
     return response.data;
   },
 

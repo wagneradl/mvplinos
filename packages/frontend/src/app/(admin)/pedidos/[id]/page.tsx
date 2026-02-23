@@ -6,12 +6,6 @@ import {
   Button,
   Stack,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Chip,
   Paper,
   Grid,
   Table,
@@ -23,7 +17,6 @@ import {
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
-  Delete as DeleteIcon,
   FileDownload as FileDownloadIcon,
   ContentCopy as ContentCopyIcon,
 } from '@mui/icons-material';
@@ -33,8 +26,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePedido, usePedidos } from '@/hooks/usePedidos';
 import { useSnackbar } from 'notistack';
+import { useAuth } from '@/contexts/AuthContext';
 import { ErrorState } from '@/components/ErrorState';
 import { PageContainer } from '@/components/PageContainer';
+import { StatusChip } from '@/components/StatusChip';
+import { TransitionButtons } from '@/components/TransitionButtons';
+import { StatusTimeline } from '@/components/StatusTimeline';
+import { PedidosService } from '@/services/pedidos.service';
+import { STATUS_CONFIG } from '@/constants/status-pedido';
 import { loggers } from '@/utils/logger';
 
 const logger = loggers.pedidos;
@@ -45,11 +44,12 @@ export default function PedidoDetalhesPage() {
   const pedidoId = Number(params?.id);
 
   const { pedido, isLoading, error, refetch } = usePedido(pedidoId);
-  // Use disableNotifications para evitar notificações duplicadas
-  const { downloadPdf, deletarPedido } = usePedidos({ disableNotifications: true });
+  const { downloadPdf } = usePedidos({ disableNotifications: true });
   const { enqueueSnackbar } = useSnackbar();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
+  const { usuario } = useAuth();
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const papelTipo = usuario?.papel?.tipo || 'INTERNO';
 
   function formatarData(data: string) {
     return format(new Date(data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -59,34 +59,33 @@ export default function PedidoDetalhesPage() {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
+  const handleTransition = async (novoStatus: string) => {
+    setIsTransitioning(true);
     try {
-      await deletarPedido(pedidoId);
-      // Já temos disableNotifications: true no hook usePedidos,
-      // então adicionamos nossa própria notificação aqui
-      enqueueSnackbar('Pedido cancelado com sucesso', { variant: 'success' });
-      router.push('/pedidos');
-    } catch (error) {
-      logger.error('Erro ao cancelar pedido:', error);
-      enqueueSnackbar('Erro ao cancelar pedido', { variant: 'error' });
+      await PedidosService.atualizarStatus(pedidoId, novoStatus);
+      const config = STATUS_CONFIG[novoStatus as keyof typeof STATUS_CONFIG];
+      enqueueSnackbar(`Status atualizado para ${config?.label || novoStatus}`, {
+        variant: 'success',
+      });
+      await refetch();
+    } catch (error: any) {
+      logger.error('Erro ao atualizar status:', error);
+      const msg =
+        error?.response?.data?.message || error?.message || 'Erro ao atualizar status';
+      enqueueSnackbar(msg, { variant: 'error' });
     } finally {
-      setIsDeleting(false);
-      setOpenDialog(false);
+      setIsTransitioning(false);
     }
   };
 
-  // Função para copiar pedido de forma adequada
   const handleCopiarPedido = async () => {
     try {
       if (!pedido) return;
-
-      // Armazenar os dados do pedido no localStorage para usar na tela de novo pedido
       localStorage.setItem(
         'pedidoParaCopiar',
         JSON.stringify({
           cliente_id: pedido.cliente_id,
-          observacoes: pedido.observacoes, // Incluir observações ao copiar o pedido
+          observacoes: pedido.observacoes,
           itens: pedido.itensPedido.map((item) => ({
             produto_id: item.produto_id,
             quantidade: item.quantidade,
@@ -94,9 +93,6 @@ export default function PedidoDetalhesPage() {
           })),
         })
       );
-
-      // Mantemos apenas esta notificação e removemos a duplicada na página de destino
-      // Isso evita que o usuário receba duas notificações idênticas
       enqueueSnackbar('Pedido copiado. Complete os dados e confirme.', { variant: 'info' });
       router.push('/pedidos/novo');
     } catch (error) {
@@ -155,18 +151,15 @@ export default function PedidoDetalhesPage() {
     <PageContainer title="Detalhes do Pedido">
       <Box sx={{ p: 3 }}>
         <Stack spacing={3}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Header com status chip */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => router.push('/pedidos')}>
               Voltar
             </Button>
             <Typography variant="h4" component="h1">
               Pedido #{params?.id}
             </Typography>
-            <Chip
-              label={pedido.status}
-              color={pedido.status === 'ATIVO' ? 'success' : 'error'}
-              sx={{ ml: 2 }}
-            />
+            <StatusChip status={pedido.status} size="medium" sx={{ ml: 1, fontSize: '0.9rem' }} />
             <Box sx={{ flexGrow: 1 }} />
             <Button startIcon={<FileDownloadIcon />} variant="outlined" onClick={handleDownloadPdf}>
               Download PDF
@@ -174,17 +167,23 @@ export default function PedidoDetalhesPage() {
             <Button startIcon={<ContentCopyIcon />} variant="outlined" onClick={handleCopiarPedido}>
               Copiar Pedido
             </Button>
-            {pedido.status === 'ATIVO' && (
-              <Button
-                startIcon={<DeleteIcon />}
-                variant="outlined"
-                color="error"
-                onClick={() => setOpenDialog(true)}
-              >
-                Cancelar Pedido
-              </Button>
-            )}
           </Box>
+
+          {/* Timeline de progresso */}
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+              Progresso do Pedido
+            </Typography>
+            <StatusTimeline statusAtual={pedido.status} />
+          </Paper>
+
+          {/* Botões de transição */}
+          <TransitionButtons
+            statusAtual={pedido.status}
+            papelTipo={papelTipo}
+            onTransition={handleTransition}
+            loading={isTransitioning}
+          />
 
           <Paper sx={{ p: 3 }}>
             <Grid container spacing={3}>
@@ -201,7 +200,9 @@ export default function PedidoDetalhesPage() {
                   {pedido?.valor_total ? formatarValor(pedido.valor_total) : '-'}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Status:</strong> {pedido?.status || '-'}
+                  <strong>Status:</strong>{' '}
+                  {STATUS_CONFIG[pedido.status as keyof typeof STATUS_CONFIG]?.label ||
+                    pedido.status}
                 </Typography>
               </Grid>
 
@@ -284,21 +285,6 @@ export default function PedidoDetalhesPage() {
             </Paper>
           </Box>
         )}
-
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Confirmar Cancelamento</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Tem certeza que deseja cancelar este pedido? Esta ação não pode ser desfeita.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Não</Button>
-            <Button onClick={handleDelete} color="error" disabled={isDeleting} autoFocus>
-              {isDeleting ? <CircularProgress size={24} /> : 'Sim, Cancelar'}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </PageContainer>
   );

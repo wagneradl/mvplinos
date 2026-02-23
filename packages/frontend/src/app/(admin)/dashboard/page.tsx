@@ -4,7 +4,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography, CircularProgress, Button, Chip, Alert } from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Button, Alert } from '@mui/material';
 import {
   ShoppingCart as PedidosIcon,
   Inventory as ProdutosIcon,
@@ -18,6 +18,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { useProdutos } from '@/hooks/useProdutos';
 import { formatCurrency } from '@/utils/format';
 import { PageContainer } from '@/components/PageContainer';
+import { StatusChip } from '@/components/StatusChip';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardPage() {
@@ -33,9 +34,7 @@ export default function DashboardPage() {
   } = usePedidos({
     page: 1,
     limit: 5,
-    filters: {
-      status: 'ATIVO',
-    },
+    filters: {},
   }) || { pedidos: [], isLoading: true, error: null };
 
   const {
@@ -379,17 +378,7 @@ export default function DashboardPage() {
                       <Typography variant="h6" color="primary.main" sx={{ mr: 2 }}>
                         {formatCurrency(pedido.valor_total || pedido.valorTotal || 0)}
                       </Typography>
-                      <Chip
-                        label={pedido.status}
-                        color={
-                          pedido.status === 'CONCLUIDO'
-                            ? 'success'
-                            : pedido.status === 'CANCELADO'
-                              ? 'error'
-                              : 'primary'
-                        }
-                        size="small"
-                      />
+                      <StatusChip status={pedido.status} />
                     </Box>
                   </Paper>
                 </Grid>

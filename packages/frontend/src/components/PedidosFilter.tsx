@@ -129,7 +129,12 @@ export function PedidosFilter({ clientes, onFilterChange }: PedidosFilterProps) 
               onChange={handleStatusChange}
             >
               <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="ATIVO">Ativo</MenuItem>
+              <MenuItem value="RASCUNHO">Rascunho</MenuItem>
+              <MenuItem value="PENDENTE">Pendente</MenuItem>
+              <MenuItem value="CONFIRMADO">Confirmado</MenuItem>
+              <MenuItem value="EM_PRODUCAO">Em Produção</MenuItem>
+              <MenuItem value="PRONTO">Pronto</MenuItem>
+              <MenuItem value="ENTREGUE">Entregue</MenuItem>
               <MenuItem value="CANCELADO">Cancelado</MenuItem>
             </TextField>
           </Grid>

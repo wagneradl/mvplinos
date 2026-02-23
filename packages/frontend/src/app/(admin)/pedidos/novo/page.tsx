@@ -305,7 +305,7 @@ export default function NovoPedidoPage() {
       const pedidoData = {
         cliente_id: data.cliente_id,
         valor_total: data.itens.reduce((total, item) => total + item.valor_total_item, 0),
-        status: 'ATIVO' as const, // Necessário para a tipagem Omit<Pedido, 'id'>
+        status: 'PENDENTE' as const, // Backend define status real; aqui satisfaz tipagem Omit<Pedido, 'id'>
         created_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
         updated_at: now, // Necessário para a tipagem Omit<Pedido, 'id'>
         data_pedido: now, // Necessário para a tipagem, mas será removido abaixo

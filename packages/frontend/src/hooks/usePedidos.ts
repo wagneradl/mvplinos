@@ -128,6 +128,28 @@ export function usePedidos(params?: PedidosParams) {
     },
   });
 
+  const atualizarStatusMutation = useMutation({
+    mutationFn: ({ id, novoStatus }: { id: number; novoStatus: string }) =>
+      PedidosService.atualizarStatus(id, novoStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+      queryClient.invalidateQueries({ queryKey: ['pedido'] });
+
+      if (!disableNotifications) {
+        enqueueSnackbar('Status atualizado com sucesso!', { variant: 'success' });
+      }
+    },
+    onError: (err) => {
+      logger.error('Erro ao atualizar status:', err);
+      if (!disableNotifications) {
+        enqueueSnackbar(
+          `Erro ao atualizar status: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
+          { variant: 'error' }
+        );
+      }
+    },
+  });
+
   const repetirPedidoMutation = useMutation({
     mutationFn: (id: number) => PedidosService.repetirPedido(id),
     onSuccess: (data) => {
@@ -166,6 +188,7 @@ export function usePedidos(params?: PedidosParams) {
     // Mutações
     criarPedido: criarPedidoMutation.mutateAsync,
     atualizarPedido: atualizarPedidoMutation.mutateAsync,
+    atualizarStatus: atualizarStatusMutation.mutateAsync,
     deletarPedido: deletarPedidoMutation.mutateAsync,
     repetirPedido: repetirPedidoMutation.mutateAsync,
     downloadPdf: PedidosService.downloadPdf,
