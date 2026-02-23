@@ -1,10 +1,19 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { LoginDto } from './dto/auth.dto';
+import { RegistrarClienteDto } from './dto/registrar-cliente.dto';
+import { PAPEL_CLIENTE_ADMIN } from './roles.constants';
 
 @Injectable()
 export class AuthService {
@@ -15,12 +24,102 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {
     this.refreshTokenExpirationHours = this.configService.get<number>(
       'REFRESH_TOKEN_EXPIRATION_HOURS',
       24,
     );
   }
+
+  // =========================================================================
+  // AUTO-CADASTRO PÚBLICO
+  // =========================================================================
+
+  /**
+   * Registra um novo cliente (empresa) + usuário responsável (CLIENTE_ADMIN).
+   * Transação atômica: se qualquer etapa falhar, nenhum registro é criado.
+   * Cliente fica com status 'pendente_aprovacao', Usuário com status 'inativo'.
+   */
+  async registrarCliente(dto: RegistrarClienteDto) {
+    // 1. Validar unicidade CNPJ
+    const cnpjExistente = await this.prisma.cliente.findFirst({
+      where: { cnpj: dto.cnpj },
+    });
+    if (cnpjExistente) {
+      throw new ConflictException('CNPJ já cadastrado no sistema');
+    }
+
+    // 2. Validar unicidade email do responsável
+    const emailExistente = await this.prisma.usuario.findFirst({
+      where: { email: dto.email_responsavel },
+    });
+    if (emailExistente) {
+      throw new ConflictException('Email já cadastrado no sistema');
+    }
+
+    // 3. Hash da senha
+    const senhaHash = await bcrypt.hash(dto.senha, 10);
+
+    // 4. Buscar papel CLIENTE_ADMIN
+    const papelClienteAdmin = await this.prisma.papel.findFirst({
+      where: { codigo: PAPEL_CLIENTE_ADMIN },
+    });
+    if (!papelClienteAdmin) {
+      throw new InternalServerErrorException(
+        'Papel CLIENTE_ADMIN não configurado no sistema. Contacte o administrador.',
+      );
+    }
+
+    // 5. Transação atômica: criar Cliente + Usuário
+    const resultado = await this.prisma.$transaction(async (tx) => {
+      const cliente = await tx.cliente.create({
+        data: {
+          razao_social: dto.razao_social,
+          nome_fantasia: dto.nome_fantasia || dto.razao_social,
+          cnpj: dto.cnpj,
+          email: dto.email_empresa,
+          telefone: dto.telefone || '',
+          status: 'pendente_aprovacao',
+        },
+      });
+
+      const usuario = await tx.usuario.create({
+        data: {
+          nome: dto.nome_responsavel,
+          email: dto.email_responsavel,
+          senha: senhaHash,
+          papel_id: papelClienteAdmin.id,
+          cliente_id: cliente.id,
+          status: 'inativo', // inativo até aprovação do admin
+        },
+      });
+
+      return { cliente, usuario };
+    });
+
+    // 6. Enviar email de confirmação ao solicitante (fire-and-forget)
+    this.emailService
+      .enviarEmail({
+        to: dto.email_responsavel,
+        subject: "Cadastro recebido — Lino's Panificadora",
+        text: `Olá ${dto.nome_responsavel}, seu cadastro para ${dto.razao_social} foi recebido e está em análise. Você será notificado por email quando for aprovado.`,
+      })
+      .catch((err) => this.logger.error(`Erro ao enviar email de confirmação: ${err.message}`));
+
+    this.logger.log(
+      `Novo auto-cadastro: clienteId=${resultado.cliente.id}, cnpj=${dto.cnpj}, email=${dto.email_responsavel}`,
+    );
+
+    return {
+      message: 'Cadastro recebido com sucesso. Aguarde aprovação.',
+      clienteId: resultado.cliente.id,
+    };
+  }
+
+  // =========================================================================
+  // LOGIN
+  // =========================================================================
 
   async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string) {
     const usuario = await this.prisma.usuario.findUnique({
@@ -37,6 +136,29 @@ export class AuthService {
     const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
     if (!senhaValida) {
       throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    // Verificar status do cliente vinculado (se houver)
+    if (usuario.cliente_id) {
+      const cliente = await this.prisma.cliente.findUnique({
+        where: { id: usuario.cliente_id },
+      });
+      if (cliente) {
+        if (cliente.status === 'pendente_aprovacao') {
+          throw new UnauthorizedException('Empresa aguardando aprovação');
+        }
+        if (cliente.status === 'rejeitado') {
+          throw new UnauthorizedException('Cadastro da empresa foi rejeitado');
+        }
+        if (cliente.status === 'suspenso') {
+          throw new UnauthorizedException(
+            'Empresa suspensa. Entre em contato com o suporte',
+          );
+        }
+        if (cliente.status === 'inativo') {
+          throw new UnauthorizedException('Empresa inativa');
+        }
+      }
     }
 
     // Parse permissões do formato JSON
@@ -105,6 +227,10 @@ export class AuthService {
     };
   }
 
+  // =========================================================================
+  // REFRESH
+  // =========================================================================
+
   async refresh(refreshTokenValue: string, ipAddress?: string, userAgent?: string) {
     // Buscar o refresh token no banco
     const storedToken = await this.prisma.refreshToken.findUnique({
@@ -145,6 +271,16 @@ export class AuthService {
     // Verificar se o usuário ainda está ativo
     if (usuario.status.toLowerCase() !== 'ativo') {
       throw new UnauthorizedException('Usuário inativo');
+    }
+
+    // Verificar status do cliente vinculado (se houver)
+    if (usuario.cliente_id) {
+      const cliente = await this.prisma.cliente.findUnique({
+        where: { id: usuario.cliente_id },
+      });
+      if (cliente && cliente.status !== 'ativo') {
+        throw new UnauthorizedException('Empresa não está ativa');
+      }
     }
 
     // Revogar o token usado (rotation - one-time use)
@@ -207,6 +343,10 @@ export class AuthService {
     };
   }
 
+  // =========================================================================
+  // LOGOUT
+  // =========================================================================
+
   async logout(refreshTokenValue: string) {
     // Revogar o refresh token (idempotente - não falha se já revogado ou inexistente)
     const token = await this.prisma.refreshToken.findUnique({
@@ -222,6 +362,10 @@ export class AuthService {
 
     return { message: 'Logout realizado com sucesso' };
   }
+
+  // =========================================================================
+  // UTILITÁRIOS
+  // =========================================================================
 
   async limparTokensExpirados() {
     const result = await this.prisma.refreshToken.deleteMany({

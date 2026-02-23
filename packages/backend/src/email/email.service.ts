@@ -40,6 +40,48 @@ export class EmailService {
     }
   }
 
+  /**
+   * Envia um email genérico via Resend (ou loga em modo MOCK).
+   * Método público reutilizável para qualquer módulo que precise enviar emails.
+   */
+  async enviarEmail(params: { to: string; subject: string; text?: string; html?: string }): Promise<void> {
+    const { to, subject, text, html } = params;
+
+    if (this.isMock) {
+      this.logger.log('=== EMAIL MOCK ===');
+      this.logger.log(`Para: ${to}`);
+      this.logger.log(`Assunto: ${subject}`);
+      if (text) this.logger.log(`Texto: ${text}`);
+      this.logger.log('=== FIM EMAIL MOCK ===');
+      return;
+    }
+
+    if (!this.resend) {
+      this.logger.error(`Não foi possível enviar email para ${to}: Resend não configurado`);
+      return;
+    }
+
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject,
+        html: html || text || '',
+      });
+
+      if (error) {
+        this.logger.error(`Falha ao enviar email para ${to}: ${error.message}`);
+        return;
+      }
+
+      this.logger.log(`Email enviado para ${to} (id: ${data?.id})`);
+    } catch (error) {
+      this.logger.error(
+        `Erro ao enviar email para ${to}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+    }
+  }
+
   @OnEvent('password.reset.requested')
   async handlePasswordResetRequested(event: PasswordResetRequestedEvent): Promise<void> {
     const { email, token, expiresAt } = event;

@@ -127,4 +127,33 @@ export class ClientesController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.clientesService.remove(id);
   }
+
+  // =========================================================================
+  // APROVAÇÃO / REJEIÇÃO DE AUTO-CADASTRO
+  // =========================================================================
+
+  @Patch(':id/aprovar')
+  @RequerPermissoes('clientes:editar')
+  @ApiOperation({ summary: 'Aprovar cadastro de cliente pendente' })
+  @ApiResponse({ status: 200, description: 'Cliente aprovado com sucesso.' })
+  @ApiResponse({ status: 400, description: 'Cliente não está pendente de aprovação.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
+  @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
+  aprovarCliente(@Param('id', ParseIntPipe) id: number) {
+    return this.clientesService.aprovarCliente(id);
+  }
+
+  @Patch(':id/rejeitar')
+  @RequerPermissoes('clientes:editar')
+  @ApiOperation({ summary: 'Rejeitar cadastro de cliente pendente' })
+  @ApiResponse({ status: 200, description: 'Cliente rejeitado.' })
+  @ApiResponse({ status: 400, description: 'Cliente não está pendente de aprovação.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
+  @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
+  rejeitarCliente(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('motivo') motivo?: string,
+  ) {
+    return this.clientesService.rejeitarCliente(id, motivo);
+  }
 }

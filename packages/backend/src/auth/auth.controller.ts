@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, AuthResponseDto, RefreshTokenDto, LogoutDto } from './dto/auth.dto';
+import { RegistrarClienteDto } from './dto/registrar-cliente.dto';
 import { SolicitarResetDto, SolicitarResetResponseDto } from './dto/solicitar-reset.dto';
 import {
   ConfirmarResetDto,
@@ -30,6 +31,25 @@ export class AuthController {
     const ipAddress = req.ip || req.socket?.remoteAddress;
     const userAgent = req.headers['user-agent'];
     return this.authService.login(loginDto, ipAddress, userAgent);
+  }
+
+  // =========================================================================
+  // AUTO-CADASTRO PÚBLICO
+  // =========================================================================
+
+  @Post('registrar-cliente')
+  @HttpCode(201)
+  @Throttle({ login: {} })
+  @ApiOperation({
+    summary: 'Auto-cadastro público de empresa',
+    description:
+      'Cria um novo Cliente (pendente de aprovação) e um Usuário vinculado (inativo). Não requer autenticação.',
+  })
+  @ApiResponse({ status: 201, description: 'Cadastro recebido com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  @ApiResponse({ status: 409, description: 'CNPJ ou email já cadastrado' })
+  async registrarCliente(@Body() dto: RegistrarClienteDto) {
+    return this.authService.registrarCliente(dto);
   }
 
   @Post('refresh')

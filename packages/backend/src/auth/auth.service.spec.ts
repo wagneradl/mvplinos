@@ -1,9 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -54,6 +60,16 @@ describe('AuthService', () => {
   const mockPrismaService = {
     usuario: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    cliente: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    papel: {
+      findFirst: jest.fn(),
     },
     refreshToken: {
       findUnique: jest.fn(),
@@ -62,6 +78,9 @@ describe('AuthService', () => {
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
     },
+    $transaction: jest.fn((cb: (prisma: any) => Promise<any>) =>
+      cb(mockPrismaService),
+    ),
   };
 
   const mockJwtService = {
@@ -76,10 +95,16 @@ describe('AuthService', () => {
     }),
   };
 
+  const mockEmailService = {
+    enviarEmail: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -87,6 +112,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -189,8 +215,6 @@ describe('AuthService', () => {
     });
 
     it('deve rejeitar usuário soft-deleted (findUnique retorna null)', async () => {
-      // Quando um usuário é soft-deleted, se findUnique retornar o registro
-      // com status !== 'ativo', deve rejeitar
       mockPrismaService.usuario.findUnique.mockResolvedValue({
         ...mockUsuario,
         status: 'inativo',
@@ -244,17 +268,16 @@ describe('AuthService', () => {
         { email: 'admin@linos.com', senha: 'admin123' },
       );
 
-      // Verifica que o JWT payload inclui clienteId
       expect(mockJwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({ clienteId: null }),
       );
-      // Verifica que o response inclui clienteId
       expect(result.usuario.clienteId).toBeNull();
     });
 
     it('deve incluir clienteId no JWT para usuário CLIENTE', async () => {
       mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({ id: 5, status: 'ativo' });
       mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
       mockPrismaService.refreshToken.create.mockResolvedValue({});
 
@@ -262,12 +285,178 @@ describe('AuthService', () => {
         { email: 'admin@padaria.com', senha: 'senha123' },
       );
 
-      // Verifica que o JWT payload inclui clienteId=5
       expect(mockJwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({ clienteId: 5 }),
       );
-      // Verifica que o response inclui clienteId=5
       expect(result.usuario.clienteId).toBe(5);
+    });
+
+    // --- Bloqueio de login por status do cliente ---
+
+    it('deve bloquear login para cliente pendente_aprovacao', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({
+        id: 5,
+        status: 'pendente_aprovacao',
+      });
+
+      await expect(
+        service.login({ email: 'admin@padaria.com', senha: 'senha123' }),
+      ).rejects.toThrow(new UnauthorizedException('Empresa aguardando aprovação'));
+    });
+
+    it('deve bloquear login para cliente rejeitado', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({
+        id: 5,
+        status: 'rejeitado',
+      });
+
+      await expect(
+        service.login({ email: 'admin@padaria.com', senha: 'senha123' }),
+      ).rejects.toThrow(new UnauthorizedException('Cadastro da empresa foi rejeitado'));
+    });
+
+    it('deve bloquear login para cliente suspenso', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({
+        id: 5,
+        status: 'suspenso',
+      });
+
+      await expect(
+        service.login({ email: 'admin@padaria.com', senha: 'senha123' }),
+      ).rejects.toThrow(
+        new UnauthorizedException('Empresa suspensa. Entre em contato com o suporte'),
+      );
+    });
+
+    it('deve permitir login para cliente ativo + usuario ativo', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({ id: 5, status: 'ativo' });
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.login(
+        { email: 'admin@padaria.com', senha: 'senha123' },
+      );
+
+      expect(result).toHaveProperty('access_token');
+      expect(result.usuario.clienteId).toBe(5);
+    });
+  });
+
+  // =========================================================================
+  // REGISTRAR CLIENTE
+  // =========================================================================
+
+  describe('registrarCliente', () => {
+    const registroDto = {
+      razao_social: 'Nova Padaria Ltda',
+      nome_fantasia: 'Nova Padaria',
+      cnpj: '12.345.678/0001-90',
+      email_empresa: 'contato@novapadaria.com',
+      telefone: '(11) 99999-9999',
+      nome_responsavel: 'João Silva',
+      email_responsavel: 'joao@novapadaria.com',
+      senha: 'Senha@123',
+    };
+
+    it('deve criar Cliente pendente + Usuario inativo em transação', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
+      mockPrismaService.usuario.findFirst.mockResolvedValue(null);
+      mockPrismaService.papel.findFirst.mockResolvedValue(mockPapelCliente);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$2a$10$hashed');
+      mockPrismaService.cliente.create.mockResolvedValue({ id: 99 });
+      mockPrismaService.usuario.create.mockResolvedValue({ id: 50 });
+
+      const result = await service.registrarCliente(registroDto);
+
+      expect(result.message).toContain('Cadastro recebido');
+      expect(result.clienteId).toBe(99);
+      expect(mockPrismaService.cliente.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: 'pendente_aprovacao',
+          cnpj: registroDto.cnpj,
+        }),
+      });
+      expect(mockPrismaService.usuario.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: 'inativo',
+          email: registroDto.email_responsavel,
+          cliente_id: 99,
+        }),
+      });
+    });
+
+    it('deve rejeitar CNPJ duplicado', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue({ id: 1, cnpj: registroDto.cnpj });
+
+      await expect(service.registrarCliente(registroDto)).rejects.toThrow(
+        new ConflictException('CNPJ já cadastrado no sistema'),
+      );
+    });
+
+    it('deve rejeitar email duplicado', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
+      mockPrismaService.usuario.findFirst.mockResolvedValue({ id: 1, email: registroDto.email_responsavel });
+
+      await expect(service.registrarCliente(registroDto)).rejects.toThrow(
+        new ConflictException('Email já cadastrado no sistema'),
+      );
+    });
+
+    it('deve falhar se papel CLIENTE_ADMIN não existe', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
+      mockPrismaService.usuario.findFirst.mockResolvedValue(null);
+      mockPrismaService.papel.findFirst.mockResolvedValue(null);
+
+      await expect(service.registrarCliente(registroDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
+
+    it('deve enviar email de confirmação', async () => {
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
+      mockPrismaService.usuario.findFirst.mockResolvedValue(null);
+      mockPrismaService.papel.findFirst.mockResolvedValue(mockPapelCliente);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$2a$10$hashed');
+      mockPrismaService.cliente.create.mockResolvedValue({ id: 99 });
+      mockPrismaService.usuario.create.mockResolvedValue({ id: 50 });
+
+      await service.registrarCliente(registroDto);
+
+      // Aguardar microtask do .catch()
+      await new Promise((r) => setImmediate(r));
+
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: registroDto.email_responsavel,
+          subject: expect.stringContaining('Cadastro recebido'),
+        }),
+      );
+    });
+
+    it('deve usar razao_social como fallback para nome_fantasia', async () => {
+      const dtoSemFantasia = { ...registroDto, nome_fantasia: undefined };
+      mockPrismaService.cliente.findFirst.mockResolvedValue(null);
+      mockPrismaService.usuario.findFirst.mockResolvedValue(null);
+      mockPrismaService.papel.findFirst.mockResolvedValue(mockPapelCliente);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$2a$10$hashed');
+      mockPrismaService.cliente.create.mockResolvedValue({ id: 99 });
+      mockPrismaService.usuario.create.mockResolvedValue({ id: 50 });
+
+      await service.registrarCliente(dtoSemFantasia);
+
+      expect(mockPrismaService.cliente.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          nome_fantasia: 'Nova Padaria Ltda',
+        }),
+      });
     });
   });
 
@@ -306,7 +495,6 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refresh_token');
       expect(result).toHaveProperty('expires_in', 900);
       expect(result.refresh_token).toHaveLength(96);
-      // O novo refresh token deve ser diferente do antigo
       expect(result.refresh_token).not.toBe('a'.repeat(96));
     });
 
@@ -326,7 +514,7 @@ describe('AuthService', () => {
     it('deve retornar 401 para refresh token expirado', async () => {
       mockPrismaService.refreshToken.findUnique.mockResolvedValue({
         ...mockStoredToken,
-        expires_at: new Date(Date.now() - 1000), // Expirado
+        expires_at: new Date(Date.now() - 1000),
       });
 
       await expect(service.refresh('a'.repeat(96))).rejects.toThrow(
@@ -373,6 +561,7 @@ describe('AuthService', () => {
         usuario: mockUsuarioCliente,
       };
       mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockStoredTokenCliente);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({ id: 5, status: 'ativo' });
       mockPrismaService.refreshToken.update.mockResolvedValue({});
       mockPrismaService.refreshToken.create.mockResolvedValue({});
 
@@ -382,6 +571,23 @@ describe('AuthService', () => {
         expect.objectContaining({ clienteId: 5 }),
       );
       expect(result.usuario.clienteId).toBe(5);
+    });
+
+    it('deve bloquear refresh se cliente não está ativo', async () => {
+      const mockStoredTokenCliente = {
+        ...mockStoredToken,
+        usuario_id: 10,
+        usuario: mockUsuarioCliente,
+      };
+      mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockStoredTokenCliente);
+      mockPrismaService.cliente.findUnique.mockResolvedValue({
+        id: 5,
+        status: 'pendente_aprovacao',
+      });
+
+      await expect(service.refresh('a'.repeat(96))).rejects.toThrow(
+        new UnauthorizedException('Empresa não está ativa'),
+      );
     });
   });
 

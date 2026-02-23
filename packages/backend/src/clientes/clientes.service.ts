@@ -9,6 +9,7 @@ import {
 import { Page } from '../common/interfaces/page.interface';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { Prisma } from '@prisma/client';
@@ -23,7 +24,10 @@ export interface TenantContext {
 export class ClientesService {
   private readonly logger = new Logger(ClientesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async create(createClienteDto: CreateClienteDto) {
     try {
@@ -332,5 +336,95 @@ export class ClientesService {
       }
       throw new BadRequestException('Erro ao buscar cliente');
     }
+  }
+
+  // =========================================================================
+  // APROVAÇÃO / REJEIÇÃO DE AUTO-CADASTRO
+  // =========================================================================
+
+  /**
+   * Aprova um cliente pendente: status → ativo, usuarios vinculados → ativo.
+   * Envia email de notificação aos usuários do cliente.
+   */
+  async aprovarCliente(id: number) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id } });
+    if (!cliente) {
+      throw new NotFoundException('Cliente não encontrado');
+    }
+    if (cliente.status !== 'pendente_aprovacao') {
+      throw new BadRequestException('Cliente não está pendente de aprovação');
+    }
+
+    // Transação: ativar cliente + ativar usuarios vinculados
+    await this.prisma.$transaction(async (tx) => {
+      await tx.cliente.update({
+        where: { id },
+        data: { status: 'ativo' },
+      });
+      await tx.usuario.updateMany({
+        where: { cliente_id: id },
+        data: { status: 'ativo' },
+      });
+    });
+
+    // Enviar email de aprovação (fire-and-forget)
+    const usuarios = await this.prisma.usuario.findMany({
+      where: { cliente_id: id },
+    });
+    for (const u of usuarios) {
+      this.emailService
+        .enviarEmail({
+          to: u.email,
+          subject: "Cadastro aprovado — Lino's Panificadora",
+          text: `Olá ${u.nome}, seu cadastro para ${cliente.razao_social} foi aprovado! Você já pode acessar o portal.`,
+        })
+        .catch((err) =>
+          this.logger.error(`Erro ao enviar email de aprovação para ${u.email}: ${err.message}`),
+        );
+    }
+
+    this.logger.log(`Cliente aprovado: id=${id}, razao_social=${cliente.razao_social}`);
+    return { message: 'Cliente aprovado com sucesso' };
+  }
+
+  /**
+   * Rejeita um cliente pendente: status → rejeitado, usuarios permanecem inativos.
+   * Envia email de rejeição (com motivo opcional).
+   */
+  async rejeitarCliente(id: number, motivo?: string) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id } });
+    if (!cliente) {
+      throw new NotFoundException('Cliente não encontrado');
+    }
+    if (cliente.status !== 'pendente_aprovacao') {
+      throw new BadRequestException('Cliente não está pendente de aprovação');
+    }
+
+    await this.prisma.cliente.update({
+      where: { id },
+      data: { status: 'rejeitado' },
+    });
+
+    // Enviar email de rejeição (fire-and-forget)
+    const usuarios = await this.prisma.usuario.findMany({
+      where: { cliente_id: id },
+    });
+    for (const u of usuarios) {
+      const motivoTexto = motivo
+        ? `\nMotivo: ${motivo}`
+        : '';
+      this.emailService
+        .enviarEmail({
+          to: u.email,
+          subject: "Cadastro não aprovado — Lino's Panificadora",
+          text: `Olá ${u.nome}, infelizmente seu cadastro para ${cliente.razao_social} não foi aprovado.${motivoTexto}\nSe tiver dúvidas, entre em contato com nosso suporte.`,
+        })
+        .catch((err) =>
+          this.logger.error(`Erro ao enviar email de rejeição para ${u.email}: ${err.message}`),
+        );
+    }
+
+    this.logger.log(`Cliente rejeitado: id=${id}, razao_social=${cliente.razao_social}${motivo ? `, motivo=${motivo}` : ''}`);
+    return { message: 'Cliente rejeitado' };
   }
 }

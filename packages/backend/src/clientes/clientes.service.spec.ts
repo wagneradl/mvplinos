@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common';
 import { ClientesService } from './clientes.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 
 describe('ClientesService', () => {
   let service: ClientesService;
+  let mockEmailService: { enviarEmail: jest.Mock };
 
   const mockCliente = {
     id: 1,
@@ -37,10 +39,15 @@ describe('ClientesService', () => {
   const mockPrismaService = {
     cliente: {
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
+    },
+    usuario: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
     $transaction: jest.fn((cb: (prisma: any) => Promise<any>) =>
       cb(mockPrismaService),
@@ -50,11 +57,15 @@ describe('ClientesService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+
+    mockEmailService = { enviarEmail: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -406,6 +417,154 @@ describe('ClientesService', () => {
       mockPrismaService.cliente.findFirst.mockResolvedValue(null);
 
       await expect(service.remove(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // =========================================================================
+  // APROVAÇÃO DE AUTO-CADASTRO (aprovarCliente)
+  // =========================================================================
+
+  describe('aprovarCliente', () => {
+    const mockClientePendente = {
+      ...mockCliente,
+      id: 10,
+      status: 'pendente_aprovacao',
+      razao_social: 'Empresa Pendente Ltda',
+    };
+
+    const mockUsuarios = [
+      { id: 100, nome: 'João', email: 'joao@empresa.com', cliente_id: 10 },
+      { id: 101, nome: 'Maria', email: 'maria@empresa.com', cliente_id: 10 },
+    ];
+
+    it('deve aprovar cliente pendente e ativar usuários vinculados', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockClientePendente);
+      mockPrismaService.cliente.update.mockResolvedValue({ ...mockClientePendente, status: 'ativo' });
+      mockPrismaService.usuario.updateMany.mockResolvedValue({ count: 2 });
+      mockPrismaService.usuario.findMany.mockResolvedValue(mockUsuarios);
+
+      const result = await service.aprovarCliente(10);
+
+      expect(result).toEqual({ message: 'Cliente aprovado com sucesso' });
+      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
+        where: { id: 10 },
+        data: { status: 'ativo' },
+      });
+      expect(mockPrismaService.usuario.updateMany).toHaveBeenCalledWith({
+        where: { cliente_id: 10 },
+        data: { status: 'ativo' },
+      });
+    });
+
+    it('deve lançar NotFoundException para cliente inexistente', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(null);
+
+      await expect(service.aprovarCliente(999)).rejects.toThrow(NotFoundException);
+    });
+
+    it('deve lançar BadRequestException para cliente que não está pendente', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockCliente); // status='ativo'
+
+      await expect(service.aprovarCliente(1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve enviar email de aprovação para todos os usuários vinculados', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockClientePendente);
+      mockPrismaService.cliente.update.mockResolvedValue({ ...mockClientePendente, status: 'ativo' });
+      mockPrismaService.usuario.updateMany.mockResolvedValue({ count: 2 });
+      mockPrismaService.usuario.findMany.mockResolvedValue(mockUsuarios);
+
+      await service.aprovarCliente(10);
+
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledTimes(2);
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'joao@empresa.com',
+          subject: expect.stringContaining('aprovado'),
+        }),
+      );
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'maria@empresa.com',
+          subject: expect.stringContaining('aprovado'),
+        }),
+      );
+    });
+  });
+
+  // =========================================================================
+  // REJEIÇÃO DE AUTO-CADASTRO (rejeitarCliente)
+  // =========================================================================
+
+  describe('rejeitarCliente', () => {
+    const mockClientePendente = {
+      ...mockCliente,
+      id: 10,
+      status: 'pendente_aprovacao',
+      razao_social: 'Empresa Pendente Ltda',
+    };
+
+    const mockUsuarios = [
+      { id: 100, nome: 'João', email: 'joao@empresa.com', cliente_id: 10 },
+    ];
+
+    it('deve rejeitar cliente pendente', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockClientePendente);
+      mockPrismaService.cliente.update.mockResolvedValue({ ...mockClientePendente, status: 'rejeitado' });
+      mockPrismaService.usuario.findMany.mockResolvedValue(mockUsuarios);
+
+      const result = await service.rejeitarCliente(10);
+
+      expect(result).toEqual({ message: 'Cliente rejeitado' });
+      expect(mockPrismaService.cliente.update).toHaveBeenCalledWith({
+        where: { id: 10 },
+        data: { status: 'rejeitado' },
+      });
+    });
+
+    it('deve lançar NotFoundException para cliente inexistente', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(null);
+
+      await expect(service.rejeitarCliente(999)).rejects.toThrow(NotFoundException);
+    });
+
+    it('deve lançar BadRequestException para cliente que não está pendente', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockCliente); // status='ativo'
+
+      await expect(service.rejeitarCliente(1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve enviar email de rejeição com motivo', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockClientePendente);
+      mockPrismaService.cliente.update.mockResolvedValue({ ...mockClientePendente, status: 'rejeitado' });
+      mockPrismaService.usuario.findMany.mockResolvedValue(mockUsuarios);
+
+      await service.rejeitarCliente(10, 'Documentação incompleta');
+
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledTimes(1);
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'joao@empresa.com',
+          subject: expect.stringContaining('não aprovado'),
+          text: expect.stringContaining('Documentação incompleta'),
+        }),
+      );
+    });
+
+    it('deve enviar email de rejeição sem motivo', async () => {
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockClientePendente);
+      mockPrismaService.cliente.update.mockResolvedValue({ ...mockClientePendente, status: 'rejeitado' });
+      mockPrismaService.usuario.findMany.mockResolvedValue(mockUsuarios);
+
+      await service.rejeitarCliente(10);
+
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledTimes(1);
+      expect(mockEmailService.enviarEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'joao@empresa.com',
+          subject: expect.stringContaining('não aprovado'),
+        }),
+      );
     });
   });
 });
