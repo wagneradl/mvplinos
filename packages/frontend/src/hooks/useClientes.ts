@@ -105,6 +105,35 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     },
   });
 
+  const { mutate: aprovarCliente, isPending: isAprovando } = useMutation({
+    mutationFn: ClientesService.aprovarCliente,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      showSuccess('Cliente aprovado com sucesso!');
+    },
+    onError: (err) => {
+      logger.error('Erro ao aprovar cliente:', err);
+      showError(
+        `Erro ao aprovar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
+    },
+  });
+
+  const { mutate: rejeitarCliente, isPending: isRejeitando } = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo?: string }) =>
+      ClientesService.rejeitarCliente(id, motivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      showSuccess('Cliente rejeitado com sucesso');
+    },
+    onError: (err) => {
+      logger.error('Erro ao rejeitar cliente:', err);
+      showError(
+        `Erro ao rejeitar cliente: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+      );
+    },
+  });
+
   // Adiciona log do que está sendo retornado
   const returnValue = {
     clientes: data?.data || [],
@@ -116,6 +145,10 @@ export function useClientes(page = 1, limit = 10, status?: string, search?: stri
     atualizarCliente,
     deletarCliente,
     reativarCliente,
+    aprovarCliente,
+    rejeitarCliente,
+    isAprovando,
+    isRejeitando,
   };
 
   logger.debug('useClientes retornando:', returnValue);

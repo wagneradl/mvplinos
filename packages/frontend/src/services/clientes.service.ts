@@ -147,6 +147,28 @@ export const ClientesService = {
     }
   },
 
+  async aprovarCliente(id: number): Promise<Cliente> {
+    try {
+      clientesLogger.debug(`Aprovando cliente ${id}`);
+      const response = await api.patch(`/clientes/${id}/aprovar`);
+      return response.data;
+    } catch (error) {
+      clientesLogger.error(`Erro ao aprovar cliente ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async rejeitarCliente(id: number, motivo?: string): Promise<Cliente> {
+    try {
+      clientesLogger.debug(`Rejeitando cliente ${id}`, { motivo });
+      const response = await api.patch(`/clientes/${id}/rejeitar`, { motivo });
+      return response.data;
+    } catch (error) {
+      clientesLogger.error(`Erro ao rejeitar cliente ${id}:`, error);
+      throw error;
+    }
+  },
+
   // Validações adicionais para casos de borda
   validarCliente(cliente: Omit<Cliente, 'id'>): void {
     // Validações básicas
@@ -176,8 +198,8 @@ export const ClientesService = {
     ClientesService.validarEmail(cliente.email);
 
     // Validar status
-    if (cliente.status && !['ativo', 'inativo'].includes(cliente.status)) {
-      throw new Error('Status inválido. Deve ser "ativo" ou "inativo"');
+    if (cliente.status && !['ativo', 'inativo', 'pendente_aprovacao', 'rejeitado', 'suspenso'].includes(cliente.status)) {
+      throw new Error('Status inválido. Deve ser "ativo", "inativo", "pendente_aprovacao", "rejeitado" ou "suspenso"');
     }
   },
 
