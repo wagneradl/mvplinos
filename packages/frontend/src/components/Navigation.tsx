@@ -37,7 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const DRAWER_WIDTH = 240;
 
 const menuItems = [
-  { text: 'Início', href: '/', icon: HomeIcon },
+  { text: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   {
     text: 'Pedidos',
     href: '/pedidos',

@@ -11,9 +11,13 @@ interface Usuario {
   id: number;
   nome: string;
   email: string;
+  clienteId?: number | null;
   papel: {
     id: number;
     nome: string;
+    codigo?: string;
+    tipo?: string; // 'INTERNO' | 'CLIENTE'
+    nivel?: number;
     permissoes: Record<string, string[]>;
   };
 }
@@ -150,6 +154,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [isTokenValid]);
 
+  // Helper: determinar rota de dashboard baseado no tipo de papel
+  const getDashboardRoute = useCallback(
+    (user: Usuario | null): string => {
+      const isCliente = user?.papel?.tipo === 'CLIENTE';
+      return isCliente ? '/portal/dashboard' : '/dashboard';
+    },
+    []
+  );
+
   // Gerenciar redirecionamentos baseados no estado de autenticação
   useEffect(() => {
     // Só aplicar redirecionamentos se não estivermos carregando
@@ -158,11 +171,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Redirecionar para dashboard se já estiver autenticado e tentar acessar login
       if (isAuthenticated && currentPath === '/login') {
-        authLogger.debug('Já autenticado, redirecionando para dashboard');
-        router.push('/pedidos');
+        const destination = getDashboardRoute(usuario);
+        authLogger.debug(`Já autenticado, redirecionando para ${destination}`);
+        router.push(destination);
       }
     }
-  }, [isAuthenticated, loading, pathname, router]);
+  }, [isAuthenticated, usuario, loading, pathname, router, getDashboardRoute]);
 
   const login = useCallback(
     async (accessToken: string, refreshToken: string, userData: Usuario) => {
@@ -177,10 +191,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUsuario(userData);
           setIsAuthenticated(true);
 
-          authLogger.debug('Login bem-sucedido, redirecionando para dashboard...');
+          // Redirecionar baseado no tipo de papel
+          const destination = getDashboardRoute(userData);
+          authLogger.debug(`Login bem-sucedido, redirecionando para ${destination}...`);
 
           // Usar o router do Next.js para navegação sem refresh completo
-          router.push('/pedidos');
+          router.push(destination);
         }
       } catch (error) {
         authLogger.error('Erro ao realizar login:', error);
@@ -195,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [router]
+    [router, getDashboardRoute]
   );
 
   const hasPermission = (recurso: string, acao: string): boolean => {
