@@ -16,11 +16,13 @@ model Usuario {
   email               String               @unique
   senha               String
   papel_id            Int
+  cliente_id          Int?
   status              String               @default("ativo")
   created_at          DateTime             @default(now())
   updated_at          DateTime             @updatedAt
   deleted_at          DateTime?
   papel               Papel                @relation(fields: [papel_id], references: [id])
+  cliente             Cliente?             @relation(fields: [cliente_id], references: [id])
   passwordResetTokens PasswordResetToken[]
   refreshTokens       RefreshToken[]
 }
@@ -73,6 +75,7 @@ model Cliente {
   updated_at    DateTime  @updatedAt
   deleted_at    DateTime?
   pedidos       Pedido[]
+  usuarios      Usuario[]
 }
 
 model Produto {

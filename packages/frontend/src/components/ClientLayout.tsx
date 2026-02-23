@@ -41,6 +41,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
+  const isPublicPage =
+    isLoginPage ||
+    pathname === '/esqueci-senha' ||
+    pathname?.startsWith('/reset-senha');
 
   // Mostrar tela de carregamento enquanto verifica a autenticação
   if (loading) {
@@ -61,8 +65,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se não estiver autenticado e não estiver na página de login, mostrar o componente de login diretamente
-  if (!isAuthenticated && !isLoginPage) {
+  // Se não estiver autenticado e não estiver em página pública, mostrar o componente de login diretamente
+  if (!isAuthenticated && !isPublicPage) {
     return (
       <>
         <CssBaseline />
@@ -73,8 +77,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se estiver na página de login (explicitamente) ou já tratada acima
-  if (isLoginPage) {
+  // Se estiver em página pública (login, esqueci-senha, reset-senha)
+  if (isPublicPage) {
     return (
       <>
         <CssBaseline />

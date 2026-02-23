@@ -158,7 +158,68 @@ describe('AuthService', () => {
         service.login({ email: 'admin@linos.com', senha: 'admin123' }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('deve rejeitar email não encontrado', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.login({ email: 'inexistente@linos.com', senha: 'admin123' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('deve rejeitar usuário soft-deleted (findUnique retorna null)', async () => {
+      // Quando um usuário é soft-deleted, se findUnique retornar o registro
+      // com status !== 'ativo', deve rejeitar
+      mockPrismaService.usuario.findUnique.mockResolvedValue({
+        ...mockUsuario,
+        status: 'inativo',
+        deleted_at: new Date(),
+      });
+
+      await expect(
+        service.login({ email: 'admin@linos.com', senha: 'admin123' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('deve retornar dados do usuário sem o campo senha', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuario);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.login(
+        { email: 'admin@linos.com', senha: 'admin123' },
+      );
+
+      expect(result.usuario).toBeDefined();
+      expect(result.usuario).not.toHaveProperty('senha');
+      expect(result.usuario.id).toBe(1);
+      expect(result.usuario.nome).toBe('Admin');
+      expect(result.usuario.email).toBe('admin@linos.com');
+    });
+
+    it('deve incluir permissões parseadas no response', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuario);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.login(
+        { email: 'admin@linos.com', senha: 'admin123' },
+      );
+
+      expect(result.usuario.papel.permissoes).toEqual({
+        clientes: ['listar', 'ver', 'criar'],
+      });
+    });
   });
+
+  // =========================================================================
+  // ME / getProfile
+  // NOTA: O endpoint /me é tratado diretamente no controller (retorna req.user
+  // do JWT guard). Não existe método getProfile/getMe no AuthService, portanto
+  // testes de ME pertencem ao controller spec, não ao service spec.
+  // =========================================================================
 
   // =========================================================================
   // REFRESH
@@ -298,6 +359,32 @@ describe('AuthService', () => {
           revoked_at: { not: null },
         },
       });
+    });
+  });
+
+  // =========================================================================
+  // VALIDATE TOKEN
+  // =========================================================================
+
+  describe('validateToken', () => {
+    it('deve retornar payload para token JWT válido', async () => {
+      const mockPayload = { sub: 1, email: 'admin@linos.com' };
+      mockJwtService.verify.mockReturnValue(mockPayload);
+
+      const result = await service.validateToken('valid-jwt-token');
+
+      expect(result).toEqual(mockPayload);
+      expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+    });
+
+    it('deve rejeitar token JWT inválido', async () => {
+      mockJwtService.verify.mockImplementation(() => {
+        throw new Error('invalid token');
+      });
+
+      await expect(service.validateToken('invalid-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

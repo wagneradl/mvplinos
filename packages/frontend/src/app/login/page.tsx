@@ -13,6 +13,7 @@ import {
   Container,
 } from '@mui/material';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { extractErrorMessage } from '@/services/api';
 import { authService } from '@/services/auth.service';
@@ -140,6 +141,22 @@ export default function LoginPage() {
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
             </Button>
+            <Box sx={{ textAlign: 'center' }}>
+              <Link href="/esqueci-senha" passHref legacyBehavior>
+                <Typography
+                  component="a"
+                  variant="body2"
+                  sx={{
+                    color: 'text.secondary',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  Esqueci minha senha
+                </Typography>
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Fade>

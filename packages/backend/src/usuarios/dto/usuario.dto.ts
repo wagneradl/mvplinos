@@ -1,5 +1,5 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { IsEmail, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateUsuarioDto {
   @ApiProperty({ example: 'João Silva' })
@@ -21,6 +21,11 @@ export class CreateUsuarioDto {
   @IsNumber()
   @IsNotEmpty({ message: 'Papel é obrigatório' })
   papel_id: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID do cliente (obrigatório para papéis do tipo CLIENTE)' })
+  @IsOptional()
+  @IsInt({ message: 'cliente_id deve ser um número inteiro' })
+  cliente_id?: number;
 }
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {}
@@ -38,6 +43,9 @@ export class UsuarioResponseDto {
   @ApiProperty({ example: 'ativo' })
   status: string;
 
+  @ApiPropertyOptional({ example: 1, description: 'ID do cliente vinculado (null para usuários internos)' })
+  cliente_id?: number;
+
   @ApiProperty({
     example: {
       id: 1,
@@ -52,6 +60,15 @@ export class UsuarioResponseDto {
     id: number;
     nome: string;
     permissoes: any;
+  };
+
+  @ApiPropertyOptional({
+    example: { id: 1, nome_fantasia: 'Padaria Central' },
+    description: 'Cliente vinculado (incluído quando cliente_id presente)',
+  })
+  cliente?: {
+    id: number;
+    nome_fantasia: string;
   };
 
   @ApiProperty({ example: '2023-04-12T10:30:00Z' })

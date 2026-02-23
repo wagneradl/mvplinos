@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto, UpdateUsuarioDto, UsuarioResponseDto } from './dto/usuario.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
@@ -37,14 +37,15 @@ export class UsuariosController {
   @Get()
   @RequerPermissoes('usuarios:listar')
   @ApiOperation({ summary: 'Listar todos os usuários' })
+  @ApiQuery({ name: 'cliente_id', required: false, type: Number, description: 'Filtrar por cliente' })
   @ApiResponse({
     status: 200,
     description: 'Lista de usuários retornada com sucesso',
     type: [UsuarioResponseDto],
   })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
-  findAll() {
-    return this.usuariosService.findAll();
+  findAll(@Query('cliente_id') clienteId?: string) {
+    return this.usuariosService.findAll(clienteId ? +clienteId : undefined);
   }
 
   @Get('papeis')

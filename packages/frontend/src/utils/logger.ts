@@ -235,5 +235,6 @@ export const loggers = {
   produtos: createLogger('Produtos'),
   clientes: createLogger('Clientes'),
   pedidos: createLogger('Pedidos'),
+  usuarios: createLogger('Usuarios'),
   forms: createLogger('Forms'),
 };

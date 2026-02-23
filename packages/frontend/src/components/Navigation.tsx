@@ -26,6 +26,7 @@ import {
   Inventory as ProdutosIcon,
   People as ClientesIcon,
   Assessment as RelatoriosIcon,
+  ManageAccounts as UsuariosIcon,
   Add as AddIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
@@ -60,6 +61,11 @@ const menuItems = [
     text: 'Relatórios',
     href: '/relatorios',
     icon: RelatoriosIcon,
+  },
+  {
+    text: 'Usuários',
+    href: '/usuarios',
+    icon: UsuariosIcon,
   },
 ];
 

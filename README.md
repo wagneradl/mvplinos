@@ -1,70 +1,177 @@
-# Sistema Lino's Panificadora
+# Lino's Panificadora
 
-Sistema de gestão de pedidos desenvolvido para a Lino's Panificadora, focado em atender as necessidades de gestão de pedidos, clientes, produtos e relatórios.
+Sistema de gestao B2B para a Lino's Panificadora. Gerencia produtos, clientes, pedidos e gera PDFs/relatorios de vendas.
 
-## Visão Geral
+## Tech Stack
 
-O Sistema Lino's Panificadora é uma solução completa para:
-- Cadastro e gestão de produtos
-- Cadastro e gestão de clientes
-- Criação e acompanhamento de pedidos
-- Geração de PDFs de pedidos
-- Relatórios de vendas
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | Next.js 15 (App Router), React 18, MUI 5, React Query 5 |
+| Backend | NestJS 10, Prisma 5 (SQLite), Passport + JWT |
+| PDF | Puppeteer 22 |
+| Email | Resend |
+| Monorepo | Yarn Workspaces + Turborepo |
+| Testes | Jest 29, Testing Library, Supertest |
+| Deploy | Render.com (auto-deploy on push to main) |
 
-## Instruções de Instalação
+## Estrutura do Monorepo
 
-Para instalar o sistema no Windows, siga um dos métodos abaixo:
+```
+packages/
+  backend/    NestJS REST API + Prisma ORM (SQLite)
+  frontend/   Next.js 15 App Router + MUI + React Query
+  shared/     Tipos TypeScript compartilhados
+```
 
-### Método Fácil (Recomendado)
-1. Clique duas vezes no arquivo `INSTALAR.bat`
-2. Siga as instruções na tela
-3. Após a instalação, utilize os atalhos criados na área de trabalho:
-   - "Iniciar Lino's Panificadora" - Para iniciar o sistema
-   - "Sistema Lino's Panificadora" - Para acessar o sistema no navegador
+### Modulos do Backend (`packages/backend/src/`)
 
-### Método Alternativo
-Caso encontre problemas com o método fácil, consulte o arquivo `README-INSTALACAO.md` para instruções detalhadas sobre o processo de instalação manual.
+| Modulo | Descricao |
+|--------|-----------|
+| `auth/` | Autenticacao JWT + Passport, refresh tokens, reset de senha |
+| `usuarios/` | CRUD de usuarios com papeis (Papel) e permissoes |
+| `clientes/` | Gestao de clientes B2B (CNPJ, razao social) |
+| `produtos/` | Gestao de produtos com precos e tipo de medida |
+| `pedidos/` | Processamento de pedidos com geracao de PDF |
+| `pdf/` | Geracao de PDF via Puppeteer |
+| `email/` | Envio de emails via Resend |
+| `admin/` | Endpoints administrativos (seed, reset, limpeza) |
+| `health/` | Health check |
 
-## Documentação
+### Paginas do Frontend (`packages/frontend/src/app/`)
 
-O sistema inclui a seguinte documentação:
-- `MANUAL_USUARIO.md` - Guia completo para usuários finais
-- `README-INSTALACAO.md` - Instruções detalhadas de instalação
-- `docs/GUIA_COMPLETO_WSL.md` - Guia técnico sobre a solução WSL utilizada
+`login/` | `clientes/` | `produtos/` | `pedidos/` | `relatorios/`
 
-## Funcionalidades Principais
+## Setup Local
 
-### Gestão de Produtos
-- Cadastro de produtos com preços e tipos de medida
-- Ativação/inativação de produtos
-- Listagem e filtragem de produtos
+### Pre-requisitos
 
-### Gestão de Clientes
-- Cadastro de clientes com CNPJ, razão social e contatos
-- Listagem e filtragem de clientes
-- Histórico de pedidos por cliente
+- Node.js >= 20
+- Yarn 1.x (`npm install -g yarn`)
 
-### Gestão de Pedidos
-- Criação de novos pedidos
-- Adição de múltiplos produtos por pedido
-- Cálculo automático de valores
-- Geração de PDF do pedido
-- Listagem e filtragem de pedidos
-- Funcionalidade de repetição de pedidos
+### Instalacao
 
-### Relatórios
-- Geração de relatórios de vendas por período
-- Exportação de relatórios em PDF
-- Análise de desempenho de vendas
+```bash
+# 1. Clonar e instalar dependencias
+git clone <repo-url>
+cd MVP7
+yarn install
 
-## Suporte Técnico
+# 2. Configurar variaveis de ambiente
+cp packages/backend/.env.example packages/backend/.env
+cp packages/frontend/.env.example packages/frontend/.env.local
+# Editar packages/backend/.env — no minimo definir JWT_SECRET
 
-Para obter suporte técnico, entre em contato:
-- Email: suporte@linos.com.br
-- Telefone: (XX) XXXX-XXXX
+# 3. Gerar Prisma client e aplicar migrations
+cd packages/backend
+npx prisma generate
+npx prisma migrate deploy
 
-## Aviso Legal
+# 4. Seed do banco (cria usuarios e dados iniciais)
+yarn build
+yarn seed
+cd ../..
 
-Este software é fornecido "como está", sem garantias expressas ou implícitas. Desenvolvido exclusivamente para uso interno da Lino's Panificadora.
+# 5. Iniciar em modo desenvolvimento
+yarn dev
+```
 
-© 2025 - Todos os direitos reservados
+O backend roda em `http://localhost:3001` e o frontend em `http://localhost:3000`.
+
+Swagger (documentacao da API): `http://localhost:3001/api`
+
+## Comandos
+
+```bash
+# Desenvolvimento
+yarn dev                    # Frontend + Backend simultaneamente
+yarn build                  # Build de todos os pacotes
+yarn start:prod             # Producao: build + check-db + start
+
+# Testes
+yarn test                   # Todos os testes (backend + frontend)
+yarn workspace @linos/backend test              # Testes backend
+yarn workspace @linos/backend test src/path     # Teste unico
+yarn workspace @linos/frontend test             # Testes frontend
+
+# Lint / Format
+yarn lint
+yarn format
+
+# Banco de Dados (de packages/backend/)
+npx prisma generate         # Gerar Prisma client
+npx prisma migrate deploy   # Aplicar migrations
+npx prisma studio           # GUI do banco
+yarn seed                   # Popular banco (requer build)
+
+# Backup
+yarn backup                 # Criar backup
+yarn backup:verify          # Verificar integridade
+yarn backup:restore         # Restaurar
+```
+
+## Entidades do Banco
+
+```
+Usuario ──> Papel (papel_id)
+         ──> RefreshToken[]
+         ──> PasswordResetToken[]
+
+Cliente ──> Pedido[]
+
+Pedido  ──> ItemPedido[] ──> Produto
+        ──> Cliente (cliente_id)
+```
+
+| Entidade | Campos principais |
+|----------|------------------|
+| `Usuario` | nome, email, senha (hash), status, papel_id |
+| `Papel` | nome, codigo, tipo, nivel, permissoes (JSON) |
+| `Cliente` | cnpj, razao_social, nome_fantasia, email, telefone |
+| `Produto` | nome, preco_unitario, tipo_medida, status |
+| `Pedido` | cliente_id, valor_total, status, pdf_path, pdf_url, observacoes |
+| `ItemPedido` | pedido_id, produto_id, quantidade, preco_unitario, valor_total_item |
+
+## Variaveis de Ambiente
+
+### Backend (`packages/backend/.env`)
+
+| Variavel | Obrigatoria | Descricao |
+|----------|:-----------:|-----------|
+| `DATABASE_URL` | sim | Conexao SQLite (padrao: `file:./prisma/dev.db`) |
+| `JWT_SECRET` | sim | Chave secreta para tokens JWT |
+| `JWT_EXPIRATION` | | Expiracao do access token (padrao: `15m`) |
+| `REFRESH_TOKEN_EXPIRATION_HOURS` | | Expiracao do refresh token em horas (padrao: `24`) |
+| `PORT` | | Porta do servidor (padrao: `3001`) |
+| `NODE_ENV` | | `development` ou `production` |
+| `RESEND_API_KEY` | prod | Chave da API Resend para envio de emails |
+| `EMAIL_FROM` | | Remetente dos emails |
+| `EMAIL_MOCK` | | `true` para logar emails no console (dev) |
+| `FRONTEND_URL` | | URL do frontend para links em emails |
+| `SUPABASE_URL` | | URL do projeto Supabase (storage de PDFs) |
+| `SUPABASE_SERVICE_ROLE_KEY` | | Chave de servico do Supabase |
+| `SUPABASE_BUCKET` | | Nome do bucket (padrao: `pedidos-pdfs`) |
+| `THROTTLE_LOGIN_LIMIT` | | Limite de tentativas de login por IP (padrao: `5`) |
+| `THROTTLE_LOGIN_TTL` | | Janela do rate limit em segundos (padrao: `60`) |
+| `CORS_ORIGINS` | prod | Origens permitidas separadas por virgula |
+
+### Frontend (`packages/frontend/.env.local`)
+
+| Variavel | Descricao |
+|----------|-----------|
+| `NEXT_PUBLIC_API_URL` | URL da API backend (padrao: `http://localhost:3001`) |
+
+## Deploy
+
+O projeto roda em **Render.com** com auto-deploy no push para `main`.
+
+A configuracao esta em `render.yaml`:
+- **Backend**: Web Service (Node.js) com disco persistente de 2 GB para SQLite
+- **Frontend**: Web Service (Node.js) com Next.js
+
+O banco SQLite fica em `/var/data/linos-panificadora.db` (disco persistente do Render).
+
+PDFs podem ser armazenados localmente ou no Supabase Storage (configuravel via env vars).
+
+---
+
+Desenvolvido por **Logos AI Solutions** — 2025
