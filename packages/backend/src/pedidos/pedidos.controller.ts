@@ -26,6 +26,7 @@ import {
 import { PedidosService, TenantContext } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { AtualizarStatusDto } from './dto/atualizar-status.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { ReportPedidoDto } from './dto/report-pedido.dto';
 import { Request, Response } from 'express';
@@ -211,6 +212,21 @@ export class PedidosController {
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
   findOne(@Req() req: Request, @Param('id') id: string) {
     return this.pedidosService.findOne(+id, this.extractTenant(req));
+  }
+
+  @Patch(':id/status')
+  @RequerPermissoes('pedidos:editar')
+  @ApiOperation({ summary: 'Atualizar status do pedido com validação de transição' })
+  @ApiResponse({ status: 200, description: 'Status atualizado.' })
+  @ApiResponse({ status: 400, description: 'Transição inválida.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado ou papel sem permissão.' })
+  @ApiParam({ name: 'id', description: 'ID do pedido' })
+  atualizarStatus(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AtualizarStatusDto,
+  ) {
+    return this.pedidosService.atualizarStatus(id, dto.status, this.extractTenant(req));
   }
 
   @Patch(':id')

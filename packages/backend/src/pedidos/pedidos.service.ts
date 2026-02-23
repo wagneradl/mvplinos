@@ -5,6 +5,12 @@ import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto, PedidoStatus } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { ReportPedidoDto } from './dto/report-pedido.dto';
+import {
+  transicaoValida,
+  transicaoPermitidaPorPapel,
+  TRANSICOES_VALIDAS,
+  ESTADOS_FINAIS,
+} from './constants/transicoes-pedido';
 import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { format } from 'date-fns';
@@ -130,6 +136,11 @@ export class PedidosService {
         const dataPedido = new Date();
         debugLog('PedidosService', 'Criando pedido com data:', dataPedido.toISOString());
 
+        // Status inicial: CLIENTE cria como RASCUNHO, INTERNO como PENDENTE
+        const statusInicial = tenant?.clienteId
+          ? PedidoStatus.RASCUNHO
+          : PedidoStatus.PENDENTE;
+
         // Criar o pedido com os itens (sem esperar o PDF)
         return await tx.pedido.create({
           data: {
@@ -137,7 +148,7 @@ export class PedidosService {
             created_by: tenant?.userId || null,
             data_pedido: dataPedido,
             valor_total: valorTotal,
-            status: PedidoStatus.ATIVO,
+            status: statusInicial,
             observacoes: createPedidoDto.observacoes, // Adicionar observações do pedido
             pdf_path: '', // Será atualizado após gerar o PDF
             itensPedido: {
@@ -412,6 +423,46 @@ export class PedidosService {
   }
 
   /**
+   * Atualiza o status de um pedido com validação de transição e regras por papel.
+   * @param id ID do pedido
+   * @param novoStatus Novo status desejado
+   * @param tenant Contexto do tenant (userId + clienteId)
+   */
+  async atualizarStatus(id: number, novoStatus: string, tenant?: TenantContext) {
+    const pedido = await this.findOne(id, tenant);
+
+    // 1. Validar transição no mapa de estados
+    if (!transicaoValida(pedido.status, novoStatus)) {
+      throw new BadRequestException(
+        `Transição inválida: ${pedido.status} → ${novoStatus}. ` +
+        `Transições permitidas: ${TRANSICOES_VALIDAS[pedido.status]?.join(', ') || 'nenhuma'}`,
+      );
+    }
+
+    // 2. Validar permissão por tipo de papel
+    const tipoPapel = tenant?.clienteId ? 'CLIENTE' : 'INTERNO';
+    if (!transicaoPermitidaPorPapel(tipoPapel, pedido.status, novoStatus)) {
+      throw new ForbiddenException(
+        `Papel ${tipoPapel} não pode fazer transição ${pedido.status} → ${novoStatus}`,
+      );
+    }
+
+    // 3. Persistir
+    return this.prisma.pedido.update({
+      where: { id },
+      data: { status: novoStatus },
+      include: {
+        cliente: true,
+        itensPedido: {
+          include: {
+            produto: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
    * Regenera o PDF de um pedido existente
    * @param id ID do pedido
    * @returns String com o caminho ou URL do PDF regenerado, ou null se falhar
@@ -518,16 +569,21 @@ export class PedidosService {
         throw new ForbiddenException('Acesso negado a este pedido');
       }
 
-      if (pedido.status === PedidoStatus.CANCELADO) {
-        throw new BadRequestException('Não é possível atualizar um pedido cancelado');
+      // Bloquear atualizações em estados finais
+      if (ESTADOS_FINAIS.includes(pedido.status)) {
+        throw new BadRequestException(
+          `Não é possível atualizar um pedido com status ${pedido.status}`,
+        );
       }
 
-      // Validar se está tentando cancelar um pedido ativo
-      if (
-        updatePedidoDto.status === PedidoStatus.CANCELADO &&
-        pedido.status === PedidoStatus.ATIVO
-      ) {
-        // Permitido cancelar pedidos ativos, não precisa fazer nada aqui
+      // Se status está sendo alterado, validar transição
+      if (updatePedidoDto.status && updatePedidoDto.status !== pedido.status) {
+        if (!transicaoValida(pedido.status, updatePedidoDto.status)) {
+          throw new BadRequestException(
+            `Transição inválida: ${pedido.status} → ${updatePedidoDto.status}. ` +
+            `Transições permitidas: ${TRANSICOES_VALIDAS[pedido.status]?.join(', ') || 'nenhuma'}`,
+          );
+        }
       }
 
       // Atualizar o pedido
@@ -604,10 +660,16 @@ export class PedidosService {
   async remove(id: number, tenant?: TenantContext) {
     try {
       // Verifica se pedido existe e ownership (findOne lança NotFoundException/ForbiddenException)
-      await this.findOne(id, tenant);
+      const pedido = await this.findOne(id, tenant);
 
-      // Modificado para apenas mudar o status para CANCELADO,
-      // sem usar deleted_at para permitir que o pedido continue aparecendo nas listagens
+      // Validar transição para CANCELADO
+      if (!transicaoValida(pedido.status, PedidoStatus.CANCELADO)) {
+        throw new BadRequestException(
+          `Não é possível cancelar pedido com status ${pedido.status}. ` +
+          `Transições permitidas: ${TRANSICOES_VALIDAS[pedido.status]?.join(', ') || 'nenhuma'}`,
+        );
+      }
+
       return await this.prisma.pedido.update({
         where: { id },
         data: {
@@ -623,7 +685,7 @@ export class PedidosService {
         },
       });
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) {
         throw error;
       }
       throw new BadRequestException('Erro ao remover pedido');
@@ -694,8 +756,11 @@ export class PedidosService {
         throw new ForbiddenException('Acesso negado a este pedido');
       }
 
-      if (pedido.status === PedidoStatus.CANCELADO) {
-        throw new BadRequestException('Não é possível atualizar um pedido cancelado');
+      // Bloquear edição de itens em estados finais
+      if (ESTADOS_FINAIS.includes(pedido.status)) {
+        throw new BadRequestException(
+          `Não é possível alterar itens de um pedido com status ${pedido.status}`,
+        );
       }
 
       const item = await this.prisma.itemPedido.findFirst({
@@ -741,12 +806,11 @@ export class PedidosService {
           .toFixed(2),
       );
 
-      // Atualizar pedido
+      // Atualizar pedido (valor_total recalculado, sem alterar status)
       return await this.prisma.pedido.update({
         where: { id: pedidoId },
         data: {
           valor_total,
-          status: PedidoStatus.ATIVO,
         },
         include: {
           cliente: true,
@@ -909,9 +973,9 @@ export class PedidosService {
 
       debugLog('PedidosService', 'Datas no intervalo para relatório:', dates);
 
-      // Condição where básica (status = ATIVO)
+      // Condição where básica: excluir RASCUNHO e CANCELADO do relatório
       const where: Prisma.PedidoWhereInput = {
-        status: PedidoStatus.ATIVO,
+        status: { notIn: [PedidoStatus.RASCUNHO, PedidoStatus.CANCELADO] },
       };
 
       // Adicionar filtro de cliente se fornecido

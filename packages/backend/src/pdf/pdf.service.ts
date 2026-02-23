@@ -520,7 +520,7 @@ export class PdfService implements OnModuleInit {
                 <p style="margin: 5px 0; color: #555;">
                   Data: ${new Date(pedidoData.data_pedido).toLocaleDateString('pt-BR')}
                 </p>
-                <div class="chip ${pedidoData.status === 'ATIVO' ? 'chip-success' : 'chip-error'}">
+                <div class="chip ${['CANCELADO'].includes(pedidoData.status) ? 'chip-error' : 'chip-success'}">
                   ${pedidoData.status}
                 </div>
               </div>

@@ -2,17 +2,20 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum PedidoStatus {
-  ATIVO = 'ATIVO',
-  CANCELADO = 'CANCELADO',
+  RASCUNHO = 'RASCUNHO',
   PENDENTE = 'PENDENTE',
-  ATUALIZADO = 'ATUALIZADO',
+  CONFIRMADO = 'CONFIRMADO',
+  EM_PRODUCAO = 'EM_PRODUCAO',
+  PRONTO = 'PRONTO',
+  ENTREGUE = 'ENTREGUE',
+  CANCELADO = 'CANCELADO',
 }
 
 export class UpdatePedidoDto {
   @ApiProperty({
     description: 'Status do pedido',
     enum: PedidoStatus,
-    example: PedidoStatus.ATIVO,
+    example: PedidoStatus.PENDENTE,
     required: false,
   })
   @IsEnum(PedidoStatus)

@@ -41,10 +41,10 @@ describe('PedidosService', () => {
     ],
   };
 
-  // Pedido com status ATIVO (como o service realmente cria)
+  // Pedido com status PENDENTE (INTERNO cria como PENDENTE)
   const mockPedidoAtivo = {
     ...mockPedido,
-    status: PedidoStatus.ATIVO,
+    status: PedidoStatus.PENDENTE,
     pdf_path: '',
     observacoes: null,
   };
@@ -149,7 +149,7 @@ describe('PedidosService', () => {
       cliente_id: 1,
       cliente: mockCliente,
       data_pedido: new Date(),
-      status: PedidoStatus.ATIVO,
+      status: PedidoStatus.PENDENTE,
       valor_total: 57.5, // 10 * 0.75 + 2 * 25.0
       pdf_path: '',
       observacoes: null,
@@ -216,7 +216,7 @@ describe('PedidosService', () => {
         data: expect.objectContaining({
           cliente_id: 1,
           valor_total: 57.5,
-          status: PedidoStatus.ATIVO,
+          status: PedidoStatus.PENDENTE,
           itensPedido: {
             create: expect.arrayContaining([
               expect.objectContaining({
@@ -396,7 +396,7 @@ describe('PedidosService', () => {
   describe('updateItemQuantidade', () => {
     const mockPedidoComItens = {
       id: 1,
-      status: PedidoStatus.ATIVO,
+      status: PedidoStatus.PENDENTE,
       itensPedido: [
         {
           id: 10,
@@ -467,7 +467,6 @@ describe('PedidosService', () => {
         where: { id: 1 },
         data: {
           valor_total: 140.0, // 80 (item atualizado) + 60 (item mantido)
-          status: PedidoStatus.ATIVO,
         },
         include: expect.any(Object),
       });
@@ -553,31 +552,53 @@ describe('PedidosService', () => {
   // =========================================================================
 
   describe('update', () => {
-    it('deve rejeitar atualização de pedido já cancelado', async () => {
+    it('deve rejeitar atualização de pedido em estado final', async () => {
       mockPrismaService.pedido.findFirst.mockResolvedValue({
         ...mockPedidoAtivo,
         status: PedidoStatus.CANCELADO,
       });
 
       await expect(
-        service.update(1, { status: PedidoStatus.ATIVO }),
+        service.update(1, { status: PedidoStatus.PENDENTE }),
       ).rejects.toThrow(BadRequestException);
       await expect(
-        service.update(1, { status: PedidoStatus.ATIVO }).catch((e) => {
+        service.update(1, { status: PedidoStatus.PENDENTE }).catch((e) => {
           mockPrismaService.pedido.findFirst.mockResolvedValue({
             ...mockPedidoAtivo,
             status: PedidoStatus.CANCELADO,
           });
           throw e;
         }),
-      ).rejects.toThrow('Não é possível atualizar um pedido cancelado');
+      ).rejects.toThrow('Não é possível atualizar um pedido com status CANCELADO');
+    });
+
+    it('deve rejeitar atualização de pedido entregue', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.ENTREGUE,
+      });
+
+      await expect(
+        service.update(1, { observacoes: 'teste' }),
+      ).rejects.toThrow('Não é possível atualizar um pedido com status ENTREGUE');
+    });
+
+    it('deve validar transição de status inválida no update', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+
+      await expect(
+        service.update(1, { status: PedidoStatus.PRONTO }),
+      ).rejects.toThrow('Transição inválida: PENDENTE → PRONTO');
     });
 
     it('deve lançar NotFoundException para pedido inexistente', async () => {
       mockPrismaService.pedido.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.update(999, { status: PedidoStatus.ATIVO }),
+        service.update(999, { status: PedidoStatus.PENDENTE }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -779,14 +800,14 @@ describe('PedidosService', () => {
         page: 1,
         limit: 10,
         clienteId: 1,
-        status: PedidoStatus.ATIVO,
+        status: PedidoStatus.PENDENTE,
         startDate: '2025-02-01',
         endDate: '2025-02-01',
       });
 
       const callArgs = mockPrismaService.pedido.findMany.mock.calls[0][0];
       expect(callArgs.where.cliente_id).toBe(1);
-      expect(callArgs.where.status).toBe(PedidoStatus.ATIVO);
+      expect(callArgs.where.status).toBe(PedidoStatus.PENDENTE);
       expect(callArgs.where.OR).toBeDefined();
     });
   });
@@ -910,7 +931,7 @@ describe('PedidosService', () => {
     });
 
     describe('create com tenant', () => {
-      function setupCreateMocksForTenant(clienteId: number) {
+      function setupCreateMocksForTenant(clienteId: number, status: PedidoStatus = PedidoStatus.RASCUNHO) {
         mockPrismaService.produto.findMany.mockResolvedValue([mockProduto1]);
         mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(mockPrismaService));
         mockPrismaService.cliente.findFirst.mockResolvedValue({ ...mockCliente, id: clienteId });
@@ -918,7 +939,7 @@ describe('PedidosService', () => {
           id: 99,
           cliente_id: clienteId,
           created_by: 10,
-          status: PedidoStatus.ATIVO,
+          status,
           valor_total: 7.5,
           itensPedido: [],
         };
@@ -947,7 +968,7 @@ describe('PedidosService', () => {
       });
 
       it('INTERNO pode criar pedido para qualquer cliente', async () => {
-        setupCreateMocksForTenant(9);
+        setupCreateMocksForTenant(9, PedidoStatus.PENDENTE);
 
         const dto = { cliente_id: 9, itens: [{ produto_id: 1, quantidade: 10 }] };
         await service.create(dto, tenantInterno);
@@ -987,6 +1008,309 @@ describe('PedidosService', () => {
           service.remove(1, tenantCliente5),
         ).rejects.toThrow('Acesso negado a este pedido');
       });
+    });
+  });
+
+  // =========================================================================
+  // ATUALIZAR STATUS (atualizarStatus) — novo endpoint com transição + papel
+  // =========================================================================
+
+  describe('atualizarStatus', () => {
+    const tenantInterno = { userId: 1, clienteId: null };
+    const tenantCliente = { userId: 10, clienteId: 5 };
+
+    it('deve atualizar status com transição válida (INTERNO)', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CONFIRMADO,
+      });
+
+      const result = await service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantInterno);
+
+      expect(result.status).toBe(PedidoStatus.CONFIRMADO);
+      expect(mockPrismaService.pedido.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { status: PedidoStatus.CONFIRMADO },
+        include: expect.any(Object),
+      });
+    });
+
+    it('deve rejeitar transição inválida (PENDENTE → PRONTO)', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.PRONTO, tenantInterno),
+      ).rejects.toThrow(BadRequestException);
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.PRONTO, tenantInterno),
+      ).rejects.toThrow('Transição inválida: PENDENTE → PRONTO');
+    });
+
+    it('deve rejeitar transição de estado final (ENTREGUE)', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.ENTREGUE,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.PENDENTE, tenantInterno),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve rejeitar transição de estado final (CANCELADO)', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CANCELADO,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.PENDENTE, tenantInterno),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('CLIENTE pode fazer RASCUNHO → PENDENTE', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.RASCUNHO,
+        cliente_id: 5,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+        cliente_id: 5,
+      });
+
+      const result = await service.atualizarStatus(1, PedidoStatus.PENDENTE, tenantCliente);
+
+      expect(result.status).toBe(PedidoStatus.PENDENTE);
+    });
+
+    it('CLIENTE pode fazer RASCUNHO → CANCELADO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.RASCUNHO,
+        cliente_id: 5,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CANCELADO,
+        cliente_id: 5,
+      });
+
+      const result = await service.atualizarStatus(1, PedidoStatus.CANCELADO, tenantCliente);
+
+      expect(result.status).toBe(PedidoStatus.CANCELADO);
+    });
+
+    it('CLIENTE NÃO pode fazer PENDENTE → CONFIRMADO (ForbiddenException)', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+        cliente_id: 5,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantCliente),
+      ).rejects.toThrow(ForbiddenException);
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+        cliente_id: 5,
+      });
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantCliente),
+      ).rejects.toThrow('Papel CLIENTE não pode fazer transição PENDENTE → CONFIRMADO');
+    });
+
+    it('INTERNO pode conduzir pedido pela produção completa', async () => {
+      // PENDENTE → CONFIRMADO
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CONFIRMADO,
+      });
+
+      const r1 = await service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantInterno);
+      expect(r1.status).toBe(PedidoStatus.CONFIRMADO);
+
+      // CONFIRMADO → EM_PRODUCAO
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CONFIRMADO,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.EM_PRODUCAO,
+      });
+
+      const r2 = await service.atualizarStatus(1, PedidoStatus.EM_PRODUCAO, tenantInterno);
+      expect(r2.status).toBe(PedidoStatus.EM_PRODUCAO);
+
+      // EM_PRODUCAO → PRONTO
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.EM_PRODUCAO,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PRONTO,
+      });
+
+      const r3 = await service.atualizarStatus(1, PedidoStatus.PRONTO, tenantInterno);
+      expect(r3.status).toBe(PedidoStatus.PRONTO);
+
+      // PRONTO → ENTREGUE
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PRONTO,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.ENTREGUE,
+      });
+
+      const r4 = await service.atualizarStatus(1, PedidoStatus.ENTREGUE, tenantInterno);
+      expect(r4.status).toBe(PedidoStatus.ENTREGUE);
+    });
+  });
+
+  // =========================================================================
+  // STATUS PADRÃO NA CRIAÇÃO
+  // =========================================================================
+
+  describe('create — status padrão por papel', () => {
+    const tenantCliente = { userId: 10, clienteId: 5 };
+    const tenantInterno = { userId: 1, clienteId: null };
+
+    function setupBasicCreateMocks(clienteId: number) {
+      mockPrismaService.produto.findMany.mockResolvedValue([mockProduto1]);
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(mockPrismaService));
+      mockPrismaService.cliente.findFirst.mockResolvedValue({ ...mockCliente, id: clienteId });
+      const pedido = {
+        id: 50,
+        cliente_id: clienteId,
+        status: PedidoStatus.PENDENTE,
+        valor_total: 7.5,
+        itensPedido: [],
+      };
+      mockPrismaService.pedido.create.mockResolvedValue(pedido);
+      mockPrismaService.pedido.findFirst.mockResolvedValue(pedido);
+      mockPdfService.generatePedidoPdf.mockResolvedValue('/uploads/pdfs/pedido-50.pdf');
+      mockPrismaService.pedido.update.mockResolvedValue({ ...pedido, pdf_path: '/uploads/pdfs/pedido-50.pdf' });
+    }
+
+    it('CLIENTE deve criar pedido com status RASCUNHO', async () => {
+      setupBasicCreateMocks(5);
+
+      const dto = { cliente_id: 5, itens: [{ produto_id: 1, quantidade: 10 }] };
+      await service.create(dto, tenantCliente);
+
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: PedidoStatus.RASCUNHO,
+          }),
+        }),
+      );
+    });
+
+    it('INTERNO deve criar pedido com status PENDENTE', async () => {
+      setupBasicCreateMocks(1);
+
+      const dto = { cliente_id: 1, itens: [{ produto_id: 1, quantidade: 10 }] };
+      await service.create(dto, tenantInterno);
+
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: PedidoStatus.PENDENTE,
+          }),
+        }),
+      );
+    });
+
+    it('sem tenant (chamada anônima) deve criar como PENDENTE', async () => {
+      setupBasicCreateMocks(1);
+
+      const dto = { cliente_id: 1, itens: [{ produto_id: 1, quantidade: 10 }] };
+      await service.create(dto);
+
+      expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: PedidoStatus.PENDENTE,
+          }),
+        }),
+      );
+    });
+  });
+
+  // =========================================================================
+  // REMOVE — validação de transição para CANCELADO
+  // =========================================================================
+
+  describe('remove — validação de transição', () => {
+    it('deve rejeitar cancelamento de pedido PRONTO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PRONTO,
+      });
+
+      await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PRONTO,
+      });
+      await expect(service.remove(1)).rejects.toThrow(
+        'Não é possível cancelar pedido com status PRONTO',
+      );
+    });
+
+    it('deve rejeitar cancelamento de pedido ENTREGUE', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.ENTREGUE,
+      });
+
+      await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve rejeitar cancelamento de pedido já CANCELADO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CANCELADO,
+      });
+
+      await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve permitir cancelamento de pedido EM_PRODUCAO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.EM_PRODUCAO,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CANCELADO,
+      });
+
+      const result = await service.remove(1);
+
+      expect(result.status).toBe(PedidoStatus.CANCELADO);
     });
   });
 });

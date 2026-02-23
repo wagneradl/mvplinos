@@ -16,7 +16,7 @@ describe('PedidosController', () => {
     id: 1,
     cliente_id: 1,
     valor_total: 150.0,
-    status: 'ATIVO',
+    status: 'PENDENTE',
     pdf_path: '/uploads/pdfs/pedido-1.pdf',
     pdf_url: null,
     observacoes: null,
@@ -38,6 +38,7 @@ describe('PedidosController', () => {
     generateReportPdf: jest.fn(),
     updateItemQuantidade: jest.fn(),
     regeneratePdf: jest.fn(),
+    atualizarStatus: jest.fn(),
   };
 
   const mockSupabaseService = {
@@ -116,7 +117,7 @@ describe('PedidosController', () => {
 
   describe('findAll', () => {
     it('deve delegar listagem ao service com filtros e tenant', async () => {
-      const filterDto = { page: 1, limit: 10, status: 'ATIVO' };
+      const filterDto = { page: 1, limit: 10, status: 'PENDENTE' };
       mockPedidosService.findAll.mockResolvedValue({
         data: [mockPedidoResponse],
         total: 1,
@@ -246,6 +247,25 @@ describe('PedidosController', () => {
 
       expect(mockPedidosService.generateReport).toHaveBeenCalledWith(reportDto);
       expect(result).toEqual(reportResult);
+    });
+  });
+
+  describe('atualizarStatus', () => {
+    it('deve delegar atualização de status ao service com transição e tenant', async () => {
+      const dto = { status: 'CONFIRMADO' };
+      mockPedidosService.atualizarStatus.mockResolvedValue({
+        ...mockPedidoResponse,
+        status: 'CONFIRMADO',
+      });
+
+      const result = await controller.atualizarStatus(mockReq(), 1, dto as any);
+
+      expect(mockPedidosService.atualizarStatus).toHaveBeenCalledWith(
+        1,
+        'CONFIRMADO',
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
+      expect(result.status).toBe('CONFIRMADO');
     });
   });
 
