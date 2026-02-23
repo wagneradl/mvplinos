@@ -141,7 +141,7 @@ export default function LoginPage() {
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link href="/esqueci-senha" passHref legacyBehavior>
                 <Typography
                   component="a"
@@ -154,6 +154,20 @@ export default function LoginPage() {
                   }}
                 >
                   Esqueci minha senha
+                </Typography>
+              </Link>
+              <Link href="/registrar" passHref legacyBehavior>
+                <Typography
+                  component="a"
+                  variant="body2"
+                  sx={{
+                    color: 'primary.main',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  Não tem conta? Cadastre sua empresa
                 </Typography>
               </Link>
             </Box>
