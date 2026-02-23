@@ -25,6 +25,7 @@ model Usuario {
   cliente             Cliente?             @relation(fields: [cliente_id], references: [id])
   passwordResetTokens PasswordResetToken[]
   refreshTokens       RefreshToken[]
+  pedidos_criados     Pedido[]             @relation("PedidosCriados")
 }
 
 model Papel {
@@ -93,6 +94,7 @@ model Produto {
 model Pedido {
   id          Int          @id @default(autoincrement())
   cliente_id  Int
+  created_by  Int?
   data_pedido DateTime     @default(now())
   valor_total Float
   status      String       @default("PENDENTE")
@@ -104,6 +106,7 @@ model Pedido {
   observacoes String?      // Observações sobre o pedido (opcional)
   itensPedido ItemPedido[]
   cliente     Cliente      @relation(fields: [cliente_id], references: [id])
+  criador     Usuario?     @relation("PedidosCriados", fields: [created_by], references: [id])
 }
 
 model ItemPedido {

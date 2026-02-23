@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
@@ -9,6 +9,11 @@ import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { format } from 'date-fns';
 import { debugLog } from '../common/utils/debug-log';
+
+export interface TenantContext {
+  userId: number;
+  clienteId?: number | null;
+}
 
 @Injectable()
 export class PedidosService {
@@ -35,8 +40,12 @@ export class PedidosService {
     );
   }
 
-  async create(createPedidoDto: CreatePedidoDto) {
-    const { cliente_id, itens } = createPedidoDto;
+  async create(createPedidoDto: CreatePedidoDto, tenant?: TenantContext) {
+    // Se tenant com clienteId (papel CLIENTE), forçar o cliente_id do JWT
+    const cliente_id = tenant?.clienteId
+      ? tenant.clienteId
+      : createPedidoDto.cliente_id;
+    const { itens } = createPedidoDto;
 
     // Validar se o pedido tem itens
     if (!itens || itens.length === 0) {
@@ -125,6 +134,7 @@ export class PedidosService {
         return await tx.pedido.create({
           data: {
             cliente_id,
+            created_by: tenant?.userId || null,
             data_pedido: dataPedido,
             valor_total: valorTotal,
             status: PedidoStatus.ATIVO,
@@ -219,7 +229,7 @@ export class PedidosService {
     }
   }
 
-  async findAll(filter: FilterPedidoDto) {
+  async findAll(filter: FilterPedidoDto, tenant?: TenantContext) {
     try {
       // Definir valores padrão e aplicar transformações
       const page = filter.page || 1;
@@ -232,8 +242,11 @@ export class PedidosService {
       // para evitar problemas com SQL raw
       const where: Prisma.PedidoWhereInput = {};
 
-      // Filtro de cliente
-      if (filter.clienteId) {
+      // Tenant filtering: se clienteId presente (papel CLIENTE), forçar filtro
+      if (tenant?.clienteId) {
+        where.cliente_id = tenant.clienteId;
+        debugLog('PedidosService', `Tenant filter: cliente_id=${tenant.clienteId}`);
+      } else if (filter.clienteId) {
         where.cliente_id = filter.clienteId;
         debugLog('PedidosService', `Filtrando por cliente_id: ${filter.clienteId}`);
       }
@@ -352,7 +365,7 @@ export class PedidosService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, tenant?: TenantContext) {
     try {
       const pedido = await this.prisma.pedido.findFirst({
         where: { id },
@@ -368,6 +381,11 @@ export class PedidosService {
 
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+
+      // Ownership check: se tenant com clienteId, verificar que pedido pertence ao cliente
+      if (tenant?.clienteId && pedido.cliente_id !== tenant.clienteId) {
+        throw new ForbiddenException('Acesso negado a este pedido');
       }
 
       // Log para depurar o campo observacoes
@@ -386,7 +404,7 @@ export class PedidosService {
 
       return pedido;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new BadRequestException('Erro ao buscar pedido');
@@ -477,7 +495,7 @@ export class PedidosService {
     }
   }
 
-  async update(id: number, updatePedidoDto: UpdatePedidoDto, regenerarPdf: boolean = false) {
+  async update(id: number, updatePedidoDto: UpdatePedidoDto, regenerarPdf: boolean = false, tenant?: TenantContext) {
     try {
       const pedido = await this.prisma.pedido.findFirst({
         where: { id },
@@ -493,6 +511,11 @@ export class PedidosService {
 
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
+      }
+
+      // Ownership check
+      if (tenant?.clienteId && pedido.cliente_id !== tenant.clienteId) {
+        throw new ForbiddenException('Acesso negado a este pedido');
       }
 
       if (pedido.status === PedidoStatus.CANCELADO) {
@@ -568,7 +591,7 @@ export class PedidosService {
 
       return pedidoAtualizado;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       if (error instanceof BadRequestException) {
@@ -578,10 +601,10 @@ export class PedidosService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, tenant?: TenantContext) {
     try {
-      // Verifica se pedido existe (findOne lança NotFoundException se não)
-      await this.findOne(id);
+      // Verifica se pedido existe e ownership (findOne lança NotFoundException/ForbiddenException)
+      await this.findOne(id, tenant);
 
       // Modificado para apenas mudar o status para CANCELADO,
       // sem usar deleted_at para permitir que o pedido continue aparecendo nas listagens
@@ -600,16 +623,16 @@ export class PedidosService {
         },
       });
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new BadRequestException('Erro ao remover pedido');
     }
   }
 
-  async repeat(id: number) {
+  async repeat(id: number, tenant?: TenantContext) {
     try {
-      const pedidoOriginal = await this.findOne(id);
+      const pedidoOriginal = await this.findOne(id, tenant);
 
       // Verificar se o cliente ainda está ativo
       const cliente = await this.prisma.cliente.findFirst({
@@ -642,18 +665,18 @@ export class PedidosService {
           produto_id: item.produto_id,
           quantidade: item.quantidade,
         })),
-      });
+      }, tenant);
 
       return novoPedido;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new BadRequestException('Erro ao repetir pedido');
     }
   }
 
-  async updateItemQuantidade(pedidoId: number, itemId: number, quantidade: number) {
+  async updateItemQuantidade(pedidoId: number, itemId: number, quantidade: number, tenant?: TenantContext) {
     try {
       const pedido = await this.prisma.pedido.findFirst({
         where: { id: pedidoId },
@@ -664,6 +687,11 @@ export class PedidosService {
 
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${pedidoId} não encontrado`);
+      }
+
+      // Ownership check
+      if (tenant?.clienteId && pedido.cliente_id !== tenant.clienteId) {
+        throw new ForbiddenException('Acesso negado a este pedido');
       }
 
       if (pedido.status === PedidoStatus.CANCELADO) {
@@ -730,7 +758,7 @@ export class PedidosService {
         },
       });
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       if (error instanceof BadRequestException) {

@@ -27,7 +27,28 @@ describe('AuthService', () => {
     senha: '$2a$10$hashsenha',
     status: 'ativo',
     papel_id: 1,
+    cliente_id: null,
     papel: mockPapel,
+  };
+
+  const mockPapelCliente = {
+    id: 6,
+    nome: 'Cliente Admin',
+    codigo: 'CLIENTE_ADMIN',
+    tipo: 'CLIENTE',
+    nivel: 30,
+    permissoes: JSON.stringify({ pedidos: ['listar', 'ver', 'criar'] }),
+  };
+
+  const mockUsuarioCliente = {
+    id: 10,
+    nome: 'Admin Padaria',
+    email: 'admin@padaria.com',
+    senha: '$2a$10$hashsenha',
+    status: 'ativo',
+    papel_id: 6,
+    cliente_id: 5,
+    papel: mockPapelCliente,
   };
 
   const mockPrismaService = {
@@ -212,6 +233,42 @@ describe('AuthService', () => {
         clientes: ['listar', 'ver', 'criar'],
       });
     });
+
+    it('deve incluir clienteId=null no JWT para usuário INTERNO', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuario);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.login(
+        { email: 'admin@linos.com', senha: 'admin123' },
+      );
+
+      // Verifica que o JWT payload inclui clienteId
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ clienteId: null }),
+      );
+      // Verifica que o response inclui clienteId
+      expect(result.usuario.clienteId).toBeNull();
+    });
+
+    it('deve incluir clienteId no JWT para usuário CLIENTE', async () => {
+      mockPrismaService.usuario.findUnique.mockResolvedValue(mockUsuarioCliente);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.login(
+        { email: 'admin@padaria.com', senha: 'senha123' },
+      );
+
+      // Verifica que o JWT payload inclui clienteId=5
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ clienteId: 5 }),
+      );
+      // Verifica que o response inclui clienteId=5
+      expect(result.usuario.clienteId).toBe(5);
+    });
   });
 
   // =========================================================================
@@ -307,6 +364,24 @@ describe('AuthService', () => {
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('IP diferente'),
       );
+    });
+
+    it('deve incluir clienteId no JWT ao renovar token de CLIENTE', async () => {
+      const mockStoredTokenCliente = {
+        ...mockStoredToken,
+        usuario_id: 10,
+        usuario: mockUsuarioCliente,
+      };
+      mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockStoredTokenCliente);
+      mockPrismaService.refreshToken.update.mockResolvedValue({});
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.refresh('a'.repeat(96));
+
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ clienteId: 5 }),
+      );
+      expect(result.usuario.clienteId).toBe(5);
     });
   });
 

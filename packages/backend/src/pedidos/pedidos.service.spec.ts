@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PedidosService } from './pedidos.service';
@@ -838,6 +839,154 @@ describe('PedidosService', () => {
       await expect(
         service.generateReport({ data_inicio: '', data_fim: '' } as any),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // =========================================================================
+  // TENANT ISOLATION
+  // =========================================================================
+
+  describe('Tenant Isolation', () => {
+    const tenantInterno = { userId: 1, clienteId: null };
+    const tenantCliente5 = { userId: 10, clienteId: 5 };
+    const tenantCliente9 = { userId: 20, clienteId: 9 };
+
+    describe('findAll com tenant', () => {
+      it('INTERNO deve ver todos os pedidos (sem filtro de cliente)', async () => {
+        mockPrismaService.pedido.findMany.mockResolvedValue([mockPedido]);
+        mockPrismaService.pedido.count.mockResolvedValue(1);
+
+        await service.findAll({} as any, tenantInterno);
+
+        const callArgs = mockPrismaService.pedido.findMany.mock.calls[0][0];
+        expect(callArgs.where).not.toHaveProperty('cliente_id');
+      });
+
+      it('CLIENTE deve ver apenas pedidos do próprio cliente_id', async () => {
+        mockPrismaService.pedido.findMany.mockResolvedValue([]);
+        mockPrismaService.pedido.count.mockResolvedValue(0);
+
+        await service.findAll({} as any, tenantCliente5);
+
+        const callArgs = mockPrismaService.pedido.findMany.mock.calls[0][0];
+        expect(callArgs.where.cliente_id).toBe(5);
+      });
+    });
+
+    describe('findOne com tenant', () => {
+      it('INTERNO deve acessar qualquer pedido', async () => {
+        mockPrismaService.pedido.findFirst.mockResolvedValue({
+          ...mockPedido,
+          cliente_id: 9,
+        });
+
+        const result = await service.findOne(1, tenantInterno);
+
+        expect(result).toBeDefined();
+        expect(result.cliente_id).toBe(9);
+      });
+
+      it('CLIENTE deve acessar pedido do próprio cliente', async () => {
+        mockPrismaService.pedido.findFirst.mockResolvedValue({
+          ...mockPedido,
+          cliente_id: 5,
+        });
+
+        const result = await service.findOne(1, tenantCliente5);
+
+        expect(result).toBeDefined();
+      });
+
+      it('CLIENTE NÃO deve acessar pedido de outro cliente', async () => {
+        mockPrismaService.pedido.findFirst.mockResolvedValue({
+          ...mockPedido,
+          cliente_id: 9,
+        });
+
+        await expect(service.findOne(1, tenantCliente5)).rejects.toThrow(
+          'Acesso negado a este pedido',
+        );
+      });
+    });
+
+    describe('create com tenant', () => {
+      function setupCreateMocksForTenant(clienteId: number) {
+        mockPrismaService.produto.findMany.mockResolvedValue([mockProduto1]);
+        mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(mockPrismaService));
+        mockPrismaService.cliente.findFirst.mockResolvedValue({ ...mockCliente, id: clienteId });
+        const pedidoCriado = {
+          id: 99,
+          cliente_id: clienteId,
+          created_by: 10,
+          status: PedidoStatus.ATIVO,
+          valor_total: 7.5,
+          itensPedido: [],
+        };
+        mockPrismaService.pedido.create.mockResolvedValue(pedidoCriado);
+        mockPrismaService.pedido.findFirst.mockResolvedValue(pedidoCriado);
+        mockPdfService.generatePedidoPdf.mockResolvedValue('/uploads/pdfs/pedido-99.pdf');
+        mockPrismaService.pedido.update.mockResolvedValue({ ...pedidoCriado, pdf_path: '/uploads/pdfs/pedido-99.pdf' });
+      }
+
+      it('CLIENTE deve ter cliente_id forçado do JWT (ignora body)', async () => {
+        setupCreateMocksForTenant(5);
+
+        // DTO diz cliente_id=9, mas tenant diz clienteId=5
+        const dto = { cliente_id: 9, itens: [{ produto_id: 1, quantidade: 10 }] };
+        await service.create(dto, tenantCliente5);
+
+        // O pedido.create deve usar cliente_id=5 (do JWT), não 9 (do body)
+        expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              cliente_id: 5,
+              created_by: 10,
+            }),
+          }),
+        );
+      });
+
+      it('INTERNO pode criar pedido para qualquer cliente', async () => {
+        setupCreateMocksForTenant(9);
+
+        const dto = { cliente_id: 9, itens: [{ produto_id: 1, quantidade: 10 }] };
+        await service.create(dto, tenantInterno);
+
+        expect(mockPrismaService.pedido.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              cliente_id: 9,
+              created_by: 1,
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('update com tenant', () => {
+      it('CLIENTE NÃO deve atualizar pedido de outro cliente', async () => {
+        mockPrismaService.pedido.findFirst.mockResolvedValue({
+          ...mockPedido,
+          cliente_id: 9,
+        });
+
+        await expect(
+          service.update(1, { status: PedidoStatus.CANCELADO }, undefined, tenantCliente5),
+        ).rejects.toThrow('Acesso negado a este pedido');
+      });
+    });
+
+    describe('remove com tenant', () => {
+      it('CLIENTE NÃO deve remover pedido de outro cliente', async () => {
+        mockPrismaService.pedido.findFirst.mockResolvedValue({
+          ...mockPedido,
+          cliente_id: 9,
+        });
+
+        await expect(
+          service.remove(1, tenantCliente5),
+        ).rejects.toThrow('Acesso negado a este pedido');
+      });
     });
   });
 });

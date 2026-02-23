@@ -10,27 +10,39 @@ import {
   HttpStatus,
   ParseIntPipe,
   Query,
+  Req,
   ValidationPipe,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
-import { ClientesService } from './clientes.service';
+import { ClientesService, TenantContext } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { UsuarioAutenticado } from '../auth/interfaces/usuario-autenticado.interface';
 import { debugLog } from '../common/utils/debug-log';
 import { SkipThrottle } from '@nestjs/throttler';
 
 @SkipThrottle()
 @ApiTags('clientes')
 @Controller('clientes')
-@UseGuards(JwtAuthGuard, PermissoesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, PermissoesGuard)
 @ApiBearerAuth()
 export class ClientesController {
   constructor(private readonly clientesService: ClientesService) {}
+
+  private extractTenant(req: Request): TenantContext {
+    const user = (req as any).user as UsuarioAutenticado;
+    return {
+      userId: user.id,
+      clienteId: (req as any).clienteId ?? null,
+    };
+  }
 
   @Post()
   @RequerPermissoes('clientes:criar')
@@ -55,11 +67,12 @@ export class ClientesController {
   @ApiQuery({ name: 'search', type: String, required: false })
   @ApiQuery({ name: 'includeDeleted', type: Boolean, required: false })
   async findAll(
+    @Req() req: Request,
     @Query(new ValidationPipe({ transform: true })) pageOptions: PageOptionsDto,
     @Query('includeDeleted') includeDeleted?: boolean,
   ) {
-    // Passar o parâmetro includeDeleted para o serviço
-    return this.clientesService.findAll(pageOptions, includeDeleted);
+    // Passar o parâmetro includeDeleted e tenant context para o serviço
+    return this.clientesService.findAll(pageOptions, includeDeleted, this.extractTenant(req));
   }
 
   @Get('cnpj/:cnpj')
@@ -80,10 +93,11 @@ export class ClientesController {
   @ApiResponse({ status: 404, description: 'Cliente não encontrado.' })
   @ApiQuery({ name: 'includeDeleted', type: Boolean, required: false })
   findOne(
+    @Req() req: Request,
     @Param('id', ParseIntPipe) id: number,
     @Query('includeDeleted') includeDeleted?: boolean,
   ) {
-    return this.clientesService.findOne(id, includeDeleted);
+    return this.clientesService.findOne(id, includeDeleted, this.extractTenant(req));
   }
 
   @Patch(':id')

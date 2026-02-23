@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { Page } from '../common/interfaces/page.interface';
@@ -12,6 +13,11 @@ import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { Prisma } from '@prisma/client';
 import { debugLog } from '../common/utils/debug-log';
+
+export interface TenantContext {
+  userId: number;
+  clienteId?: number | null;
+}
 
 @Injectable()
 export class ClientesService {
@@ -173,13 +179,18 @@ export class ClientesService {
     }
   }
 
-  async findAll(pageOptions?: PageOptionsDto, includeDeleted?: boolean): Promise<Page<any>> {
+  async findAll(pageOptions?: PageOptionsDto, includeDeleted?: boolean, tenant?: TenantContext): Promise<Page<any>> {
     try {
       const { page = 1, limit = 10, status, search } = pageOptions || {};
       const skip = (page - 1) * limit;
 
       // Construir condições de filtro
       const where: Prisma.ClienteWhereInput = {};
+
+      // Tenant isolation: CLIENTE users can only see their own company
+      if (tenant?.clienteId) {
+        where.id = tenant.clienteId;
+      }
 
       // Verificar se devemos incluir clientes soft-deleted
       if (includeDeleted) {
@@ -275,8 +286,13 @@ export class ClientesService {
     }
   }
 
-  async findOne(id: number, includeDeleted: boolean = false) {
+  async findOne(id: number, includeDeleted: boolean = false, tenant?: TenantContext) {
     try {
+      // Tenant isolation: CLIENTE users can only see their own company
+      if (tenant?.clienteId && id !== tenant.clienteId) {
+        throw new ForbiddenException('Acesso negado a este cliente');
+      }
+
       // Construir condição de busca
       const where: Prisma.ClienteWhereInput = { id };
 
@@ -311,7 +327,7 @@ export class ClientesService {
 
       return cliente;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new BadRequestException('Erro ao buscar cliente');

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
   Res,
   BadRequestException,
   NotFoundException,
@@ -22,26 +23,28 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { PedidosService } from './pedidos.service';
+import { PedidosService, TenantContext } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { ReportPedidoDto } from './dto/report-pedido.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ParseIntPipe, ParseFloatPipe } from '@nestjs/common';
 import { join, basename } from 'path';
 import { existsSync } from 'fs';
 import { SupabaseService } from '../supabase/supabase.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissoesGuard } from '../auth/guards/permissoes.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
+import { UsuarioAutenticado } from '../auth/interfaces/usuario-autenticado.interface';
 import { debugLog } from '../common/utils/debug-log';
 import { SkipThrottle } from '@nestjs/throttler';
 
 @SkipThrottle()
 @ApiTags('pedidos')
 @Controller('pedidos')
-@UseGuards(JwtAuthGuard, PermissoesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, PermissoesGuard)
 @ApiBearerAuth()
 export class PedidosController {
   private readonly logger = new Logger(PedidosController.name);
@@ -51,14 +54,22 @@ export class PedidosController {
     private readonly supabaseService: SupabaseService,
   ) {}
 
+  private extractTenant(req: Request): TenantContext {
+    const user = (req as any).user as UsuarioAutenticado;
+    return {
+      userId: user.id,
+      clienteId: (req as any).clienteId ?? null,
+    };
+  }
+
   @Post()
   @RequerPermissoes('pedidos:criar')
   @ApiOperation({ summary: 'Criar novo pedido' })
   @ApiResponse({ status: 201, description: 'Pedido criado com sucesso.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  create(@Body() createPedidoDto: CreatePedidoDto) {
+  create(@Req() req: Request, @Body() createPedidoDto: CreatePedidoDto) {
     debugLog('PedidosController', 'Recebeu createPedidoDto:', createPedidoDto);
-    return this.pedidosService.create(createPedidoDto);
+    return this.pedidosService.create(createPedidoDto, this.extractTenant(req));
   }
 
   @Get('reports/summary')
@@ -179,7 +190,7 @@ export class PedidosController {
     description: 'Lista de pedidos retornada com metadados de paginação.',
   })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  findAll(@Query() filterDto: FilterPedidoDto) {
+  findAll(@Req() req: Request, @Query() filterDto: FilterPedidoDto) {
     debugLog('PedidosController', 'Recebeu request para listar pedidos com filtros:', filterDto);
 
     // Log detalhado para troubleshooting do filtro de datas
@@ -190,7 +201,7 @@ export class PedidosController {
       );
     }
 
-    return this.pedidosService.findAll(filterDto);
+    return this.pedidosService.findAll(filterDto, this.extractTenant(req));
   }
 
   @Get(':id')
@@ -198,8 +209,8 @@ export class PedidosController {
   @ApiOperation({ summary: 'Buscar pedido por ID' })
   @ApiResponse({ status: 200, description: 'Pedido encontrado.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  findOne(@Param('id') id: string) {
-    return this.pedidosService.findOne(+id);
+  findOne(@Req() req: Request, @Param('id') id: string) {
+    return this.pedidosService.findOne(+id, this.extractTenant(req));
   }
 
   @Patch(':id')
@@ -207,8 +218,8 @@ export class PedidosController {
   @ApiOperation({ summary: 'Atualizar pedido' })
   @ApiResponse({ status: 200, description: 'Pedido atualizado.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  update(@Param('id') id: string, @Body() updatePedidoDto: UpdatePedidoDto) {
-    return this.pedidosService.update(+id, updatePedidoDto);
+  update(@Req() req: Request, @Param('id') id: string, @Body() updatePedidoDto: UpdatePedidoDto) {
+    return this.pedidosService.update(+id, updatePedidoDto, undefined, this.extractTenant(req));
   }
 
   @Delete(':id')
@@ -216,8 +227,8 @@ export class PedidosController {
   @ApiOperation({ summary: 'Remover pedido (soft delete)' })
   @ApiResponse({ status: 200, description: 'Pedido removido.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  remove(@Param('id') id: string) {
-    return this.pedidosService.remove(+id);
+  remove(@Req() req: Request, @Param('id') id: string) {
+    return this.pedidosService.remove(+id, this.extractTenant(req));
   }
 
   @Post(':id/repeat')
@@ -225,8 +236,8 @@ export class PedidosController {
   @ApiOperation({ summary: 'Repetir pedido existente' })
   @ApiResponse({ status: 201, description: 'Novo pedido criado baseado no original.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  repeat(@Param('id') id: string) {
-    return this.pedidosService.repeat(+id);
+  repeat(@Req() req: Request, @Param('id') id: string) {
+    return this.pedidosService.repeat(+id, this.extractTenant(req));
   }
 
   @Get(':id/pdf')
@@ -236,7 +247,7 @@ export class PedidosController {
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
   @ApiResponse({ status: 404, description: 'PDF não encontrado' })
   @ApiParam({ name: 'id', description: 'ID do pedido' })
-  async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async downloadPdf(@Req() req: Request, @Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     try {
       // Verificar ambiente e configurações
       const isProduction = process.env.NODE_ENV === 'production';
@@ -268,8 +279,8 @@ export class PedidosController {
         );
       }
 
-      // Buscar o pedido com informações completas
-      const pedido = await this.pedidosService.findOne(id);
+      // Buscar o pedido com informações completas (com tenant isolation)
+      const pedido = await this.pedidosService.findOne(id, this.extractTenant(req));
 
       if (!pedido) {
         throw new NotFoundException(`Pedido com ID ${id} não encontrado`);
@@ -491,10 +502,11 @@ export class PedidosController {
     },
   })
   async updateItemQuantidade(
+    @Req() req: Request,
     @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
     @Body('quantidade', ParseFloatPipe) quantidade: number,
   ) {
-    return this.pedidosService.updateItemQuantidade(id, itemId, quantidade);
+    return this.pedidosService.updateItemQuantidade(id, itemId, quantidade, this.extractTenant(req));
   }
 }

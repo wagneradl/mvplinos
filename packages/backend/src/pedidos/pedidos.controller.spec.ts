@@ -47,6 +47,29 @@ describe('PedidosController', () => {
     getBucketName: jest.fn().mockReturnValue('linos-pdfs'),
   };
 
+  // Helper: mock Request with user (INTERNO, no clienteId)
+  const mockReq = (overrides?: Partial<{ userId: number; clienteId: number | null }>) => {
+    const userId = overrides?.userId ?? 1;
+    const clienteId = overrides?.clienteId ?? null;
+    return {
+      user: {
+        id: userId,
+        email: 'admin@test.com',
+        nome: 'Admin',
+        clienteId,
+        papel: {
+          id: 1,
+          nome: 'Admin Sistema',
+          codigo: 'ADMIN_SISTEMA',
+          tipo: 'INTERNO',
+          nivel: 100,
+          permissoes: {},
+        },
+      },
+      clienteId: clienteId,
+    } as any;
+  };
+
   const mockResponse = () => {
     const res: any = {};
     res.setHeader = jest.fn().mockReturnValue(res);
@@ -77,28 +100,34 @@ describe('PedidosController', () => {
   // =========================================================================
 
   describe('create', () => {
-    it('deve delegar criação ao service com o DTO recebido', async () => {
+    it('deve delegar criação ao service com o DTO e tenant context', async () => {
       const dto = { cliente_id: 1, itens: [{ produto_id: 1, quantidade: 5 }] };
       mockPedidosService.create.mockResolvedValue(mockPedidoResponse);
 
-      const result = await controller.create(dto as any);
+      const result = await controller.create(mockReq(), dto as any);
 
-      expect(mockPedidosService.create).toHaveBeenCalledWith(dto);
+      expect(mockPedidosService.create).toHaveBeenCalledWith(
+        dto,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result.id).toBe(1);
     });
   });
 
   describe('findAll', () => {
-    it('deve delegar listagem ao service com filtros', async () => {
+    it('deve delegar listagem ao service com filtros e tenant', async () => {
       const filterDto = { page: 1, limit: 10, status: 'ATIVO' };
       mockPedidosService.findAll.mockResolvedValue({
         data: [mockPedidoResponse],
         total: 1,
       });
 
-      const result = await controller.findAll(filterDto as any);
+      const result = await controller.findAll(mockReq(), filterDto as any);
 
-      expect(mockPedidosService.findAll).toHaveBeenCalledWith(filterDto);
+      expect(mockPedidosService.findAll).toHaveBeenCalledWith(
+        filterDto,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result).toHaveProperty('data');
     });
 
@@ -111,78 +140,98 @@ describe('PedidosController', () => {
       };
       mockPedidosService.findAll.mockResolvedValue({ data: [], total: 0 });
 
-      await controller.findAll(filterDto as any);
+      await controller.findAll(mockReq(), filterDto as any);
 
       expect(mockPedidosService.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           startDate: '2024-01-01',
           endDate: '2024-12-31',
         }),
+        expect.any(Object),
       );
     });
   });
 
   describe('findOne', () => {
-    it('deve delegar busca ao service com ID parseado', async () => {
+    it('deve delegar busca ao service com ID parseado e tenant', async () => {
       mockPedidosService.findOne.mockResolvedValue(mockPedidoResponse);
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(mockReq(), '1');
 
-      expect(mockPedidosService.findOne).toHaveBeenCalledWith(1);
+      expect(mockPedidosService.findOne).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result.id).toBe(1);
     });
   });
 
   describe('update', () => {
-    it('deve delegar atualização ao service com ID e DTO', async () => {
+    it('deve delegar atualização ao service com ID, DTO e tenant', async () => {
       const updateDto = { status: 'CANCELADO' };
       mockPedidosService.update.mockResolvedValue({
         ...mockPedidoResponse,
         status: 'CANCELADO',
       });
 
-      const result = await controller.update('1', updateDto as any);
+      const result = await controller.update(mockReq(), '1', updateDto as any);
 
-      expect(mockPedidosService.update).toHaveBeenCalledWith(1, updateDto);
+      expect(mockPedidosService.update).toHaveBeenCalledWith(
+        1,
+        updateDto,
+        undefined,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result.status).toBe('CANCELADO');
     });
   });
 
   describe('remove', () => {
-    it('deve delegar remoção ao service com ID parseado', async () => {
+    it('deve delegar remoção ao service com ID parseado e tenant', async () => {
       mockPedidosService.remove.mockResolvedValue({
         ...mockPedidoResponse,
         status: 'CANCELADO',
       });
 
-      const result = await controller.remove('1');
+      const result = await controller.remove(mockReq(), '1');
 
-      expect(mockPedidosService.remove).toHaveBeenCalledWith(1);
+      expect(mockPedidosService.remove).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result.status).toBe('CANCELADO');
     });
   });
 
   describe('repeat', () => {
-    it('deve delegar repetição ao service com ID parseado', async () => {
+    it('deve delegar repetição ao service com ID parseado e tenant', async () => {
       mockPedidosService.repeat.mockResolvedValue({
         ...mockPedidoResponse,
         id: 2,
       });
 
-      const result = await controller.repeat('1');
+      const result = await controller.repeat(mockReq(), '1');
 
-      expect(mockPedidosService.repeat).toHaveBeenCalledWith(1);
+      expect(mockPedidosService.repeat).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result.id).toBe(2);
     });
   });
 
   describe('updateItemQuantidade', () => {
-    it('deve delegar atualização de item ao service', async () => {
+    it('deve delegar atualização de item ao service com tenant', async () => {
       mockPedidosService.updateItemQuantidade.mockResolvedValue(mockPedidoResponse);
 
-      const result = await controller.updateItemQuantidade(1, 10, 5);
+      const result = await controller.updateItemQuantidade(mockReq(), 1, 10, 5);
 
-      expect(mockPedidosService.updateItemQuantidade).toHaveBeenCalledWith(1, 10, 5);
+      expect(mockPedidosService.updateItemQuantidade).toHaveBeenCalledWith(
+        1,
+        10,
+        5,
+        expect.objectContaining({ userId: 1, clienteId: null }),
+      );
       expect(result).toBeDefined();
     });
   });
@@ -213,7 +262,7 @@ describe('PedidosController', () => {
       });
       mockSupabaseService.isAvailable.mockReturnValue(false);
 
-      await controller.downloadPdf(1, res);
+      await controller.downloadPdf(mockReq(), 1, res);
 
       expect(res.redirect).toHaveBeenCalledWith(
         'https://storage.example.com/pedido-1.pdf',
@@ -233,7 +282,7 @@ describe('PedidosController', () => {
         data: { arrayBuffer: () => Promise.resolve(mockArrayBuffer) },
       });
 
-      await controller.downloadPdf(1, res);
+      await controller.downloadPdf(mockReq(), 1, res);
 
       expect(mockSupabaseService.downloadFile).toHaveBeenCalledWith(
         'pedidos/pedido-1.pdf',
@@ -255,7 +304,7 @@ describe('PedidosController', () => {
         return path === '/uploads/pdfs/pedido-1.pdf';
       });
 
-      await controller.downloadPdf(1, res);
+      await controller.downloadPdf(mockReq(), 1, res);
 
       expect(res.sendFile).toHaveBeenCalledWith('/uploads/pdfs/pedido-1.pdf');
     });
@@ -276,7 +325,7 @@ describe('PedidosController', () => {
         return path === '/uploads/pdfs/pedido-1.pdf';
       });
 
-      await controller.downloadPdf(1, res);
+      await controller.downloadPdf(mockReq(), 1, res);
 
       expect(mockPedidosService.regeneratePdf).toHaveBeenCalledWith(1);
       expect(res.sendFile).toHaveBeenCalledWith('/uploads/pdfs/pedido-1.pdf');
@@ -293,7 +342,7 @@ describe('PedidosController', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
       mockPedidosService.regeneratePdf.mockResolvedValue(null);
 
-      await expect(controller.downloadPdf(1, res)).rejects.toThrow(
+      await expect(controller.downloadPdf(mockReq(), 1, res)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -302,7 +351,7 @@ describe('PedidosController', () => {
       const res = mockResponse();
       mockPedidosService.findOne.mockResolvedValue(null);
 
-      await expect(controller.downloadPdf(1, res)).rejects.toThrow(
+      await expect(controller.downloadPdf(mockReq(), 1, res)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -311,7 +360,7 @@ describe('PedidosController', () => {
       const res = mockResponse();
       mockPedidosService.findOne.mockRejectedValue(new Error('DB connection lost'));
 
-      await expect(controller.downloadPdf(1, res)).rejects.toThrow(
+      await expect(controller.downloadPdf(mockReq(), 1, res)).rejects.toThrow(
         InternalServerErrorException,
       );
     });

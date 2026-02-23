@@ -73,6 +73,7 @@ export class AuthService {
       sub: usuario.id,
       email: usuario.email,
       nome: usuario.nome,
+      clienteId: usuario.cliente_id || null,
       papel: {
         id: usuario.papel.id,
         nome: usuario.papel.nome,
@@ -91,6 +92,7 @@ export class AuthService {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        clienteId: usuario.cliente_id || null,
         papel: {
           id: usuario.papel.id,
           nome: usuario.papel.nome,
@@ -173,6 +175,7 @@ export class AuthService {
       sub: usuario.id,
       email: usuario.email,
       nome: usuario.nome,
+      clienteId: usuario.cliente_id || null,
       papel: {
         id: usuario.papel.id,
         nome: usuario.papel.nome,
@@ -191,6 +194,7 @@ export class AuthService {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        clienteId: usuario.cliente_id || null,
         papel: {
           id: usuario.papel.id,
           nome: usuario.papel.nome,
