@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,15 +22,22 @@ import {
   MenuBook as CatalogoIcon,
   ShoppingCart as PedidosIcon,
   Assessment as RelatoriosIcon,
+  Group as EquipeIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
-const portalMenuItems = [
+/** Itens base do menu do portal (todos os papéis CLIENTE) */
+const baseMenuItems = [
   { text: 'Dashboard', href: '/portal/dashboard', icon: DashboardIcon },
   { text: 'Catálogo', href: '/portal/catalogo', icon: CatalogoIcon },
   { text: 'Meus Pedidos', href: '/portal/pedidos', icon: PedidosIcon },
   { text: 'Relatórios', href: '/portal/relatorios', icon: RelatoriosIcon },
+];
+
+/** Item extra visível apenas para CLIENTE_ADMIN */
+const adminOnlyItems = [
+  { text: 'Minha Equipe', href: '/portal/usuarios', icon: EquipeIcon },
 ];
 
 /**
@@ -44,6 +51,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const theme = useTheme();
   const [checked, setChecked] = useState(false);
+
+  // Menu dinâmico: CLIENTE_ADMIN vê "Minha Equipe"
+  const portalMenuItems = useMemo(() => {
+    const isAdmin = usuario?.papel?.codigo === 'CLIENTE_ADMIN';
+    return isAdmin ? [...baseMenuItems, ...adminOnlyItems] : baseMenuItems;
+  }, [usuario?.papel?.codigo]);
 
   useEffect(() => {
     if (loading) return;

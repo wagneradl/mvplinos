@@ -3,8 +3,20 @@ import { UsuariosService } from '@/services/usuarios.service';
 import { Usuario, UpdateUsuarioDto } from '@/types/usuario';
 import { useSnackbar } from './useSnackbar';
 import { loggers } from '@/utils/logger';
+import { AxiosError } from 'axios';
 
 const logger = loggers.usuarios;
+
+/** Extrai mensagem de erro do backend (AxiosError) ou genérica */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof AxiosError && err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return fallback;
+}
 
 export function useUsuarios() {
   const queryClient = useQueryClient();
@@ -35,9 +47,7 @@ export function useUsuarios() {
     },
     onError: (err) => {
       logger.error('Erro ao criar usuário:', err);
-      showError(
-        `Erro ao criar usuário: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
-      );
+      showError(extractErrorMessage(err, 'Erro ao criar usuário'));
     },
   });
 
@@ -50,9 +60,7 @@ export function useUsuarios() {
     },
     onError: (err) => {
       logger.error('Erro ao atualizar usuário:', err);
-      showError(
-        `Erro ao atualizar usuário: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
-      );
+      showError(extractErrorMessage(err, 'Erro ao atualizar usuário'));
     },
   });
 
@@ -64,9 +72,7 @@ export function useUsuarios() {
     },
     onError: (err) => {
       logger.error('Erro ao inativar usuário:', err);
-      showError(
-        `Erro ao inativar usuário: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
-      );
+      showError(extractErrorMessage(err, 'Erro ao inativar usuário'));
     },
   });
 
@@ -78,9 +84,7 @@ export function useUsuarios() {
     },
     onError: (err) => {
       logger.error('Erro ao reativar usuário:', err);
-      showError(
-        `Erro ao reativar usuário: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
-      );
+      showError(extractErrorMessage(err, 'Erro ao reativar usuário'));
     },
   });
 
@@ -96,15 +100,15 @@ export function useUsuarios() {
   };
 }
 
-export function usePapeis() {
+export function usePapeis(tipo?: string) {
   const logger = loggers.usuarios;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['papeis'],
+    queryKey: ['papeis', tipo],
     queryFn: async () => {
       try {
-        logger.debug('Buscando papéis');
-        return await UsuariosService.listarPapeis();
+        logger.debug('Buscando papéis', { tipo });
+        return await UsuariosService.listarPapeis(tipo);
       } catch (err) {
         logger.error('Erro ao buscar papéis:', err);
         throw err;

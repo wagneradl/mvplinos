@@ -72,10 +72,11 @@ export const UsuariosService = {
     }
   },
 
-  async listarPapeis(): Promise<Papel[]> {
+  async listarPapeis(tipo?: string): Promise<Papel[]> {
     try {
-      usuariosLogger.debug('Fazendo requisição para /usuarios/papeis');
-      const response = await api.get<Papel[]>('/usuarios/papeis');
+      const params = tipo ? { tipo } : {};
+      usuariosLogger.debug('Fazendo requisição para /usuarios/papeis', { tipo });
+      const response = await api.get<Papel[]>('/usuarios/papeis', { params });
       return response.data;
     } catch (error) {
       usuariosLogger.error('Erro ao listar papéis:', error);
