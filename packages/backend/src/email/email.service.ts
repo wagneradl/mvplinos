@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Resend } from 'resend';
 import { PasswordResetRequestedEvent } from '../auth/services/password-reset.service';
+import { PedidoStatusChangedEvent } from '../pedidos/pedidos.service';
 
 @Injectable()
 export class EmailService {
@@ -131,6 +132,110 @@ export class EmailService {
         `Erro ao enviar email de reset para ${email}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       );
     }
+  }
+
+  private static readonly STATUS_LABELS: Record<string, string> = {
+    RASCUNHO: 'Rascunho',
+    PENDENTE: 'Pendente',
+    CONFIRMADO: 'Confirmado',
+    EM_PRODUCAO: 'Em Produção',
+    PRONTO: 'Pronto',
+    ENTREGUE: 'Entregue',
+    CANCELADO: 'Cancelado',
+  };
+
+  private static readonly STATUS_MENSAGENS: Record<string, string> = {
+    PENDENTE: 'Seu pedido foi enviado e está aguardando confirmação.',
+    CONFIRMADO: 'Seu pedido foi confirmado! Estamos preparando tudo.',
+    EM_PRODUCAO: 'Seu pedido está em produção.',
+    PRONTO: 'Seu pedido está pronto para retirada/entrega!',
+    ENTREGUE: 'Seu pedido foi entregue. Obrigado pela preferência!',
+    CANCELADO: 'Seu pedido foi cancelado.',
+  };
+
+  @OnEvent('pedido.status.changed')
+  async handlePedidoStatusChanged(event: PedidoStatusChangedEvent): Promise<void> {
+    if (event.tipoUsuario !== 'INTERNO') return;
+
+    const statusLabel = EmailService.STATUS_LABELS[event.statusNovo] || event.statusNovo;
+    const subject = `Lino's Panificadora — Pedido #${event.numeroPedido}: ${statusLabel}`;
+
+    const html = this.buildStatusChangeHtml(event);
+
+    try {
+      await this.enviarEmail({
+        to: event.clienteEmail,
+        subject,
+        html,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Erro ao enviar email de status para ${event.clienteEmail}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+    }
+  }
+
+  buildStatusChangeHtml(event: PedidoStatusChangedEvent): string {
+    const statusAnteriorLabel = EmailService.STATUS_LABELS[event.statusAnterior] || event.statusAnterior;
+    const statusNovoLabel = EmailService.STATUS_LABELS[event.statusNovo] || event.statusNovo;
+    const mensagem = EmailService.STATUS_MENSAGENS[event.statusNovo] || '';
+
+    return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0; padding:0; background-color:#f5f5f5; font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#8B4513; padding:24px; text-align:center;">
+              <h1 style="margin:0; color:#ffffff; font-size:22px; font-weight:bold;">Lino's Panificadora</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 24px;">
+              <h2 style="margin:0 0 16px; color:#333333; font-size:18px;">Atualização do Pedido #${event.numeroPedido}</h2>
+              <p style="margin:0 0 16px; color:#555555; font-size:14px; line-height:1.6;">
+                Olá, ${event.clienteNome}
+              </p>
+              <p style="margin:0 0 16px; color:#555555; font-size:14px; line-height:1.6;">
+                O status do seu pedido <strong>#${event.numeroPedido}</strong> foi atualizado.
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+                <tr>
+                  <td style="padding:12px 16px; background-color:#f9f9f9; border-radius:6px; text-align:center;">
+                    <span style="color:#999999; font-size:13px;">${statusAnteriorLabel}</span>
+                    <span style="color:#8B4513; font-size:16px; font-weight:bold; padding:0 12px;">→</span>
+                    <span style="color:#8B4513; font-size:15px; font-weight:bold;">${statusNovoLabel}</span>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 16px; color:#555555; font-size:14px; line-height:1.6;">
+                ${mensagem}
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f9f9f9; padding:16px 24px; text-align:center;">
+              <p style="margin:0; color:#999999; font-size:11px;">
+                Lino's Panificadora — Este é um email automático, não responda.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim();
   }
 
   private buildResetPasswordHtml(params: {

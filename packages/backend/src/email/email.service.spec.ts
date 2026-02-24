@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { EmailService } from './email.service';
+import { PedidoStatusChangedEvent } from '../pedidos/pedidos.service';
 
 // Mock do Resend SDK
 const mockSend = jest.fn();
@@ -17,6 +18,16 @@ describe('EmailService', () => {
     email: 'usuario@teste.com',
     token: 'token-abc-123',
     expiresAt: new Date('2026-03-01T12:15:00Z'),
+  };
+
+  const mockStatusEvent: PedidoStatusChangedEvent = {
+    pedidoId: 42,
+    clienteEmail: 'cliente@padaria.com',
+    clienteNome: 'Padaria Bom Pão LTDA',
+    numeroPedido: 42,
+    statusAnterior: 'PENDENTE',
+    statusNovo: 'CONFIRMADO',
+    tipoUsuario: 'INTERNO',
   };
 
   let logSpy: jest.SpyInstance;
@@ -253,6 +264,108 @@ describe('EmailService', () => {
       expect(html).toContain(
         `https://custom.domain.com/reset-senha?token=${mockEvent.token}`,
       );
+    });
+  });
+
+  // ===========================================================================
+  // NOTIFICAÇÃO DE MUDANÇA DE STATUS DO PEDIDO
+  // ===========================================================================
+  describe('handlePedidoStatusChanged', () => {
+    it('deve enviar email quando tipoUsuario é INTERNO', async () => {
+      mockSend.mockResolvedValue({ data: { id: 'msg_status_1' }, error: null });
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged(mockStatusEvent);
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.to).toBe('cliente@padaria.com');
+      expect(callArgs.subject).toContain('Pedido #42');
+      expect(callArgs.subject).toContain('Confirmado');
+    });
+
+    it('NÃO deve enviar email quando tipoUsuario é CLIENTE', async () => {
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged({
+        ...mockStatusEvent,
+        tipoUsuario: 'CLIENTE',
+      });
+
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it('o HTML deve conter nome do cliente e número do pedido', async () => {
+      mockSend.mockResolvedValue({ data: { id: 'msg_status_2' }, error: null });
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged(mockStatusEvent);
+
+      const html = mockSend.mock.calls[0][0].html;
+      expect(html).toContain('Padaria Bom Pão LTDA');
+      expect(html).toContain('#42');
+    });
+
+    it('o HTML deve conter status anterior e novo', async () => {
+      mockSend.mockResolvedValue({ data: { id: 'msg_status_3' }, error: null });
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged(mockStatusEvent);
+
+      const html = mockSend.mock.calls[0][0].html;
+      expect(html).toContain('Pendente');
+      expect(html).toContain('Confirmado');
+    });
+
+    it.each([
+      ['CONFIRMADO', 'Seu pedido foi confirmado! Estamos preparando tudo.'],
+      ['EM_PRODUCAO', 'Seu pedido está em produção.'],
+      ['PRONTO', 'Seu pedido está pronto para retirada/entrega!'],
+      ['ENTREGUE', 'Seu pedido foi entregue. Obrigado pela preferência!'],
+      ['CANCELADO', 'Seu pedido foi cancelado.'],
+    ])('deve gerar mensagem amigável para status %s', async (status, mensagem) => {
+      mockSend.mockResolvedValue({ data: { id: 'msg_each' }, error: null });
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged({
+        ...mockStatusEvent,
+        statusNovo: status,
+      });
+
+      const html = mockSend.mock.calls[0][0].html;
+      expect(html).toContain(mensagem);
+    });
+
+    it('o HTML deve conter footer com aviso de email automático', async () => {
+      mockSend.mockResolvedValue({ data: { id: 'msg_footer' }, error: null });
+      const service = await createService();
+
+      await service.handlePedidoStatusChanged(mockStatusEvent);
+
+      const html = mockSend.mock.calls[0][0].html;
+      expect(html).toContain('Este é um email automático, não responda.');
+    });
+
+    it('falha no envio não deve lançar exceção (fire-and-forget)', async () => {
+      mockSend.mockRejectedValue(new Error('SMTP down'));
+      const service = await createService();
+
+      await expect(
+        service.handlePedidoStatusChanged(mockStatusEvent),
+      ).resolves.toBeUndefined();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('SMTP down'),
+      );
+    });
+
+    it('deve logar em modo mock sem chamar Resend', async () => {
+      const service = await createService({ EMAIL_MOCK: 'true' });
+
+      await service.handlePedidoStatusChanged(mockStatusEvent);
+
+      expect(mockSend).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('=== EMAIL MOCK ===');
     });
   });
 });

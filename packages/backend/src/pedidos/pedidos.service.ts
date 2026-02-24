@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
@@ -22,6 +23,16 @@ export interface TenantContext {
   clienteId?: number | null;
 }
 
+export interface PedidoStatusChangedEvent {
+  pedidoId: number;
+  clienteEmail: string;
+  clienteNome: string;
+  numeroPedido: number;
+  statusAnterior: string;
+  statusNovo: string;
+  tipoUsuario: 'INTERNO' | 'CLIENTE';
+}
+
 @Injectable()
 export class PedidosService {
   private readonly logger = new Logger(PedidosService.name);
@@ -30,6 +41,7 @@ export class PedidosService {
     private readonly prisma: PrismaService,
     private readonly pdfService: PdfService,
     private readonly structuredLogger: StructuredLoggerService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // Função auxiliar para depurar problemas de data
@@ -463,7 +475,9 @@ export class PedidosService {
       userId: tenant?.userId,
     });
 
-    return this.prisma.pedido.update({
+    const statusAnterior = pedido.status;
+
+    const pedidoAtualizado = await this.prisma.pedido.update({
       where: { id },
       data: { status: novoStatus },
       include: {
@@ -475,6 +489,19 @@ export class PedidosService {
         },
       },
     });
+
+    // 4. Fire-and-forget: notificar mudança de status por email
+    this.eventEmitter.emit('pedido.status.changed', {
+      pedidoId: id,
+      clienteEmail: pedidoAtualizado.cliente?.email,
+      clienteNome: pedidoAtualizado.cliente?.razao_social || pedidoAtualizado.cliente?.nome_fantasia,
+      numeroPedido: id,
+      statusAnterior,
+      statusNovo: novoStatus,
+      tipoUsuario: tipoPapel,
+    } as PedidoStatusChangedEvent);
+
+    return pedidoAtualizado;
   }
 
   /**

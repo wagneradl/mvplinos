@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PedidosService } from './pedidos.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
@@ -73,6 +74,7 @@ describe('Pedidos — Transição de Status por Papel', () => {
         StructuredLoggerService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PdfService, useValue: mockPdfService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

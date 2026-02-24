@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PedidosService } from './pedidos.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
@@ -106,6 +107,10 @@ describe('PedidosService', () => {
     generateReportPdf: jest.fn(),
   };
 
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -122,6 +127,10 @@ describe('PedidosService', () => {
         {
           provide: PdfService,
           useValue: mockPdfService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();
@@ -1228,6 +1237,82 @@ describe('PedidosService', () => {
 
       const r4 = await service.atualizarStatus(1, PedidoStatus.ENTREGUE, tenantInterno);
       expect(r4.status).toBe(PedidoStatus.ENTREGUE);
+    });
+
+    // Emissão de evento de mudança de status
+    it('deve emitir evento pedido.status.changed após transição bem-sucedida', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CONFIRMADO,
+      });
+
+      await service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantInterno);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'pedido.status.changed',
+        expect.objectContaining({
+          pedidoId: 1,
+          clienteEmail: 'teste@teste.com',
+          clienteNome: 'Cliente Teste LTDA',
+          numeroPedido: 1,
+          statusAnterior: PedidoStatus.PENDENTE,
+          statusNovo: PedidoStatus.CONFIRMADO,
+          tipoUsuario: 'INTERNO',
+        }),
+      );
+    });
+
+    it('deve emitir evento com tipoUsuario CLIENTE para transição de cliente', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.RASCUNHO,
+        cliente_id: 5,
+      });
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+        cliente_id: 5,
+      });
+
+      await service.atualizarStatus(1, PedidoStatus.PENDENTE, tenantCliente);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'pedido.status.changed',
+        expect.objectContaining({
+          tipoUsuario: 'CLIENTE',
+        }),
+      );
+    });
+
+    it('NÃO deve emitir evento quando transição é inválida', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.PRONTO, tenantInterno),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('NÃO deve emitir evento quando papel não tem permissão', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PENDENTE,
+        cliente_id: 5,
+      });
+
+      await expect(
+        service.atualizarStatus(1, PedidoStatus.CONFIRMADO, tenantCliente),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled();
     });
   });
 
