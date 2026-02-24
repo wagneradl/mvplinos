@@ -39,6 +39,7 @@ describe('PedidosController', () => {
     updateItemQuantidade: jest.fn(),
     regeneratePdf: jest.fn(),
     atualizarStatus: jest.fn(),
+    getDashboard: jest.fn(),
   };
 
   const mockSupabaseService = {
@@ -266,6 +267,36 @@ describe('PedidosController', () => {
         expect.objectContaining({ userId: 1, clienteId: null }),
       );
       expect(result.status).toBe('CONFIRMADO');
+    });
+  });
+
+  // =========================================================================
+  // DASHBOARD
+  // =========================================================================
+
+  describe('getDashboard', () => {
+    const mockDashboard = {
+      resumo: { totalPedidos: 10, pedidosMes: 3, valorTotalMes: 500, pedidosPendentes: 2 },
+      porStatus: [{ status: 'PENDENTE', quantidade: 2, percentual: 20 }],
+      pedidosRecentes: [],
+    };
+
+    it('deve delegar para service.getDashboard com clienteId do tenant (admin)', async () => {
+      mockPedidosService.getDashboard.mockResolvedValue(mockDashboard);
+
+      const result = await controller.getDashboard(mockReq());
+
+      expect(mockPedidosService.getDashboard).toHaveBeenCalledWith(null);
+      expect(result).toEqual(mockDashboard);
+    });
+
+    it('deve delegar para service.getDashboard com clienteId do tenant (cliente)', async () => {
+      mockPedidosService.getDashboard.mockResolvedValue(mockDashboard);
+
+      const result = await controller.getDashboard(mockReq({ clienteId: 5 }));
+
+      expect(mockPedidosService.getDashboard).toHaveBeenCalledWith(5);
+      expect(result).toEqual(mockDashboard);
     });
   });
 

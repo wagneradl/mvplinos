@@ -6,6 +6,7 @@ import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto, PedidoStatus } from './dto/update-pedido.dto';
 import { FilterPedidoDto } from './dto/filter-pedido.dto';
 import { ReportPedidoDto } from './dto/report-pedido.dto';
+import { DashboardResponse } from './dto/dashboard-pedido.dto';
 import {
   transicaoValida,
   transicaoPermitidaPorPapel,
@@ -440,6 +441,121 @@ export class PedidosService {
       }
       throw new BadRequestException('Erro ao buscar pedido');
     }
+  }
+
+  /**
+   * Retorna dados agregados para o dashboard do cliente.
+   * Tenant isolation: se clienteId presente, filtra por ele. Sem clienteId (admin), retorna tudo.
+   */
+  async getDashboard(clienteId?: number | null): Promise<DashboardResponse> {
+    const baseWhere: Prisma.PedidoWhereInput = {
+      deleted_at: null,
+      ...(clienteId ? { cliente_id: clienteId } : {}),
+    };
+
+    // Início do mês corrente (UTC)
+    const now = new Date();
+    const inicioMes = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+
+    const mesWhere: Prisma.PedidoWhereInput = {
+      ...baseWhere,
+      data_pedido: { gte: inicioMes },
+    };
+
+    // === Queries em paralelo ===
+    const [
+      totalPedidos,
+      pedidosMes,
+      aggregateMes,
+      pedidosPendentes,
+      statusGroups,
+      pedidosRecentes,
+    ] = await Promise.all([
+      // Q1: total de pedidos
+      this.prisma.pedido.count({ where: baseWhere }),
+
+      // Q2: pedidos do mês corrente
+      this.prisma.pedido.count({ where: mesWhere }),
+
+      // Q3: valor total do mês
+      this.prisma.pedido.aggregate({
+        where: mesWhere,
+        _sum: { valor_total: true },
+      }),
+
+      // Q4: pedidos pendentes (RASCUNHO + PENDENTE)
+      this.prisma.pedido.count({
+        where: {
+          ...baseWhere,
+          status: { in: ['RASCUNHO', 'PENDENTE'] },
+        },
+      }),
+
+      // Q5: agrupamento por status
+      this.prisma.pedido.groupBy({
+        by: ['status'],
+        where: baseWhere,
+        _count: { _all: true },
+      }),
+
+      // Q6: últimos 5 pedidos
+      this.prisma.pedido.findMany({
+        where: baseWhere,
+        orderBy: { data_pedido: 'desc' },
+        take: 5,
+        include: {
+          _count: {
+            select: { itensPedido: true },
+          },
+        },
+      }),
+    ]);
+
+    // Montar porStatus com ordem lógica
+    const ordemStatus = [
+      'RASCUNHO',
+      'PENDENTE',
+      'CONFIRMADO',
+      'EM_PRODUCAO',
+      'PRONTO',
+      'ENTREGUE',
+      'CANCELADO',
+    ];
+
+    const statusMap = new Map<string, number>();
+    for (const group of statusGroups) {
+      statusMap.set(group.status, group._count._all);
+    }
+
+    const porStatus = ordemStatus
+      .filter((s) => statusMap.has(s))
+      .map((s) => ({
+        status: s,
+        quantidade: statusMap.get(s)!,
+        percentual: totalPedidos > 0
+          ? Math.round((statusMap.get(s)! / totalPedidos) * 10000) / 100
+          : 0,
+      }));
+
+    // Montar pedidosRecentes
+    const recentes = pedidosRecentes.map((p) => ({
+      id: p.id,
+      dataPedido: p.data_pedido.toISOString(),
+      status: p.status,
+      valorTotal: p.valor_total,
+      quantidadeItens: (p as any)._count.itensPedido,
+    }));
+
+    return {
+      resumo: {
+        totalPedidos,
+        pedidosMes,
+        valorTotalMes: aggregateMes._sum.valor_total ?? 0,
+        pedidosPendentes,
+      },
+      porStatus,
+      pedidosRecentes: recentes,
+    };
   }
 
   /**

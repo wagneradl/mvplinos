@@ -180,6 +180,19 @@ export class PedidosController {
     }
   }
 
+  @Get('dashboard')
+  @RequerPermissoes('pedidos:listar')
+  @ApiOperation({
+    summary: 'Dados agregados para o dashboard do cliente',
+    description: 'Retorna resumo, breakdown por status e pedidos recentes. Tenant-isolated.',
+  })
+  @ApiResponse({ status: 200, description: 'Dashboard retornado com sucesso.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado.' })
+  getDashboard(@Req() req: Request) {
+    const tenant = this.extractTenant(req);
+    return this.pedidosService.getDashboard(tenant.clienteId);
+  }
+
   @Get()
   @RequerPermissoes('pedidos:listar')
   @ApiOperation({
