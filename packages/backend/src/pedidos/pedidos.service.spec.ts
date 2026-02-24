@@ -508,14 +508,36 @@ describe('PedidosService', () => {
       );
     });
 
-    it('deve rejeitar atualização de item em pedido cancelado', async () => {
+    it('deve rejeitar atualização de item em pedido CANCELADO', async () => {
       mockPrismaService.pedido.findFirst.mockResolvedValue({
         ...mockPedidoComItens,
         status: PedidoStatus.CANCELADO,
       });
 
       await expect(service.updateItemQuantidade(1, 10, 5)).rejects.toThrow(
-        BadRequestException,
+        'Pedido não pode ser editado após confirmação',
+      );
+    });
+
+    it('deve rejeitar atualização de item em pedido CONFIRMADO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoComItens,
+        status: PedidoStatus.CONFIRMADO,
+      });
+
+      await expect(service.updateItemQuantidade(1, 10, 5)).rejects.toThrow(
+        'Pedido não pode ser editado após confirmação',
+      );
+    });
+
+    it('deve rejeitar atualização de item em pedido EM_PRODUCAO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoComItens,
+        status: PedidoStatus.EM_PRODUCAO,
+      });
+
+      await expect(service.updateItemQuantidade(1, 10, 5)).rejects.toThrow(
+        'Pedido não pode ser editado após confirmação',
       );
     });
   });
@@ -554,27 +576,18 @@ describe('PedidosService', () => {
   // =========================================================================
 
   describe('update', () => {
-    it('deve rejeitar atualização de pedido em estado final', async () => {
+    it('deve rejeitar edição de pedido CANCELADO', async () => {
       mockPrismaService.pedido.findFirst.mockResolvedValue({
         ...mockPedidoAtivo,
         status: PedidoStatus.CANCELADO,
       });
 
       await expect(
-        service.update(1, { status: PedidoStatus.PENDENTE }),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.update(1, { status: PedidoStatus.PENDENTE }).catch((e) => {
-          mockPrismaService.pedido.findFirst.mockResolvedValue({
-            ...mockPedidoAtivo,
-            status: PedidoStatus.CANCELADO,
-          });
-          throw e;
-        }),
-      ).rejects.toThrow('Não é possível atualizar um pedido com status CANCELADO');
+        service.update(1, { observacoes: 'teste' }),
+      ).rejects.toThrow('Pedido não pode ser editado após confirmação');
     });
 
-    it('deve rejeitar atualização de pedido entregue', async () => {
+    it('deve rejeitar edição de pedido ENTREGUE', async () => {
       mockPrismaService.pedido.findFirst.mockResolvedValue({
         ...mockPedidoAtivo,
         status: PedidoStatus.ENTREGUE,
@@ -582,7 +595,51 @@ describe('PedidosService', () => {
 
       await expect(
         service.update(1, { observacoes: 'teste' }),
-      ).rejects.toThrow('Não é possível atualizar um pedido com status ENTREGUE');
+      ).rejects.toThrow('Pedido não pode ser editado após confirmação');
+    });
+
+    it('deve rejeitar edição de pedido CONFIRMADO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.CONFIRMADO,
+      });
+
+      await expect(
+        service.update(1, { observacoes: 'teste' }),
+      ).rejects.toThrow('Pedido não pode ser editado após confirmação');
+    });
+
+    it('deve rejeitar edição de pedido EM_PRODUCAO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.EM_PRODUCAO,
+      });
+
+      await expect(
+        service.update(1, { observacoes: 'teste' }),
+      ).rejects.toThrow('Pedido não pode ser editado após confirmação');
+    });
+
+    it('deve rejeitar edição de pedido PRONTO', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue({
+        ...mockPedidoAtivo,
+        status: PedidoStatus.PRONTO,
+      });
+
+      await expect(
+        service.update(1, { observacoes: 'teste' }),
+      ).rejects.toThrow('Pedido não pode ser editado após confirmação');
+    });
+
+    it('deve permitir edição de pedido PENDENTE', async () => {
+      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedidoAtivo);
+      mockPrismaService.pedido.update.mockResolvedValue({
+        ...mockPedidoAtivo,
+        observacoes: 'Entrega urgente',
+      });
+
+      const result = await service.update(1, { observacoes: 'Entrega urgente' });
+      expect(result.observacoes).toBe('Entrega urgente');
     });
 
     it('deve validar transição de status inválida no update', async () => {
@@ -604,22 +661,6 @@ describe('PedidosService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('deve atualizar pedido ativo com sucesso', async () => {
-      mockPrismaService.pedido.findFirst.mockResolvedValue(mockPedidoAtivo);
-      mockPrismaService.pedido.update.mockResolvedValue({
-        ...mockPedidoAtivo,
-        observacoes: 'Entrega urgente',
-      });
-
-      const result = await service.update(1, { observacoes: 'Entrega urgente' });
-
-      expect(result.observacoes).toBe('Entrega urgente');
-      expect(mockPrismaService.pedido.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { observacoes: 'Entrega urgente' },
-        include: expect.any(Object),
-      });
-    });
   });
 
   // =========================================================================

@@ -2,6 +2,7 @@ import {
   TRANSICOES_VALIDAS,
   ESTADOS_PEDIDO,
   ESTADOS_FINAIS,
+  ESTADOS_BLOQUEIO_EDICAO,
   transicaoValida,
   TRANSICOES_POR_TIPO,
   transicaoPermitidaPorPapel,
@@ -61,6 +62,20 @@ describe('transicoes-pedido', () => {
     it('deve conter ENTREGUE e CANCELADO', () => {
       expect(ESTADOS_FINAIS).toContain('ENTREGUE');
       expect(ESTADOS_FINAIS).toContain('CANCELADO');
+    });
+  });
+
+  describe('ESTADOS_BLOQUEIO_EDICAO', () => {
+    it('deve conter exatamente CONFIRMADO, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO', () => {
+      expect(ESTADOS_BLOQUEIO_EDICAO).toEqual(
+        expect.arrayContaining(['CONFIRMADO', 'EM_PRODUCAO', 'PRONTO', 'ENTREGUE', 'CANCELADO']),
+      );
+      expect(ESTADOS_BLOQUEIO_EDICAO).toHaveLength(5);
+    });
+
+    it('NÃO deve conter RASCUNHO nem PENDENTE', () => {
+      expect(ESTADOS_BLOQUEIO_EDICAO).not.toContain('RASCUNHO');
+      expect(ESTADOS_BLOQUEIO_EDICAO).not.toContain('PENDENTE');
     });
   });
 

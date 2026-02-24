@@ -9,7 +9,7 @@ import {
   transicaoValida,
   transicaoPermitidaPorPapel,
   TRANSICOES_VALIDAS,
-  ESTADOS_FINAIS,
+  ESTADOS_BLOQUEIO_EDICAO,
 } from './constants/transicoes-pedido';
 import { Prisma } from '@prisma/client';
 import { join } from 'path';
@@ -584,10 +584,10 @@ export class PedidosService {
         throw new ForbiddenException('Acesso negado a este pedido');
       }
 
-      // Bloquear atualizações em estados finais
-      if (ESTADOS_FINAIS.includes(pedido.status)) {
+      // Bloquear edição de conteúdo após confirmação
+      if (ESTADOS_BLOQUEIO_EDICAO.includes(pedido.status)) {
         throw new BadRequestException(
-          `Não é possível atualizar um pedido com status ${pedido.status}`,
+          'Pedido não pode ser editado após confirmação',
         );
       }
 
@@ -771,10 +771,10 @@ export class PedidosService {
         throw new ForbiddenException('Acesso negado a este pedido');
       }
 
-      // Bloquear edição de itens em estados finais
-      if (ESTADOS_FINAIS.includes(pedido.status)) {
+      // Bloquear edição de itens após confirmação
+      if (ESTADOS_BLOQUEIO_EDICAO.includes(pedido.status)) {
         throw new BadRequestException(
-          `Não é possível alterar itens de um pedido com status ${pedido.status}`,
+          'Pedido não pode ser editado após confirmação',
         );
       }
 

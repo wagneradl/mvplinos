@@ -26,6 +26,16 @@ export const ESTADOS_PEDIDO = Object.keys(TRANSICOES_VALIDAS);
 /** Estados terminais — sem transições de saída */
 export const ESTADOS_FINAIS = ['ENTREGUE', 'CANCELADO'];
 
+/** Estados que bloqueiam edição de conteúdo (itens, quantidades, observações).
+ *  Somente RASCUNHO e PENDENTE permitem edição. */
+export const ESTADOS_BLOQUEIO_EDICAO = [
+  'CONFIRMADO',
+  'EM_PRODUCAO',
+  'PRONTO',
+  'ENTREGUE',
+  'CANCELADO',
+];
+
 /**
  * Verifica se a transição de `atual` para `novo` é válida.
  * Função pura, sem side-effects.

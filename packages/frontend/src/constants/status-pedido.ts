@@ -83,3 +83,9 @@ export const TRANSICAO_BOTAO: Record<
 
 /** Estados finais — sem transições de saída */
 export const ESTADOS_FINAIS: StatusPedido[] = ['ENTREGUE', 'CANCELADO'];
+
+/** Verifica se o pedido pode ter conteúdo editado (itens, quantidades, observações).
+ *  Somente RASCUNHO e PENDENTE permitem edição. */
+export const podeEditarPedido = (status: string): boolean => {
+  return ['RASCUNHO', 'PENDENTE'].includes(status);
+};
