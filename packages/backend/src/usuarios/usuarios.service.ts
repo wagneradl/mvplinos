@@ -3,10 +3,23 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/usuario.dto';
 import * as bcrypt from 'bcryptjs';
+
+/** Contexto do caller para operações de criação/edição */
+export interface CallerContext {
+  clienteId: number;
+  papelNivel: number;
+}
+
+/** Contexto do caller para operações de remoção */
+export interface RemoveCallerContext {
+  clienteId: number;
+  callerId: number;
+}
 
 @Injectable()
 export class UsuariosService {
@@ -63,7 +76,24 @@ export class UsuariosService {
     };
   }
 
-  async create(createUsuarioDto: CreateUsuarioDto) {
+  async create(createUsuarioDto: CreateUsuarioDto, callerContext?: CallerContext) {
+    // ── Tenant isolation: CLIENTE_ADMIN restrictions ──
+    if (callerContext?.clienteId) {
+      // Forçar cliente_id do caller (ignorar valor do body)
+      createUsuarioDto.cliente_id = callerContext.clienteId;
+
+      // Verificar que o papel destino é CLIENTE e nível menor que o caller
+      const papelDestino = await this.prisma.papel.findUnique({
+        where: { id: createUsuarioDto.papel_id },
+      });
+      if (!papelDestino) {
+        throw new NotFoundException(`Papel com ID ${createUsuarioDto.papel_id} não encontrado`);
+      }
+      if (papelDestino.tipo !== 'CLIENTE' || papelDestino.nivel >= callerContext.papelNivel) {
+        throw new ForbiddenException('Sem permissão para criar usuários com este papel');
+      }
+    }
+
     // Verificar se já existe um usuário com o mesmo email
     const emailExistente = await this.prisma.usuario.findUnique({
       where: { email: createUsuarioDto.email },
@@ -73,10 +103,10 @@ export class UsuariosService {
       throw new ConflictException('E-mail já cadastrado');
     }
 
-    // Verificar se o papel existe
-    const papel = await this.prisma.papel.findUnique({
-      where: { id: createUsuarioDto.papel_id },
-    });
+    // Verificar se o papel existe (pode já ter sido buscado acima)
+    const papel = callerContext?.clienteId
+      ? await this.prisma.papel.findUnique({ where: { id: createUsuarioDto.papel_id } })
+      : await this.prisma.papel.findUnique({ where: { id: createUsuarioDto.papel_id } });
 
     if (!papel) {
       throw new NotFoundException(`Papel com ID ${createUsuarioDto.papel_id} não encontrado`);
@@ -110,10 +140,13 @@ export class UsuariosService {
     return this.formatarRetorno(usuarioCriado);
   }
 
-  async findAll(clienteId?: number) {
+  async findAll(clienteId?: number, callerClienteId?: number) {
+    // Tenant isolation: caller CLIENTE sempre vê apenas seu próprio cliente
+    const effectiveClienteId = callerClienteId || clienteId;
+
     const where: any = { deleted_at: null };
-    if (clienteId) {
-      where.cliente_id = clienteId;
+    if (effectiveClienteId) {
+      where.cliente_id = effectiveClienteId;
     }
 
     const usuarios = await this.prisma.usuario.findMany({
@@ -127,7 +160,7 @@ export class UsuariosService {
     return usuarios.map((usuario) => this.formatarRetorno(usuario));
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, callerClienteId?: number) {
     const usuario = await this.prisma.usuario.findUnique({
       where: { id },
       include: {
@@ -140,10 +173,15 @@ export class UsuariosService {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
     }
 
+    // Tenant isolation: caller CLIENTE só pode ver usuários do seu cliente
+    if (callerClienteId && usuario.cliente_id !== callerClienteId) {
+      throw new ForbiddenException('Acesso negado a este usuário');
+    }
+
     return this.formatarRetorno(usuario);
   }
 
-  async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
+  async update(id: number, updateUsuarioDto: UpdateUsuarioDto, callerContext?: CallerContext) {
     // Verificar se o usuário existe
     const usuarioExistente = await this.prisma.usuario.findUnique({
       where: { id },
@@ -152,6 +190,30 @@ export class UsuariosService {
 
     if (!usuarioExistente) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
+    }
+
+    // ── Tenant isolation: CLIENTE_ADMIN restrictions ──
+    if (callerContext?.clienteId) {
+      // Verificar que o usuário pertence ao mesmo cliente
+      if (usuarioExistente.cliente_id !== callerContext.clienteId) {
+        throw new ForbiddenException('Acesso negado a este usuário');
+      }
+
+      // Se tentar mudar o papel, validar que o novo papel é CLIENTE e nível menor
+      if (updateUsuarioDto.papel_id) {
+        const novoPapel = await this.prisma.papel.findUnique({
+          where: { id: updateUsuarioDto.papel_id },
+        });
+        if (!novoPapel) {
+          throw new NotFoundException(`Papel com ID ${updateUsuarioDto.papel_id} não encontrado`);
+        }
+        if (novoPapel.tipo !== 'CLIENTE' || novoPapel.nivel >= callerContext.papelNivel) {
+          throw new ForbiddenException('Sem permissão para atribuir este papel');
+        }
+      }
+
+      // Forçar cliente_id (não pode mover para outro cliente)
+      delete updateUsuarioDto.cliente_id;
     }
 
     // Se houver atualização de email, verificar se já existe
@@ -168,6 +230,7 @@ export class UsuariosService {
     // Determinar o papel efetivo (novo ou existente)
     let papelEfetivo = usuarioExistente.papel;
     if (updateUsuarioDto.papel_id) {
+      // Se callerContext era presente, o papel já foi validado acima
       const novoPapel = await this.prisma.papel.findUnique({
         where: { id: updateUsuarioDto.papel_id },
       });
@@ -179,8 +242,6 @@ export class UsuariosService {
     }
 
     // Determinar o cliente_id efetivo
-    // Se cliente_id é explicitamente passado (mesmo null), usar o valor passado
-    // Se não passado, manter o existente
     const clienteIdExplicit = 'cliente_id' in updateUsuarioDto;
     let clienteIdEfetivo: number | null;
 
@@ -226,14 +287,33 @@ export class UsuariosService {
     return this.formatarRetorno(usuarioAtualizado);
   }
 
-  async remove(id: number) {
+  async remove(id: number, callerContext?: RemoveCallerContext) {
     // Verificar se o usuário existe
     const usuario = await this.prisma.usuario.findUnique({
       where: { id },
+      include: { papel: true },
     });
 
     if (!usuario) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
+    }
+
+    // ── Tenant isolation: CLIENTE_ADMIN restrictions ──
+    if (callerContext?.clienteId) {
+      // Verificar que o usuário pertence ao mesmo cliente
+      if (usuario.cliente_id !== callerContext.clienteId) {
+        throw new ForbiddenException('Acesso negado a este usuário');
+      }
+
+      // Não pode desativar a si mesmo
+      if (usuario.id === callerContext.callerId) {
+        throw new BadRequestException('Não é possível desativar sua própria conta');
+      }
+
+      // Não pode desativar outro CLIENTE_ADMIN (apenas CLIENTE_USUARIO)
+      if (usuario.papel.codigo === 'CLIENTE_ADMIN') {
+        throw new ForbiddenException('Sem permissão para desativar administradores');
+      }
     }
 
     // Soft delete (marcar como deletado)
@@ -246,8 +326,13 @@ export class UsuariosService {
     });
   }
 
-  async findPapeis() {
-    const papeis = await this.prisma.papel.findMany();
+  async findPapeis(tipo?: string) {
+    const where: any = {};
+    if (tipo) {
+      where.tipo = tipo;
+    }
+
+    const papeis = await this.prisma.papel.findMany({ where });
 
     // Processar permissões para cada papel
     return papeis.map((papel) => {
