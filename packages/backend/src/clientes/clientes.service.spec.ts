@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { ClientesService } from './clientes.service';
@@ -565,6 +566,72 @@ describe('ClientesService', () => {
           subject: expect.stringContaining('não aprovado'),
         }),
       );
+    });
+  });
+
+  // =========================================================================
+  // TENANT ISOLATION
+  // =========================================================================
+
+  describe('Tenant Isolation', () => {
+    const tenantClienteA = { userId: 10, clienteId: 1 };
+    const tenantClienteB = { userId: 20, clienteId: 2 };
+    const tenantInterno = { userId: 1, clienteId: null };
+
+    describe('findAll com tenant', () => {
+      it('CLIENTE deve ver apenas o próprio cliente', async () => {
+        mockPrismaService.cliente.count.mockResolvedValue(1);
+        mockPrismaService.cliente.findMany.mockResolvedValue([mockCliente]);
+
+        await service.findAll({ page: 1, limit: 10 }, false, tenantClienteA);
+
+        const callArgs = mockPrismaService.cliente.count.mock.calls[0][0];
+        expect(callArgs.where.id).toBe(1);
+      });
+
+      it('INTERNO deve ver todos os clientes (sem filtro de tenant)', async () => {
+        mockPrismaService.cliente.count.mockResolvedValue(2);
+        mockPrismaService.cliente.findMany.mockResolvedValue([
+          mockCliente,
+          { ...mockCliente, id: 2 },
+        ]);
+
+        await service.findAll({ page: 1, limit: 10 }, false, tenantInterno);
+
+        const callArgs = mockPrismaService.cliente.count.mock.calls[0][0];
+        expect(callArgs.where).not.toHaveProperty('id');
+      });
+    });
+
+    describe('findOne com tenant', () => {
+      it('CLIENTE pode acessar dados do próprio cliente', async () => {
+        const clienteComPedidos = { ...mockCliente, pedidos: [] };
+        mockPrismaService.cliente.findFirst.mockResolvedValue(clienteComPedidos);
+
+        const result = await service.findOne(1, false, tenantClienteA);
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(1);
+      });
+
+      it('CLIENTE NÃO pode acessar dados de outro cliente', async () => {
+        await expect(
+          service.findOne(2, false, tenantClienteA),
+        ).rejects.toThrow(ForbiddenException);
+        await expect(
+          service.findOne(2, false, tenantClienteA),
+        ).rejects.toThrow('Acesso negado a este cliente');
+      });
+
+      it('INTERNO pode acessar qualquer cliente', async () => {
+        const clienteComPedidos = { ...mockCliente, id: 2, pedidos: [] };
+        mockPrismaService.cliente.findFirst.mockResolvedValue(clienteComPedidos);
+
+        const result = await service.findOne(2, false, tenantInterno);
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(2);
+      });
     });
   });
 });
