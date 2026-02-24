@@ -9,6 +9,7 @@ import {
 import { ClientesService } from './clientes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 
 describe('ClientesService', () => {
   let service: ClientesService;
@@ -65,6 +66,7 @@ describe('ClientesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientesService,
+        StructuredLoggerService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: EmailService, useValue: mockEmailService },
       ],

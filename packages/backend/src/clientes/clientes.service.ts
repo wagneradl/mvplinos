@@ -14,6 +14,7 @@ import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { Prisma } from '@prisma/client';
 import { debugLog } from '../common/utils/debug-log';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 
 export interface TenantContext {
   userId: number;
@@ -27,6 +28,7 @@ export class ClientesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly structuredLogger: StructuredLoggerService,
   ) {}
 
   async create(createClienteDto: CreateClienteDto) {
@@ -384,6 +386,9 @@ export class ClientesService {
     }
 
     this.logger.log(`Cliente aprovado: id=${id}, razao_social=${cliente.razao_social}`);
+    this.structuredLogger.logWithContext('log', 'Cliente aprovado', 'ClientesService', {
+      clienteId: id,
+    });
     return { message: 'Cliente aprovado com sucesso' };
   }
 

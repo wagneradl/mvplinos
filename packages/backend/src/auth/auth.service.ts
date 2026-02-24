@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../email/email.service';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { LoginDto } from './dto/auth.dto';
@@ -25,6 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private structuredLogger: StructuredLoggerService,
   ) {
     this.refreshTokenExpirationHours = this.configService.get<number>(
       'REFRESH_TOKEN_EXPIRATION_HOURS',
@@ -111,6 +113,11 @@ export class AuthService {
       `Novo auto-cadastro: clienteId=${resultado.cliente.id}, cnpj=${dto.cnpj}, email=${dto.email_responsavel}`,
     );
 
+    this.structuredLogger.logWithContext('log', 'Novo registro de cliente', 'AuthService', {
+      clienteId: resultado.cliente.id,
+      email: dto.email_responsavel,
+    });
+
     return {
       message: 'Cadastro recebido com sucesso. Aguarde aprovação.',
       clienteId: resultado.cliente.id,
@@ -130,11 +137,19 @@ export class AuthService {
     });
 
     if (!usuario || usuario.status.toLowerCase() !== 'ativo') {
+      this.structuredLogger.logWithContext('warn', 'Login falhou', 'AuthService', {
+        email: loginDto.email,
+        motivo: !usuario ? 'usuario_nao_encontrado' : 'usuario_inativo',
+      });
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
     if (!senhaValida) {
+      this.structuredLogger.logWithContext('warn', 'Login falhou', 'AuthService', {
+        email: loginDto.email,
+        motivo: 'senha_invalida',
+      });
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
@@ -205,6 +220,12 @@ export class AuthService {
       },
       permissoes,
     };
+
+    this.structuredLogger.logWithContext('log', 'Login bem-sucedido', 'AuthService', {
+      userId: usuario.id,
+      papel: usuario.papel.tipo,
+      clienteId: usuario.cliente_id || undefined,
+    });
 
     return {
       access_token: this.jwtService.sign(payload),

@@ -15,6 +15,7 @@ import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { format } from 'date-fns';
 import { debugLog } from '../common/utils/debug-log';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 
 export interface TenantContext {
   userId: number;
@@ -28,6 +29,7 @@ export class PedidosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pdfService: PdfService,
+    private readonly structuredLogger: StructuredLoggerService,
   ) {}
 
   // Função auxiliar para depurar problemas de data
@@ -164,6 +166,12 @@ export class PedidosService {
             },
           },
         });
+      });
+
+      this.structuredLogger.logWithContext('log', 'Pedido criado', 'PedidosService', {
+        pedidoId: pedido.id,
+        clienteId: pedido.cliente_id,
+        userId: tenant?.userId,
       });
 
       // ETAPA 2: Gerar o PDF separadamente (fora da transação)
@@ -448,6 +456,13 @@ export class PedidosService {
     }
 
     // 3. Persistir
+    this.structuredLogger.logWithContext('log', 'Transição de status', 'PedidosService', {
+      pedidoId: id,
+      de: pedido.status,
+      para: novoStatus,
+      userId: tenant?.userId,
+    });
+
     return this.prisma.pedido.update({
       where: { id },
       data: { status: novoStatus },

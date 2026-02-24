@@ -6,6 +6,7 @@ import { mkdirSync, existsSync, copyFileSync, readFileSync, writeFileSync } from
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SupabaseService } from '../supabase/supabase.service';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 import { debugLog } from '../common/utils/debug-log';
 
 // Tipagem para retorno de PDF
@@ -25,7 +26,10 @@ export class PdfService implements OnModuleInit {
     return process.env.PDF_MOCK === 'true';
   }
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly structuredLogger: StructuredLoggerService,
+  ) {
     // Configuração para ambiente de produção (Render) ou desenvolvimento
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -112,6 +116,7 @@ export class PdfService implements OnModuleInit {
    */
   async generatePedidoPdf(pedidoData: any): Promise<PdfResult | string> {
     let browser;
+    const startTime = Date.now();
     try {
       debugLog('PdfService', `Iniciando geração de PDF para pedido ${pedidoData.id}`);
 
@@ -235,6 +240,10 @@ export class PdfService implements OnModuleInit {
           debugLog('PdfService', `PDF enviado para o Supabase: ${pdfUrl}`);
 
           // Retornar caminho e URL
+          this.structuredLogger.logWithContext('log', 'PDF gerado', 'PdfService', {
+            pedidoId: pedidoData.id,
+            durationMs: Date.now() - startTime,
+          });
           return {
             path: supabasePath,
             url: pdfUrl,
@@ -312,6 +321,10 @@ export class PdfService implements OnModuleInit {
           );
 
           // Retornar caminho relativo (comportamento original)
+          this.structuredLogger.logWithContext('log', 'PDF gerado', 'PdfService', {
+            pedidoId: pedidoData.id,
+            durationMs: Date.now() - startTime,
+          });
           return pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
         } catch (error) {
           this.logger.error(
@@ -323,6 +336,12 @@ export class PdfService implements OnModuleInit {
         }
       }
     } catch (error) {
+      this.structuredLogger.logWithContext('error', 'PDF falhou', 'PdfService', {
+        pedidoId: pedidoData?.id,
+        error: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - startTime,
+      });
+
       this.logger.error(
         `Erro ao gerar PDF para pedido ${pedidoData?.id}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         error instanceof Error ? error.stack : undefined,

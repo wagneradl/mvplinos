@@ -13,9 +13,13 @@ import { EmailModule } from './email/email.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ThrottleExceptionFilter } from './common/filters/throttle-exception.filter';
+import { SentryModule } from './common/sentry/sentry.module';
+import { SentryExceptionFilter } from './common/sentry/sentry-exception.filter';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -37,6 +41,7 @@ import { ThrottleExceptionFilter } from './common/filters/throttle-exception.fil
         ],
       }),
     }),
+    LoggerModule,
     PrismaModule,
     ProdutosModule,
     ClientesModule,
@@ -55,6 +60,10 @@ import { ThrottleExceptionFilter } from './common/filters/throttle-exception.fil
     {
       provide: APP_FILTER,
       useClass: ThrottleExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SentryExceptionFilter,
     },
   ],
 })

@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import express from 'express';
 import { AppModule } from './app.module';
+import { StructuredLoggerService } from './common/logger/structured-logger.service';
 import { debugLog } from './common/utils/debug-log';
 
 async function bootstrap() {
@@ -84,6 +85,11 @@ async function bootstrap() {
     );
   } else {
     debugLog('Bootstrap', 'Swagger desabilitado em ambiente de produção por motivos de segurança');
+  }
+
+  // Structured logging em produção
+  if (process.env.NODE_ENV === 'production') {
+    app.useLogger(app.get(StructuredLoggerService));
   }
 
   const port = process.env.PORT || 3001;

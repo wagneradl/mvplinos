@@ -7,6 +7,7 @@ import {
 import { PedidosService } from './pedidos.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 import { PedidoStatus } from './dto/update-pedido.dto';
 
 /**
@@ -69,6 +70,7 @@ describe('Pedidos — Transição de Status por Papel', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PedidosService,
+        StructuredLoggerService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PdfService, useValue: mockPdfService },
       ],

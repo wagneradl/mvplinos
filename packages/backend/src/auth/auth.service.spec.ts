@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { StructuredLoggerService } from '../common/logger/structured-logger.service';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -109,6 +110,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        StructuredLoggerService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
