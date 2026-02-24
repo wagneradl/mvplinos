@@ -12,7 +12,9 @@ function hasThrottleGroup(target: Function, group: string): boolean {
 
 function hasSkipThrottle(target: Function | object): boolean {
   const keys = Reflect.getMetadataKeys(target);
-  return keys.includes(THROTTLER_SKIP + 'default');
+  // Aceita tanto @SkipThrottle() (seta 'default') quanto
+  // @SkipThrottle({ login: true, reset: true }) (seta throttlers nomeados)
+  return keys.some((k) => typeof k === 'string' && k.startsWith(THROTTLER_SKIP));
 }
 
 describe('AuthController — Throttle decorators', () => {

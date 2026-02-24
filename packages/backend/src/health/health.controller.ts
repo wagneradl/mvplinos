@@ -3,7 +3,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @Controller('health')
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
