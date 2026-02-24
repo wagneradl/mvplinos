@@ -39,6 +39,21 @@ services:
         value: "true"
       - key: CORS_ORIGINS
         value: "https://linos-frontend-6wef.onrender.com,https://linos-frontend.onrender.com,https://sistema.linospanificadora.com,http://localhost:3000,http://localhost:10000,https://linos-backend.onrender.com"
+      # Email
+      - key: EMAIL_MOCK
+        value: "true"
+      - key: EMAIL_FROM
+        value: "Lino's Panificadora <noreply@resend.dev>"
+      - key: FRONTEND_URL
+        value: "https://linos-frontend.onrender.com"
+      # PDF
+      - key: PDF_MOCK
+        value: "true"
+      # Admin seed (credenciais para criação do admin no primeiro deploy)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
       - fromGroup: linos-secrets
     disk:
       name: data
@@ -89,4 +104,6 @@ envVarGroups:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SENTRY_DSN
+        sync: false
+      - key: RESEND_API_KEY
         sync: false

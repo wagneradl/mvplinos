@@ -29,7 +29,8 @@ interface ItemPedido {
 }
 
 async function getPedidoData(id: string) {
-  const response = await fetch(`http://localhost:3001/pedidos/${id}`, {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://linos-backend.onrender.com';
+  const response = await fetch(`${apiUrl}/pedidos/${id}`, {
     next: { revalidate: 0 }, // Não cachear
   });
   return response.json();
