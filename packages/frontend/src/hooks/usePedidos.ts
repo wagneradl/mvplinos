@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PedidosService } from '@/services/pedidos.service';
+import { PedidosService, DashboardResponse } from '@/services/pedidos.service';
 import { Pedido } from '@/types/pedido';
 import { useSnackbar } from 'notistack';
 import { loggers } from '@/utils/logger';
@@ -198,6 +198,14 @@ export function usePedidos(params?: PedidosParams) {
 
   logger.debug('usePedidos retornando:', returnValue);
   return returnValue;
+}
+
+export function useDashboard() {
+  return useQuery<DashboardResponse, Error>({
+    queryKey: ['dashboard'],
+    queryFn: () => PedidosService.getDashboard(),
+    staleTime: 30_000, // 30s — dados razoavelmente frescos
+  });
 }
 
 export function usePedido(id: number) {

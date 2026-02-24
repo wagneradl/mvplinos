@@ -14,6 +14,27 @@ interface PaginatedResponse<T> {
   };
 }
 
+export interface DashboardResponse {
+  resumo: {
+    totalPedidos: number;
+    pedidosMes: number;
+    valorTotalMes: number;
+    pedidosPendentes: number;
+  };
+  porStatus: {
+    status: string;
+    quantidade: number;
+    percentual: number;
+  }[];
+  pedidosRecentes: {
+    id: number;
+    dataPedido: string;
+    status: string;
+    valorTotal: number;
+    quantidadeItens: number;
+  }[];
+}
+
 export interface ReportData {
   data: {
     date: string;
@@ -158,6 +179,11 @@ export const PedidosService = {
       ...(filtros.cliente_id && { cliente_id: filtros.cliente_id.toString() }),
     });
     const response = await api.get<ReportData>(`/pedidos/reports/summary?${params}`);
+    return response.data;
+  },
+
+  async getDashboard(): Promise<DashboardResponse> {
+    const response = await api.get<DashboardResponse>('/pedidos/dashboard');
     return response.data;
   },
 

@@ -21,6 +21,7 @@ import {
   Dashboard as DashboardIcon,
   MenuBook as CatalogoIcon,
   ShoppingCart as PedidosIcon,
+  Assessment as RelatoriosIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +30,7 @@ const portalMenuItems = [
   { text: 'Dashboard', href: '/portal/dashboard', icon: DashboardIcon },
   { text: 'Catálogo', href: '/portal/catalogo', icon: CatalogoIcon },
   { text: 'Meus Pedidos', href: '/portal/pedidos', icon: PedidosIcon },
+  { text: 'Relatórios', href: '/portal/relatorios', icon: RelatoriosIcon },
 ];
 
 /**
