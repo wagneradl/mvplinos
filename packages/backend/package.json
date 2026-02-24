@@ -38,7 +38,7 @@
     "cloud:setup-static": "node ../../scripts/cloud/setup-static.js",
     "cloud:full-setup": "node ../../scripts/cloud/full-setup.js",
     "deploy:clean": "prisma migrate deploy && node dist/scripts/seed.js",
-    "postinstall": "node scripts/copy-logo.js && npx puppeteer browsers install chrome"
+    "postinstall": "node scripts/copy-logo.js && node scripts/maybe-install-puppeteer.js"
   },
   "prisma": {
     "seed": "node dist/scripts/seed.js"
