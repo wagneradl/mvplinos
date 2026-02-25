@@ -136,12 +136,12 @@ describe('Pedidos — Transição de Status por Papel', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('CLIENTE NÃO pode fazer PRONTO → ENTREGUE', async () => {
-      setupPedido(PedidoStatus.PRONTO);
+    it('CLIENTE pode fazer PRONTO → ENTREGUE (confirmar recebimento)', async () => {
+      setupPedidoAndUpdate(PedidoStatus.PRONTO, PedidoStatus.ENTREGUE);
 
-      await expect(
-        service.atualizarStatus(1, PedidoStatus.ENTREGUE, tenantCliente),
-      ).rejects.toThrow(ForbiddenException);
+      const result = await service.atualizarStatus(1, PedidoStatus.ENTREGUE, tenantCliente);
+
+      expect(result.status).toBe(PedidoStatus.ENTREGUE);
     });
   });
 

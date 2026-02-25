@@ -59,6 +59,7 @@ export const TRANSICOES_POR_TIPO: Record<string, Record<string, string[]>> = {
   CLIENTE: {
     RASCUNHO: ['PENDENTE', 'CANCELADO'],
     PENDENTE: ['CANCELADO'],
+    PRONTO: ['ENTREGUE'],
   },
   INTERNO: {
     PENDENTE: ['CONFIRMADO', 'CANCELADO'],

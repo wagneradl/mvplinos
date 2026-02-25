@@ -95,6 +95,7 @@ const PAPEIS_CONFIG = [
     nivel: 30,
     permissoes: {
       usuarios: ['listar', 'ver', 'criar', 'editar', 'desativar', 'resetar_senha'],
+      papeis: ['listar'],
       clientes: ['listar', 'ver'],
       produtos: ['listar', 'ver'],
       pedidos: ['listar', 'ver', 'criar', 'editar', 'cancelar', 'exportar'],

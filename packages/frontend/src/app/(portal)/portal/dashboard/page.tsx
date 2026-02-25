@@ -187,7 +187,7 @@ export default function PortalDashboardPage() {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KpiCard
-            label="Pendentes"
+            label="Não Confirmados"
             value={resumo.pedidosPendentes}
             icon={<HourglassEmptyIcon fontSize="large" />}
             color="#ed6c02"

@@ -5,11 +5,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Divider,
   Paper,
   Stack,
@@ -19,12 +14,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  IconButton,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
   FileDownload as PdfIcon,
-  Cancel as CancelIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -36,10 +34,10 @@ import { PageContainer } from '@/components/PageContainer';
 import { StatusChip } from '@/components/StatusChip';
 import { StatusTimeline } from '@/components/StatusTimeline';
 import { ErrorState } from '@/components/ErrorState';
+import { TransitionButtons } from '@/components/TransitionButtons';
 import { PedidosService } from '@/services/pedidos.service';
-
-/** Statuses that a CLIENTE can cancel */
-const CANCELABLE_STATUSES = ['RASCUNHO', 'PENDENTE'];
+import { podeEditarPedido } from '@/constants/status-pedido';
+import { useAuth } from '@/contexts/AuthContext';
 
 function formatDate(dateStr: string): string {
   try {
@@ -61,27 +59,59 @@ export default function PortalPedidoDetalhePage() {
   const { pedido, isLoading, error, refetch } = usePedido(pedidoId);
   const { downloadPdf } = usePedidos({ disableNotifications: true });
   const { enqueueSnackbar } = useSnackbar();
+  const { usuario } = useAuth();
+  const papelTipo = usuario?.papel?.tipo || 'CLIENTE';
 
-  const [cancelDialog, setCancelDialog] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const canCancel = pedido && CANCELABLE_STATUSES.includes(pedido.status);
+  // Inline quantity editing state
+  const [editQuantidades, setEditQuantidades] = useState<Record<number, number>>({});
+  const [savingItemId, setSavingItemId] = useState<number | null>(null);
 
-  // Cancel handler
-  const handleConfirmCancel = async () => {
-    if (!pedido) return;
-    setIsCancelling(true);
+  const editavel = podeEditarPedido(pedido?.status || '');
+
+  const handleSaveItem = async (itemId: number) => {
+    const novaQuantidade = editQuantidades[itemId];
+    if (novaQuantidade == null || novaQuantidade <= 0) {
+      enqueueSnackbar('Quantidade deve ser maior que zero', { variant: 'warning' });
+      return;
+    }
+    setSavingItemId(itemId);
     try {
-      await PedidosService.atualizarStatus(pedido.id, 'CANCELADO');
-      enqueueSnackbar('Pedido cancelado com sucesso', { variant: 'success' });
-      setCancelDialog(false);
+      await PedidosService.atualizarQuantidadeItem(pedidoId, itemId, novaQuantidade);
+      enqueueSnackbar('Quantidade atualizada com sucesso', { variant: 'success' });
+      setEditQuantidades((prev) => {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      });
       await refetch();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Erro ao cancelar pedido';
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || 'Erro ao atualizar quantidade. O pedido pode ter mudado de status.';
       enqueueSnackbar(msg, { variant: 'error' });
     } finally {
-      setIsCancelling(false);
+      setSavingItemId(null);
+    }
+  };
+
+  const handleTransition = async (novoStatus: string) => {
+    setIsTransitioning(true);
+    try {
+      await PedidosService.atualizarStatus(pedidoId, novoStatus);
+      enqueueSnackbar(
+        novoStatus === 'ENTREGUE'
+          ? 'Recebimento confirmado com sucesso!'
+          : novoStatus === 'PENDENTE'
+          ? 'Pedido enviado com sucesso!'
+          : `Status atualizado para ${novoStatus}`,
+        { variant: 'success' }
+      );
+      await refetch();
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || 'Erro ao atualizar status';
+      enqueueSnackbar(msg, { variant: 'error' });
+    } finally {
+      setIsTransitioning(false);
     }
   };
 
@@ -167,10 +197,23 @@ export default function PortalPedidoDetalhePage() {
           <StatusTimeline statusAtual={pedido.status} />
         </Paper>
 
+        {/* Transition Buttons */}
+        <TransitionButtons
+          statusAtual={pedido.status}
+          papelTipo={papelTipo}
+          onTransition={handleTransition}
+          loading={isTransitioning}
+        />
+
         {/* Items table */}
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             Itens do Pedido
+            {editavel && (
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                (editável)
+              </Typography>
+            )}
           </Typography>
 
           <TableContainer>
@@ -187,6 +230,7 @@ export default function PortalPedidoDetalhePage() {
                   <TableCell sx={{ fontWeight: 700 }} align="right">
                     Subtotal
                   </TableCell>
+                  {editavel && <TableCell sx={{ fontWeight: 700, width: 60 }} />}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -196,16 +240,34 @@ export default function PortalPedidoDetalhePage() {
                       {item.produto?.nome || `Produto #${item.produto_id}`}
                     </TableCell>
                     <TableCell align="right">
-                      {item.quantidade}
-                      {item.produto?.tipo_medida && (
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 0.5 }}
-                        >
-                          {item.produto.tipo_medida}
-                        </Typography>
+                      {editavel ? (
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={editQuantidades[item.id] ?? item.quantidade}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val >= 0) {
+                              setEditQuantidades((prev) => ({ ...prev, [item.id]: val }));
+                            }
+                          }}
+                          inputProps={{ min: 0.01, step: 'any', style: { textAlign: 'right', width: 80 } }}
+                          disabled={savingItemId === item.id}
+                        />
+                      ) : (
+                        <>
+                          {item.quantidade}
+                          {item.produto?.tipo_medida && (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ ml: 0.5 }}
+                            >
+                              {item.produto.tipo_medida}
+                            </Typography>
+                          )}
+                        </>
                       )}
                     </TableCell>
                     <TableCell align="right">
@@ -214,12 +276,28 @@ export default function PortalPedidoDetalhePage() {
                     <TableCell align="right">
                       {formatCurrency(item.valor_total_item)}
                     </TableCell>
+                    {editavel && (
+                      <TableCell align="center">
+                        <Tooltip title="Salvar quantidade">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleSaveItem(item.id)}
+                              disabled={savingItemId === item.id || editQuantidades[item.id] === undefined || editQuantidades[item.id] === item.quantidade}
+                            >
+                              {savingItemId === item.id ? <CircularProgress size={20} /> : <SaveIcon fontSize="small" />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
 
                 {/* Total row */}
                 <TableRow>
-                  <TableCell colSpan={3} align="right" sx={{ borderBottom: 'none' }}>
+                  <TableCell colSpan={editavel ? 4 : 3} align="right" sx={{ borderBottom: 'none' }}>
                     <Typography variant="subtitle1" fontWeight={700}>
                       Total:
                     </Typography>
@@ -261,46 +339,8 @@ export default function PortalPedidoDetalhePage() {
           >
             {isDownloading ? 'Gerando...' : 'Baixar PDF'}
           </Button>
-
-          {canCancel && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<CancelIcon />}
-              onClick={() => setCancelDialog(true)}
-              sx={{ textTransform: 'none' }}
-            >
-              Cancelar Pedido
-            </Button>
-          )}
         </Box>
       </Stack>
-
-      {/* Cancel confirmation dialog */}
-      <Dialog open={cancelDialog} onClose={() => setCancelDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Cancelar Pedido</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Tem certeza que deseja cancelar o pedido{' '}
-            <strong>#{pedido.id}</strong>?
-            <br />
-            Esta acao nao pode ser desfeita.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelDialog(false)} disabled={isCancelling}>
-            Voltar
-          </Button>
-          <Button
-            onClick={handleConfirmCancel}
-            color="error"
-            variant="contained"
-            disabled={isCancelling}
-          >
-            {isCancelling ? 'Cancelando...' : 'Confirmar Cancelamento'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </PageContainer>
   );
 }

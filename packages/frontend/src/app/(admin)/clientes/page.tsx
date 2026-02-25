@@ -31,7 +31,6 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Edit as EditIcon,
   Block as BlockIcon,
   Search as SearchIcon,
@@ -251,11 +250,7 @@ export default function ClientesPage() {
   return (
     <PageContainer
       title="Clientes"
-      actions={
-        <Button component={Link} href="/clientes/novo" variant="contained" startIcon={<AddIcon />}>
-          Novo Cliente
-        </Button>
-      }
+      actions={undefined}
     >
       {/* Banner de clientes pendentes */}
       {mostrarBannerPendentes && (
@@ -323,7 +318,7 @@ export default function ClientesPage() {
         {clientes.length === 0 ? (
           <EmptyState
             title="Nenhum cliente encontrado"
-            message="Não há clientes registrados com os filtros atuais. Você pode adicionar um novo cliente usando o botão 'Novo Cliente'."
+            message="Não há clientes registrados com os filtros atuais."
             icon={<PeopleIcon fontSize="large" />}
             sx={{ py: 6 }}
           />
@@ -350,7 +345,13 @@ export default function ClientesPage() {
                     sx={isPendente ? { bgcolor: 'warning.light', '& td': { bgcolor: 'transparent' } } : undefined}
                   >
                     <TableCell>{formatCNPJ(cliente.cnpj)}</TableCell>
-                    <TableCell>{cliente.razao_social}</TableCell>
+                    <TableCell>
+                      <Link href={`/clientes/${cliente.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Typography fontWeight={500} sx={{ '&:hover': { color: 'primary.main' } }}>
+                          {cliente.razao_social}
+                        </Typography>
+                      </Link>
+                    </TableCell>
                     <TableCell>{cliente.nome_fantasia}</TableCell>
                     <TableCell>
                       <Box>
