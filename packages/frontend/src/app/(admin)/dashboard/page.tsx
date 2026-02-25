@@ -4,7 +4,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography, CircularProgress, Button, Alert } from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Button, Alert, Chip } from '@mui/material';
 import {
   ShoppingCart as PedidosIcon,
   Inventory as ProdutosIcon,
