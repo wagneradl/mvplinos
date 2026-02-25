@@ -82,14 +82,14 @@ export class UsuariosService {
       // Forçar cliente_id do caller (ignorar valor do body)
       createUsuarioDto.cliente_id = callerContext.clienteId;
 
-      // Verificar que o papel destino é CLIENTE e nível menor que o caller
+      // Verificar que o papel destino é CLIENTE e nível igual ou menor que o caller
       const papelDestino = await this.prisma.papel.findUnique({
         where: { id: createUsuarioDto.papel_id },
       });
       if (!papelDestino) {
         throw new NotFoundException(`Papel com ID ${createUsuarioDto.papel_id} não encontrado`);
       }
-      if (papelDestino.tipo !== 'CLIENTE' || papelDestino.nivel >= callerContext.papelNivel) {
+      if (papelDestino.tipo !== 'CLIENTE' || papelDestino.nivel > callerContext.papelNivel) {
         throw new ForbiddenException('Sem permissão para criar usuários com este papel');
       }
     }
@@ -199,7 +199,7 @@ export class UsuariosService {
         throw new ForbiddenException('Acesso negado a este usuário');
       }
 
-      // Se tentar mudar o papel, validar que o novo papel é CLIENTE e nível menor
+      // Se tentar mudar o papel, validar que o novo papel é CLIENTE e nível igual ou menor
       if (updateUsuarioDto.papel_id) {
         const novoPapel = await this.prisma.papel.findUnique({
           where: { id: updateUsuarioDto.papel_id },
@@ -207,7 +207,7 @@ export class UsuariosService {
         if (!novoPapel) {
           throw new NotFoundException(`Papel com ID ${updateUsuarioDto.papel_id} não encontrado`);
         }
-        if (novoPapel.tipo !== 'CLIENTE' || novoPapel.nivel >= callerContext.papelNivel) {
+        if (novoPapel.tipo !== 'CLIENTE' || novoPapel.nivel > callerContext.papelNivel) {
           throw new ForbiddenException('Sem permissão para atribuir este papel');
         }
       }

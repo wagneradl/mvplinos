@@ -271,7 +271,7 @@ export default function PortalUsuariosPage() {
   // Filtrar: papéis disponíveis para criação (nível menor que o do admin logado)
   const papeisDisponiveis = useMemo(() => {
     const callerNivel = currentUser?.papel?.nivel ?? 0;
-    return papeis.filter((p) => p.tipo === 'CLIENTE' && p.nivel < callerNivel);
+    return papeis.filter((p) => p.tipo === 'CLIENTE' && p.nivel <= callerNivel);
   }, [papeis, currentUser]);
 
   // Redirecionar se não for admin

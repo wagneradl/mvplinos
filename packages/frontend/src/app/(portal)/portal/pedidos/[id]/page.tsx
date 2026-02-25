@@ -14,15 +14,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
-  IconButton,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
   FileDownload as PdfIcon,
-  Save as SaveIcon,
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -36,7 +32,6 @@ import { StatusTimeline } from '@/components/StatusTimeline';
 import { ErrorState } from '@/components/ErrorState';
 import { TransitionButtons } from '@/components/TransitionButtons';
 import { PedidosService } from '@/services/pedidos.service';
-import { podeEditarPedido } from '@/constants/status-pedido';
 import { useAuth } from '@/contexts/AuthContext';
 
 function formatDate(dateStr: string): string {
@@ -65,35 +60,6 @@ export default function PortalPedidoDetalhePage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Inline quantity editing state
-  const [editQuantidades, setEditQuantidades] = useState<Record<number, number>>({});
-  const [savingItemId, setSavingItemId] = useState<number | null>(null);
-
-  const editavel = podeEditarPedido(pedido?.status || '');
-
-  const handleSaveItem = async (itemId: number) => {
-    const novaQuantidade = editQuantidades[itemId];
-    if (novaQuantidade == null || novaQuantidade <= 0) {
-      enqueueSnackbar('Quantidade deve ser maior que zero', { variant: 'warning' });
-      return;
-    }
-    setSavingItemId(itemId);
-    try {
-      await PedidosService.atualizarQuantidadeItem(pedidoId, itemId, novaQuantidade);
-      enqueueSnackbar('Quantidade atualizada com sucesso', { variant: 'success' });
-      setEditQuantidades((prev) => {
-        const { [itemId]: _, ...rest } = prev;
-        return rest;
-      });
-      await refetch();
-    } catch (error: any) {
-      const msg = error?.response?.data?.message || 'Erro ao atualizar quantidade. O pedido pode ter mudado de status.';
-      enqueueSnackbar(msg, { variant: 'error' });
-    } finally {
-      setSavingItemId(null);
-    }
-  };
-
   const handleTransition = async (novoStatus: string) => {
     setIsTransitioning(true);
     try {
@@ -103,13 +69,23 @@ export default function PortalPedidoDetalhePage() {
           ? 'Recebimento confirmado com sucesso!'
           : novoStatus === 'PENDENTE'
           ? 'Pedido enviado com sucesso!'
-          : `Status atualizado para ${novoStatus}`,
+          : `Status atualizado`,
         { variant: 'success' }
       );
       await refetch();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || 'Erro ao atualizar status';
+      const backendMsg = error?.response?.data?.message || '';
+      let msg: string;
+
+      if (backendMsg.includes('Transição inválida') || backendMsg.includes('não pode fazer transição')) {
+        msg = 'Este pedido já mudou de status e não pode mais ser alterado. Atualize a página para ver o status atual.';
+      } else {
+        msg = backendMsg || 'Erro ao atualizar status do pedido.';
+      }
+
       enqueueSnackbar(msg, { variant: 'error' });
+      // Refetch para atualizar a UI com o status real
+      await refetch();
     } finally {
       setIsTransitioning(false);
     }
@@ -209,11 +185,6 @@ export default function PortalPedidoDetalhePage() {
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             Itens do Pedido
-            {editavel && (
-              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                (editável)
-              </Typography>
-            )}
           </Typography>
 
           <TableContainer>
@@ -230,7 +201,6 @@ export default function PortalPedidoDetalhePage() {
                   <TableCell sx={{ fontWeight: 700 }} align="right">
                     Subtotal
                   </TableCell>
-                  {editavel && <TableCell sx={{ fontWeight: 700, width: 60 }} />}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -240,34 +210,16 @@ export default function PortalPedidoDetalhePage() {
                       {item.produto?.nome || `Produto #${item.produto_id}`}
                     </TableCell>
                     <TableCell align="right">
-                      {editavel ? (
-                        <TextField
-                          type="number"
-                          size="small"
-                          value={editQuantidades[item.id] ?? item.quantidade}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            if (!isNaN(val) && val >= 0) {
-                              setEditQuantidades((prev) => ({ ...prev, [item.id]: val }));
-                            }
-                          }}
-                          inputProps={{ min: 0.01, step: 'any', style: { textAlign: 'right', width: 80 } }}
-                          disabled={savingItemId === item.id}
-                        />
-                      ) : (
-                        <>
-                          {item.quantidade}
-                          {item.produto?.tipo_medida && (
-                            <Typography
-                              component="span"
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ ml: 0.5 }}
-                            >
-                              {item.produto.tipo_medida}
-                            </Typography>
-                          )}
-                        </>
+                      {item.quantidade}
+                      {item.produto?.tipo_medida && (
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 0.5 }}
+                        >
+                          {item.produto.tipo_medida}
+                        </Typography>
                       )}
                     </TableCell>
                     <TableCell align="right">
@@ -276,28 +228,12 @@ export default function PortalPedidoDetalhePage() {
                     <TableCell align="right">
                       {formatCurrency(item.valor_total_item)}
                     </TableCell>
-                    {editavel && (
-                      <TableCell align="center">
-                        <Tooltip title="Salvar quantidade">
-                          <span>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleSaveItem(item.id)}
-                              disabled={savingItemId === item.id || editQuantidades[item.id] === undefined || editQuantidades[item.id] === item.quantidade}
-                            >
-                              {savingItemId === item.id ? <CircularProgress size={20} /> : <SaveIcon fontSize="small" />}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </TableCell>
-                    )}
                   </TableRow>
                 ))}
 
                 {/* Total row */}
                 <TableRow>
-                  <TableCell colSpan={editavel ? 4 : 3} align="right" sx={{ borderBottom: 'none' }}>
+                  <TableCell colSpan={3} align="right" sx={{ borderBottom: 'none' }}>
                     <Typography variant="subtitle1" fontWeight={700}>
                       Total:
                     </Typography>

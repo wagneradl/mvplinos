@@ -805,20 +805,37 @@ describe('UsuariosService', () => {
       expect(createDto.cliente_id).toBe(1);
     });
 
-    it('CLIENTE_ADMIN tenta criar CLIENTE_ADMIN → ForbiddenException (mesmo nível)', async () => {
+    it('CLIENTE_ADMIN cria outro CLIENTE_ADMIN → sucesso (mesmo nível permitido)', async () => {
       const createDto = {
         nome: 'Outro Admin',
         email: 'admin2@padaria.com',
         senha: 'senha123',
         papel_id: 3, // CLIENTE_ADMIN (nível 30 = nível do caller)
+        cliente_id: 999, // será sobrescrito pelo callerContext
       };
 
-      mockPrismaService.papel.findUnique.mockResolvedValue(mockPapelClienteAdmin);
+      mockPrismaService.papel.findUnique
+        .mockResolvedValueOnce(mockPapelClienteAdmin) // check papel destino
+        .mockResolvedValueOnce(mockPapelClienteAdmin); // create pipeline
+      mockPrismaService.usuario.findUnique.mockResolvedValue(null); // email não existe
+      mockPrismaService.cliente.findUnique.mockResolvedValue(mockCliente); // cliente válido
+      mockPrismaService.usuario.create.mockResolvedValue({
+        id: 21,
+        ...createDto,
+        cliente_id: 1,
+        senha: '$2a$10$hashsenha',
+        status: 'ativo',
+        papel: mockPapelClienteAdmin,
+        cliente: mockCliente,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      });
 
-      await expect(service.create(createDto, callerContext)).rejects.toThrow(ForbiddenException);
-      await expect(service.create(createDto, callerContext)).rejects.toThrow(
-        'Sem permissão para criar usuários com este papel',
-      );
+      const result = await service.create(createDto, callerContext);
+
+      expect(result.id).toBe(21);
+      expect(createDto.cliente_id).toBe(1);
     });
 
     it('CLIENTE_ADMIN tenta criar papel INTERNO → ForbiddenException', async () => {
