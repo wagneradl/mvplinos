@@ -84,7 +84,7 @@ export default function CatalogoPage() {
   const debouncedSearch = useDebounce(searchInput, 400);
 
   // Buscar todos os produtos ativos (limite alto para catálogo)
-  const { produtos, isLoading, meta } = useProdutos(1, 200, 'ativo', debouncedSearch);
+  const { produtos, isLoading, meta } = useProdutos(1, 100, 'ativo', debouncedSearch);
 
   // Ordenar client-side
   const produtosOrdenados = useMemo(() => {

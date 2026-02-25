@@ -14,11 +14,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   FileDownload as FileDownloadIcon,
   ContentCopy as ContentCopyIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -33,7 +37,7 @@ import { StatusChip } from '@/components/StatusChip';
 import { TransitionButtons } from '@/components/TransitionButtons';
 import { StatusTimeline } from '@/components/StatusTimeline';
 import { PedidosService } from '@/services/pedidos.service';
-import { STATUS_CONFIG } from '@/constants/status-pedido';
+import { STATUS_CONFIG, podeEditarPedido } from '@/constants/status-pedido';
 import { loggers } from '@/utils/logger';
 
 const logger = loggers.pedidos;
@@ -48,6 +52,10 @@ export default function PedidoDetalhesPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { usuario } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Estado local para edição inline de quantidades
+  const [editQuantidades, setEditQuantidades] = useState<Record<number, number>>({});
+  const [savingItemId, setSavingItemId] = useState<number | null>(null);
 
   const papelTipo = usuario?.papel?.tipo || 'INTERNO';
 
@@ -111,6 +119,34 @@ export default function PedidoDetalhesPage() {
     }
   };
 
+  /** Salvar a quantidade editada de um item */
+  const handleSaveItem = async (itemId: number) => {
+    const novaQuantidade = editQuantidades[itemId];
+    if (novaQuantidade == null || novaQuantidade <= 0) {
+      enqueueSnackbar('Quantidade deve ser maior que zero', { variant: 'warning' });
+      return;
+    }
+
+    setSavingItemId(itemId);
+    try {
+      await PedidosService.atualizarQuantidadeItem(pedidoId, itemId, novaQuantidade);
+      enqueueSnackbar('Quantidade atualizada com sucesso', { variant: 'success' });
+      // Limpar estado local do item editado
+      setEditQuantidades((prev) => {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      });
+      await refetch();
+    } catch (error: any) {
+      logger.error('Erro ao atualizar quantidade:', error);
+      const msg =
+        error?.response?.data?.message || error?.message || 'Erro ao atualizar quantidade';
+      enqueueSnackbar(msg, { variant: 'error' });
+    } finally {
+      setSavingItemId(null);
+    }
+  };
+
   // Exibir estado de carregamento
   if (isLoading) {
     return (
@@ -146,6 +182,8 @@ export default function PedidoDetalhesPage() {
       </PageContainer>
     );
   }
+
+  const editavel = podeEditarPedido(pedido.status);
 
   return (
     <PageContainer title="Detalhes do Pedido">
@@ -229,6 +267,11 @@ export default function PedidoDetalhesPage() {
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Itens do Pedido
+              {editavel && (
+                <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                  (editável)
+                </Typography>
+              )}
             </Typography>
 
             <TableContainer>
@@ -239,23 +282,65 @@ export default function PedidoDetalhesPage() {
                     <TableCell align="right">Quantidade</TableCell>
                     <TableCell align="right">Preço Unitário</TableCell>
                     <TableCell align="right">Valor Total</TableCell>
+                    {editavel && <TableCell align="center" sx={{ width: 60 }} />}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {pedido?.itensPedido?.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        {item.produto?.nome || `Produto ID: ${item.produto_id}`}
-                      </TableCell>
-                      <TableCell align="right">
-                        {item.quantidade} {item.produto?.tipo_medida}
-                      </TableCell>
-                      <TableCell align="right">{formatarValor(item.preco_unitario)}</TableCell>
-                      <TableCell align="right">{formatarValor(item.valor_total_item)}</TableCell>
-                    </TableRow>
-                  ))}
+                  {pedido?.itensPedido?.map((item) => {
+                    const isEditing = editQuantidades[item.id] !== undefined;
+                    const currentQty = editQuantidades[item.id] ?? item.quantidade;
+                    const isSaving = savingItemId === item.id;
+                    const hasChanged = isEditing && editQuantidades[item.id] !== item.quantidade;
+
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          {item.produto?.nome || `Produto ID: ${item.produto_id}`}
+                        </TableCell>
+                        <TableCell align="right">
+                          {editavel ? (
+                            <TextField
+                              type="number"
+                              size="small"
+                              value={currentQty}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val >= 0) {
+                                  setEditQuantidades((prev) => ({ ...prev, [item.id]: val }));
+                                }
+                              }}
+                              inputProps={{ min: 0.01, step: 'any', style: { textAlign: 'right', width: 80 } }}
+                              disabled={isSaving}
+                            />
+                          ) : (
+                            <>
+                              {item.quantidade} {item.produto?.tipo_medida}
+                            </>
+                          )}
+                        </TableCell>
+                        <TableCell align="right">{formatarValor(item.preco_unitario)}</TableCell>
+                        <TableCell align="right">{formatarValor(item.valor_total_item)}</TableCell>
+                        {editavel && (
+                          <TableCell align="center">
+                            <Tooltip title="Salvar quantidade">
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleSaveItem(item.id)}
+                                  disabled={isSaving || !hasChanged}
+                                >
+                                  {isSaving ? <CircularProgress size={20} /> : <SaveIcon fontSize="small" />}
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
                   <TableRow>
-                    <TableCell colSpan={3} align="right">
+                    <TableCell colSpan={editavel ? 4 : 3} align="right">
                       <Typography variant="subtitle1">
                         <strong>Total:</strong>
                       </Typography>

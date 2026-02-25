@@ -187,6 +187,11 @@ export const PedidosService = {
     return response.data;
   },
 
+  /** Atualizar quantidade de um item do pedido (RASCUNHO/PENDENTE) */
+  async atualizarQuantidadeItem(pedidoId: number, itemId: number, quantidade: number): Promise<void> {
+    await api.patch(`/pedidos/${pedidoId}/itens/${itemId}`, { quantidade });
+  },
+
   async downloadRelatorioPdf(filtros: {
     data_inicio?: string;
     data_fim?: string;

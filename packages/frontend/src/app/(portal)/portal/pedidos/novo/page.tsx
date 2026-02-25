@@ -69,7 +69,7 @@ export default function NovoPedidoPage() {
   // Fetch all active products
   const { produtos, isLoading: loadingProdutos } = useProdutos(
     1,
-    200,
+    100,
     'ativo',
     debouncedSearch || undefined
   );

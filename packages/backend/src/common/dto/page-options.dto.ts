@@ -36,10 +36,10 @@ export class PageOptionsDto {
 
   @ApiPropertyOptional({
     description: 'Status do item',
-    enum: ['ativo', 'inativo'],
+    enum: ['ativo', 'inativo', 'pendente_aprovacao'],
   })
   @IsString()
-  @IsIn(['ativo', 'inativo'])
+  @IsIn(['ativo', 'inativo', 'pendente_aprovacao'])
   @IsOptional()
   status?: string;
 

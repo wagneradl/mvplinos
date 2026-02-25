@@ -3,17 +3,20 @@
 // Força renderização no lado do cliente, evitando SSG/SSR
 export const dynamic = 'force-dynamic';
 
-import { useMemo, useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography, CircularProgress, Button, Alert, Chip } from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Button, Alert, Chip, Skeleton,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress,
+} from '@mui/material';
 import {
   ShoppingCart as PedidosIcon,
   Inventory as ProdutosIcon,
   People as ClientesIcon,
   Add as AddIcon,
   TrendingUp as TrendingUpIcon,
+  Assessment as ReportsIcon,
+  Warning as PendingIcon,
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { usePedidos } from '@/hooks/usePedidos';
+import { useDashboard } from '@/hooks/usePedidos';
 import { useClientes } from '@/hooks/useClientes';
 import { useProdutos } from '@/hooks/useProdutos';
 import { formatCurrency } from '@/utils/format';
@@ -21,375 +24,315 @@ import { PageContainer } from '@/components/PageContainer';
 import { StatusChip } from '@/components/StatusChip';
 import { useAuth } from '@/contexts/AuthContext';
 
+// ── Helpers ───────────────────────────────────────────────────────────
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('pt-BR');
+}
+
+// Cores por status para a barra de progresso
+const STATUS_COLORS: Record<string, string> = {
+  RASCUNHO: '#9E9E9E',
+  PENDENTE: '#FF9800',
+  CONFIRMADO: '#2196F3',
+  EM_PRODUCAO: '#FF5722',
+  PRONTO: '#4CAF50',
+  ENTREGUE: '#1B5E20',
+  CANCELADO: '#F44336',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  RASCUNHO: 'Rascunho',
+  PENDENTE: 'Pendente',
+  CONFIRMADO: 'Confirmado',
+  EM_PRODUCAO: 'Em Produção',
+  PRONTO: 'Pronto',
+  ENTREGUE: 'Entregue',
+  CANCELADO: 'Cancelado',
+};
+
+// ── Componente ────────────────────────────────────────────────────────
+
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
-  // Hooks para buscar dados com valores padrão seguros
-  const {
-    pedidos = [],
-    isLoading: isLoadingPedidos,
-    error: pedidosError,
-  } = usePedidos({
-    page: 1,
-    limit: 5,
-    filters: {},
-  }) || { pedidos: [], isLoading: true, error: null };
+  // KPIs reais do endpoint /pedidos/dashboard
+  const { data: dashboard, isLoading: isLoadingDashboard, error: dashboardError } = useDashboard();
 
-  const {
-    clientes = [],
-    isLoading: isLoadingClientes,
-    error: clientesError,
-  } = useClientes(1, 100, 'ativo') || { clientes: [], isLoading: true, error: null };
+  // Apenas meta para totais de clientes e produtos (limit=1 para não trazer dados)
+  const { meta: clientesMeta, isLoading: isLoadingClientes } = useClientes(1, 1, 'ativo');
+  const { meta: produtosMeta, isLoading: isLoadingProdutos } = useProdutos(1, 1, 'ativo');
 
-  const {
-    produtos = [],
-    isLoading: isLoadingProdutos,
-    error: produtosError,
-  } = useProdutos(1, 100, 'ativo') || { produtos: [], isLoading: true, error: null };
+  const isLoading = isLoadingDashboard || isLoadingClientes || isLoadingProdutos;
 
-  // Atualizar o estado de carregamento global e erros
-  useEffect(() => {
-    // Não iniciar o carregamento de dados se a autenticação ainda estiver pendente
-    if (authLoading) {
-      return;
-    }
-
-    setIsLoading(isLoadingPedidos || isLoadingClientes || isLoadingProdutos);
-
-    const errors = [
-      pedidosError && 'Erro ao carregar pedidos',
-      clientesError && 'Erro ao carregar clientes',
-      produtosError && 'Erro ao carregar produtos',
-    ].filter(Boolean);
-
-    if (errors.length > 0) {
-      setError(errors.join('. '));
-    } else {
-      setError(null);
-    }
-  }, [
-    isLoadingPedidos,
-    isLoadingClientes,
-    isLoadingProdutos,
-    pedidosError,
-    clientesError,
-    produtosError,
-    authLoading,
-  ]);
-
-  // Estatísticas básicas
-  const estatisticas = useMemo(() => {
-    return {
-      totalPedidos: pedidos.length,
-      totalClientes: clientes.length,
-      totalProdutos: produtos.length,
-      valorTotalPedidos: pedidos.reduce((total, pedido) => {
-        // Checar se o campo é valor_total ou valorTotal com segurança
-        const valorPedido = pedido.valor_total || pedido.valorTotal || 0;
-        return total + valorPedido;
-      }, 0),
-    };
-  }, [pedidos, clientes, produtos]);
-
-  // Se ainda estiver carregando a autenticação, mostrar indicador de carregamento
+  // Auth guards
   if (authLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
       </Box>
     );
   }
 
-  // Se não estiver autenticado, não renderizar nada (o redirecionamento será feito pelo AuthContext)
   if (!isAuthenticated) {
     return null;
   }
 
-  // Render da página
+  // Dados extraídos
+  const resumo = dashboard?.resumo;
+  const porStatus = dashboard?.porStatus || [];
+  const pedidosRecentes = dashboard?.pedidosRecentes || [];
+  const totalClientes = clientesMeta?.total ?? 0;
+  const totalProdutos = produtosMeta?.total ?? 0;
+
   return (
     <PageContainer title="Dashboard">
-      {isLoading ? (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '50vh',
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : error ? (
+      {dashboardError ? (
         <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
+          Erro ao carregar dados do dashboard: {dashboardError.message}
         </Alert>
       ) : (
         <Box sx={{ flexGrow: 1 }}>
-          {/* Cartões de estatísticas */}
+          {/* ── KPI Cards ──────────────────────────────────────────── */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                  backgroundColor: 'primary.light',
-                  color: 'white',
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Pedidos
-                  </Typography>
-                  <PedidosIcon />
-                </Box>
-                <Typography variant="h4" component="div" sx={{ mt: 1 }}>
-                  {estatisticas.totalPedidos || 0}
-                </Typography>
-                <Box sx={{ mt: 'auto' }}>
-                  <Link href="/pedidos/novo">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      startIcon={<AddIcon />}
-                      sx={{ mt: 1 }}
-                    >
-                      Novo Pedido
-                    </Button>
-                  </Link>
-                </Box>
-              </Paper>
-            </Grid>
-
-            {/* Card de Estatísticas dos Pedidos */}
+            {/* Card 1: Total de Pedidos */}
             <Grid item xs={12} sm={6} md={3}>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  backgroundColor: '#f5f0ea',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
+                  p: 3, display: 'flex', flexDirection: 'column', height: '100%',
+                  backgroundColor: '#f5f0ea', border: '1px solid', borderColor: 'divider', borderRadius: 2,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box
-                    sx={{
-                      backgroundColor: 'primary.main',
-                      borderRadius: '50%',
-                      p: 1,
-                      display: 'flex',
-                      mr: 2,
-                    }}
-                  >
+                  <Box sx={{ backgroundColor: 'primary.main', borderRadius: '50%', p: 1, display: 'flex', mr: 2 }}>
                     <PedidosIcon sx={{ color: 'white' }} />
                   </Box>
-                  <Typography variant="h6" component="div">
-                    Pedidos Hoje
+                  <Typography variant="h6" component="div">Total de Pedidos</Typography>
+                </Box>
+                {isLoading ? <Skeleton variant="text" width={80} height={48} /> : (
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {resumo?.totalPedidos ?? 0}
                   </Typography>
-                </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {estatisticas.totalPedidos}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Valor Total: {formatCurrency(estatisticas.valorTotalPedidos)}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip
-                    size="small"
-                    icon={<TrendingUpIcon fontSize="small" />}
-                    label="Ver Relatórios"
-                    component={Link}
-                    href="/relatorios"
-                    clickable
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </Box>
+                )}
+                {!isLoading && (resumo?.pedidosPendentes ?? 0) > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <PendingIcon fontSize="small" color="warning" />
+                    <Typography variant="body2" color="warning.main">
+                      {resumo?.pedidosPendentes} pendente{(resumo?.pedidosPendentes ?? 0) !== 1 ? 's' : ''}
+                    </Typography>
+                  </Box>
+                )}
               </Paper>
             </Grid>
 
-            {/* Card de Clientes */}
+            {/* Card 2: Pedidos este Mês */}
             <Grid item xs={12} sm={6} md={3}>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
+                  p: 3, display: 'flex', flexDirection: 'column', height: '100%',
+                  border: '1px solid', borderColor: 'divider', borderRadius: 2,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box
-                    sx={{
-                      backgroundColor: 'info.main',
-                      borderRadius: '50%',
-                      p: 1,
-                      display: 'flex',
-                      mr: 2,
-                    }}
-                  >
+                  <Box sx={{ backgroundColor: 'info.main', borderRadius: '50%', p: 1, display: 'flex', mr: 2 }}>
+                    <TrendingUpIcon sx={{ color: 'white' }} />
+                  </Box>
+                  <Typography variant="h6" component="div">Pedidos do Mês</Typography>
+                </Box>
+                {isLoading ? <Skeleton variant="text" width={80} height={48} /> : (
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {resumo?.pedidosMes ?? 0}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  Pedidos criados no mês atual
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Card 3: Faturamento do Mês */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3, display: 'flex', flexDirection: 'column', height: '100%',
+                  border: '1px solid', borderColor: 'divider', borderRadius: 2,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ backgroundColor: 'success.main', borderRadius: '50%', p: 1, display: 'flex', mr: 2 }}>
+                    <ReportsIcon sx={{ color: 'white' }} />
+                  </Box>
+                  <Typography variant="h6" component="div">Faturamento</Typography>
+                </Box>
+                {isLoading ? <Skeleton variant="text" width={120} height={48} /> : (
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {formatCurrency(resumo?.valorTotalMes ?? 0)}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  Valor total no mês atual
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Card 4: Clientes / Produtos */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3, display: 'flex', flexDirection: 'column', height: '100%',
+                  border: '1px solid', borderColor: 'divider', borderRadius: 2,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ backgroundColor: 'secondary.main', borderRadius: '50%', p: 1, display: 'flex', mr: 2 }}>
                     <ClientesIcon sx={{ color: 'white' }} />
                   </Box>
-                  <Typography variant="h6" component="div">
-                    Clientes
-                  </Typography>
+                  <Typography variant="h6" component="div">Cadastros</Typography>
                 </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {estatisticas.totalClientes}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Total de clientes ativos
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip
-                    size="small"
-                    icon={<AddIcon fontSize="small" />}
-                    label="Novo Cliente"
-                    component={Link}
-                    href="/clientes/novo"
-                    clickable
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </Box>
-              </Paper>
-            </Grid>
-
-            {/* Card de Produtos */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box
-                    sx={{
-                      backgroundColor: 'success.main',
-                      borderRadius: '50%',
-                      p: 1,
-                      display: 'flex',
-                      mr: 2,
-                    }}
-                  >
-                    <ProdutosIcon sx={{ color: 'white' }} />
+                {isLoading ? <Skeleton variant="text" width={80} height={48} /> : (
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'baseline', mb: 1 }}>
+                    <Box>
+                      <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
+                        {totalClientes}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary"> clientes</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
+                        {totalProdutos}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary"> produtos</Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="h6" component="div">
-                    Produtos
-                  </Typography>
-                </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {estatisticas.totalProdutos}
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  Ativos no sistema
                 </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Total de produtos ativos
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-                  <Chip
-                    size="small"
-                    icon={<AddIcon fontSize="small" />}
-                    label="Novo Produto"
-                    component={Link}
-                    href="/produtos/novo"
-                    clickable
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </Box>
               </Paper>
             </Grid>
           </Grid>
 
-          {/* Seção de Pedidos Recentes */}
-          <Typography variant="h5" sx={{ mb: 2, fontWeight: 'medium' }}>
-            Pedidos Recentes
-          </Typography>
-
-          {/* Conteúdo condicional para pedidos */}
-          {pedidos.length === 0 ? (
-            <Paper sx={{ p: 3, textAlign: 'center', mb: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                Nenhum pedido recente encontrado.
+          {/* ── Status dos Pedidos ──────────────────────────────────── */}
+          {porStatus.length > 0 && (
+            <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Status dos Pedidos
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                component={Link}
-                href="/pedidos/novo"
-                sx={{ mt: 2 }}
-              >
-                Criar Novo Pedido
-              </Button>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {porStatus.map((item) => (
+                  <Box key={item.status}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {STATUS_LABELS[item.status] || item.status}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.quantidade} ({item.percentual.toFixed(1)}%)
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={item.percentual}
+                      sx={{
+                        height: 8, borderRadius: 1,
+                        backgroundColor: 'grey.200',
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: STATUS_COLORS[item.status] || 'grey.500',
+                          borderRadius: 1,
+                        },
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Box>
             </Paper>
-          ) : (
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* Lista de pedidos recentes seria exibida aqui */}
-              {pedidos.map((pedido) => (
-                <Grid item xs={12} key={pedido.id}>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      display: 'flex',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      alignItems: { xs: 'flex-start', sm: 'center' },
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        Pedido #{pedido.id}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Cliente: {pedido.cliente?.nome || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Data:{' '}
-                        {new Date(pedido.data_pedido || pedido.dataPedido || '').toLocaleDateString(
-                          'pt-BR'
-                        )}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: { xs: 2, sm: 0 } }}>
-                      <Typography variant="h6" color="primary.main" sx={{ mr: 2 }}>
-                        {formatCurrency(pedido.valor_total || pedido.valorTotal || 0)}
-                      </Typography>
-                      <StatusChip status={pedido.status} />
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
           )}
 
-          {/* Seção de Atividades Recentes */}
-          <Grid container spacing={3}>
-            {/* Aqui você pode adicionar widgets adicionais como gráficos ou relatórios resumidos */}
-          </Grid>
+          {/* ── Pedidos Recentes ─────────────────────────────────────── */}
+          <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Pedidos Recentes
+            </Typography>
+
+            {isLoading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} variant="rectangular" height={48} sx={{ borderRadius: 1 }} />
+                ))}
+              </Box>
+            ) : pedidosRecentes.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  Nenhum pedido recente encontrado.
+                </Typography>
+                <Button variant="contained" startIcon={<AddIcon />} component={Link} href="/pedidos/novo">
+                  Criar Novo Pedido
+                </Button>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Data</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Itens</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }} align="right">Valor</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {pedidosRecentes.map((pedido) => (
+                      <TableRow
+                        key={pedido.id}
+                        hover
+                        sx={{ cursor: 'pointer', '&:last-child td': { border: 0 } }}
+                        component={Link}
+                        href={`/pedidos/${pedido.id}`}
+                      >
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            #{pedido.id}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{formatDate(pedido.dataPedido)}</TableCell>
+                        <TableCell>{pedido.quantidadeItens}</TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2" fontWeight={600} color="primary.main">
+                            {formatCurrency(pedido.valorTotal)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <StatusChip status={pedido.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Paper>
+
+          {/* ── Ações Rápidas ──────────────────────────────────────── */}
+          <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Ações Rápidas
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              <Button variant="contained" startIcon={<AddIcon />} component={Link} href="/pedidos/novo">
+                Novo Pedido
+              </Button>
+              <Button variant="outlined" startIcon={<ProdutosIcon />} component={Link} href="/produtos/novo">
+                Novo Produto
+              </Button>
+              <Button variant="outlined" startIcon={<ReportsIcon />} component={Link} href="/relatorios">
+                Ver Relatórios
+              </Button>
+            </Box>
+          </Paper>
         </Box>
       )}
     </PageContainer>
