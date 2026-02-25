@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { extractErrorMessage } from '@/services/api';
 import { authService } from '@/services/auth.service';
 import { loggers } from '@/utils/logger';
 
@@ -27,6 +27,15 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === 'true';
+
+  useEffect(() => {
+    if (sessionExpired) {
+      // Limpar o query param sem recarregar a página
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [sessionExpired]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +46,16 @@ export default function LoginPage() {
       // Usar o serviço de autenticação em vez de fetch direto
       const data = await authService.login({ email, senha });
       login(data.access_token, data.refresh_token, data.usuario);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Erro de login:', error);
-      setError(extractErrorMessage(error) || 'Falha na autenticação. Verifique seu email e senha.');
+      if (!error.response) {
+        // Erro de rede — servidor indisponível
+        setError('Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.');
+      } else if (error.response?.status === 401) {
+        setError('Email ou senha incorretos.');
+      } else {
+        setError(error.response?.data?.message || 'Erro ao fazer login. Tente novamente.');
+      }
       setLoading(false);
     }
   };
@@ -96,6 +112,11 @@ export default function LoginPage() {
             </Typography>
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: '100%' }}>
+            {sessionExpired && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Sua sessão expirou. Por favor, faça login novamente.
+              </Alert>
+            )}
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}

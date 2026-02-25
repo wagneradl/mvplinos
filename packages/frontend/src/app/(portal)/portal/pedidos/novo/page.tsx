@@ -52,6 +52,24 @@ function formatCurrency(value: number): string {
   });
 }
 
+/** Retorna step de incremento baseado no tipo de medida */
+function getStep(tipoMedida?: string): number {
+  return tipoMedida === 'kg' || tipoMedida === 'lt' ? 0.1 : 1;
+}
+
+/** Retorna quantidade mínima baseada no tipo de medida */
+function getMin(tipoMedida?: string): number {
+  return tipoMedida === 'kg' || tipoMedida === 'lt' ? 0.1 : 1;
+}
+
+/** Formata quantidade conforme tipo de medida */
+function formatQty(value: number, tipoMedida?: string): number {
+  if (tipoMedida === 'kg' || tipoMedida === 'lt') {
+    return Math.round(value * 1000) / 1000; // 3 casas decimais
+  }
+  return Math.floor(value); // inteiro para unidades
+}
+
 interface ProdutoComQuantidade extends Produto {
   quantidade: number;
 }
@@ -81,10 +99,10 @@ export default function NovoPedidoPage() {
   const getQtd = (produtoId: number) => quantidades[produtoId] || 0;
 
   // Update quantity
-  const setQtd = (produtoId: number, value: number) => {
-    const newVal = Math.max(0, Math.floor(value));
+  const setQtd = (produtoId: number, value: number, tipoMedida?: string) => {
+    const newVal = Math.max(0, formatQty(value, tipoMedida));
     setQuantidades((prev) => {
-      if (newVal === 0) {
+      if (newVal === 0 || newVal < 0.001) {
         const { [produtoId]: _, ...rest } = prev;
         return rest;
       }
@@ -92,12 +110,14 @@ export default function NovoPedidoPage() {
     });
   };
 
-  const increment = (produtoId: number) => {
-    setQtd(produtoId, getQtd(produtoId) + 1);
+  const increment = (produtoId: number, tipoMedida?: string) => {
+    const step = getStep(tipoMedida);
+    setQtd(produtoId, getQtd(produtoId) + step, tipoMedida);
   };
 
-  const decrement = (produtoId: number) => {
-    setQtd(produtoId, getQtd(produtoId) - 1);
+  const decrement = (produtoId: number, tipoMedida?: string) => {
+    const step = getStep(tipoMedida);
+    setQtd(produtoId, getQtd(produtoId) - step, tipoMedida);
   };
 
   // Selected items (quantity > 0)
@@ -283,7 +303,7 @@ export default function NovoPedidoPage() {
                           >
                             <IconButton
                               size="small"
-                              onClick={() => decrement(produto.id)}
+                              onClick={() => decrement(produto.id, produto.tipo_medida)}
                               disabled={qty === 0}
                               color="primary"
                             >
@@ -292,15 +312,17 @@ export default function NovoPedidoPage() {
                             <TextField
                               value={qty}
                               onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) setQtd(produto.id, val);
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val)) setQtd(produto.id, val, produto.tipo_medida);
                               }}
+                              type="number"
                               size="small"
                               inputProps={{
                                 min: 0,
+                                step: getStep(produto.tipo_medida),
                                 style: {
                                   textAlign: 'center',
-                                  width: 48,
+                                  width: 64,
                                   padding: '4px 0',
                                 },
                               }}
@@ -308,7 +330,7 @@ export default function NovoPedidoPage() {
                             />
                             <IconButton
                               size="small"
-                              onClick={() => increment(produto.id)}
+                              onClick={() => increment(produto.id, produto.tipo_medida)}
                               color="primary"
                             >
                               <AddIcon fontSize="small" />
