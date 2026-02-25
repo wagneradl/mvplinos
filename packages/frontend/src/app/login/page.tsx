@@ -94,9 +94,6 @@ export default function LoginPage() {
             <Typography component="h1" variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
               Lino&apos;s Panificadora
             </Typography>
-            <Typography variant="subtitle1" sx={{ mt: 1, color: 'text.secondary' }}>
-              Sistema de Gestão
-            </Typography>
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: '100%' }}>
             {error && (
