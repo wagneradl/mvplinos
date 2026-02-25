@@ -117,7 +117,7 @@ export function UsuarioForm({ usuario, onSubmit, isLoading = false }: UsuarioFor
   // Buscar lista de clientes ativos para o dropdown
   const { data: clientes = [], isLoading: clientesLoading } = useQuery({
     queryKey: ['clientes-ativos-select'],
-    queryFn: () => ClientesService.listarTodosClientes(200, 'ativo'),
+    queryFn: () => ClientesService.listarTodosClientes(100, 'ativo'),
     staleTime: 30000,
   });
 

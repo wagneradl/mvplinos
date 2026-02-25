@@ -29,6 +29,11 @@ import { LoggerModule } from './common/logger/logger.module';
       useFactory: (config: ConfigService) => ({
         throttlers: [
           {
+            name: 'default',
+            ttl: 60 * 1000,
+            limit: config.get<number>('THROTTLE_DEFAULT_LIMIT', 100),
+          },
+          {
             name: 'login',
             ttl: config.get<number>('THROTTLE_LOGIN_TTL', 60) * 1000,
             limit: config.get<number>('THROTTLE_LOGIN_LIMIT', 5),

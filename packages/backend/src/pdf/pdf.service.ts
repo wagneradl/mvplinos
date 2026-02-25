@@ -135,15 +135,8 @@ export class PdfService implements OnModuleInit {
         );
         writeFileSync(pdfPath, emptyPDF);
         const relativePath = pdfPath.replace(process.cwd(), '').replace(/^\/+/, '');
-        if (this.useSupabase) {
-          // Em modo Supabase mock, path deve ser o local real do arquivo
-          return {
-            path: relativePath,
-            url: `https://example.com/pedido-${pedidoData.id}.pdf`,
-          };
-        } else {
-          return relativePath;
-        }
+        // In mock mode, always return local path — file is never uploaded to Supabase
+        return relativePath;
       }
 
       browser = await puppeteer.launch({
@@ -706,14 +699,8 @@ export class PdfService implements OnModuleInit {
           '| relative:',
           relativePath,
         );
-        if (this.useSupabase) {
-          return {
-            path: relativePath,
-            url: `https://example.com/${relatorioFilename}`,
-          };
-        } else {
-          return relativePath;
-        }
+        // In mock mode, always return local path — file is never uploaded to Supabase
+        return relativePath;
       }
 
       browser = await puppeteer.launch({

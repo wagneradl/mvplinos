@@ -23,7 +23,7 @@ import { PermissoesGuard } from '../auth/guards/permissoes.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @ApiTags('produtos')
 @Controller('produtos')
 @UseGuards(JwtAuthGuard, PermissoesGuard)

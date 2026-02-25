@@ -64,7 +64,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  @SkipThrottle()
+  @SkipThrottle({ login: true, reset: true })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Revogar refresh token (logout)' })
   @ApiResponse({ status: 200, description: 'Logout realizado com sucesso' })
@@ -74,7 +74,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @SkipThrottle()
+  @SkipThrottle({ login: true, reset: true })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Obter informações do usuário logado' })
   @ApiResponse({ status: 200, description: 'Informações do usuário retornadas com sucesso' })

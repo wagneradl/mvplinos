@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequerPermissoes } from '../auth/decorators/requer-permissoes.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 export class AdminController {

@@ -28,7 +28,7 @@ import { UsuarioAutenticado } from '../auth/interfaces/usuario-autenticado.inter
 import { debugLog } from '../common/utils/debug-log';
 import { SkipThrottle } from '@nestjs/throttler';
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @ApiTags('clientes')
 @Controller('clientes')
 @UseGuards(JwtAuthGuard, TenantGuard, PermissoesGuard)

@@ -1080,10 +1080,19 @@ export class PedidosService {
       }
     } catch (error) {
       this.logger.error(`Erro ao gerar PDF do relatório: ${error}`);
-      if (error instanceof Error) {
-        throw new BadRequestException(`Erro ao gerar PDF do relatório: ${error.message}`);
+      if (error instanceof Error && error.stack) {
+        this.logger.error(`Stack: ${error.stack}`);
       }
-      throw new BadRequestException('Erro ao gerar PDF do relatório');
+      // Let HTTP exceptions pass through without re-wrapping
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro ao gerar PDF do relatório';
+      throw new BadRequestException(`Erro ao gerar PDF do relatório: ${errorMessage}`);
     }
   }
 

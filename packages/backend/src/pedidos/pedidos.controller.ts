@@ -42,7 +42,7 @@ import { UsuarioAutenticado } from '../auth/interfaces/usuario-autenticado.inter
 import { debugLog } from '../common/utils/debug-log';
 import { SkipThrottle } from '@nestjs/throttler';
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @ApiTags('pedidos')
 @Controller('pedidos')
 @UseGuards(JwtAuthGuard, TenantGuard, PermissoesGuard)
@@ -156,27 +156,16 @@ export class PedidosController {
       this.logger.error(
         `Erro ao gerar PDF do relatório: ${error instanceof Error ? error.message : error}`,
       );
-      if (error instanceof BadRequestException) {
-        // Loga o corpo da exceção se disponível
-        if (error.getResponse) {
-          const resp = error.getResponse();
-          const safe =
-            typeof resp === 'object' && resp
-              ? {
-                  statusCode: (resp as any).statusCode,
-                  message: (resp as any).message,
-                  error: (resp as any).error,
-                }
-              : { message: String(resp) };
-          debugLog('PedidosController', 'BadRequestException payload:', safe);
-        }
+      if (error instanceof Error && error.stack) {
+        this.logger.error(`Stack: ${error.stack}`);
+      }
+      // Let HTTP exceptions pass through without re-wrapping
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
         throw error;
       }
-      // Loga stacktrace para erros desconhecidos
-      if (error instanceof Error && error.stack) {
-        debugLog('PedidosController', 'Stacktrace:', error.stack);
-      }
-      throw new BadRequestException('Erro ao gerar PDF do relatório');
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro ao gerar PDF do relatório';
+      throw new BadRequestException(`Erro ao gerar PDF do relatório: ${errorMessage}`);
     }
   }
 

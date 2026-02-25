@@ -456,15 +456,15 @@ describe('PedidosController', () => {
       );
     });
 
-    it('deve lançar BadRequestException se PDF local não existe', async () => {
+    it('deve lançar NotFoundException se PDF local não existe', async () => {
       const res = mockResponse();
       mockPedidosService.generateReportPdf.mockResolvedValue('/tmp/report.pdf');
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      // NotFoundException é capturada pelo catch e re-lançada como BadRequestException
+      // NotFoundException passa direto pelo catch (não é re-wrappada)
       await expect(
         controller.generateReportPdf('2024-01-01', '2024-12-31', undefined as any, res),
-      ).rejects.toThrow('Erro ao gerar PDF do relatório');
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('deve converter InternalServerErrorException em BadRequestException', async () => {

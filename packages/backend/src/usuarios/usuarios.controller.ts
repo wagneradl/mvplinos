@@ -35,7 +35,7 @@ interface CallerContext {
   callerId: number;
 }
 
-@SkipThrottle()
+@SkipThrottle({ login: true, reset: true })
 @ApiTags('Usuários')
 @Controller('usuarios')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard, PermissoesGuard)
