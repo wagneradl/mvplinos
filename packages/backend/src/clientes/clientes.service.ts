@@ -216,6 +216,10 @@ export class ClientesService {
         } else if (status === 'inativo') {
           // Clientes inativos: status = 'inativo' OU soft-deleted
           where.OR = [{ status: 'inativo', deleted_at: null }, { deleted_at: { not: null } }];
+        } else if (status === 'pendente_aprovacao') {
+          // Clientes pendentes de aprovação: status = 'pendente_aprovacao' E não deletados
+          where.status = 'pendente_aprovacao';
+          where.deleted_at = null;
         } else {
           // Se nenhum status fornecido (filtro "Todos"), mostrar todos os clientes não deletados
           // E também clientes com status inativo que foram soft-deleted

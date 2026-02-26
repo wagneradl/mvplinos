@@ -30,6 +30,7 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Edit as EditIcon,
   Block as BlockIcon,
@@ -342,7 +343,12 @@ export default function ClientesPage() {
                 return (
                   <TableRow
                     key={cliente.id}
-                    sx={isPendente ? { bgcolor: 'warning.light', '& td': { bgcolor: 'transparent' } } : undefined}
+                    sx={isPendente ? {
+                      borderLeft: '4px solid',
+                      borderLeftColor: 'warning.main',
+                      bgcolor: (theme: any) => alpha(theme.palette.warning.light, 0.15),
+                      '& td': { bgcolor: 'transparent' },
+                    } : undefined}
                   >
                     <TableCell>{formatCNPJ(cliente.cnpj)}</TableCell>
                     <TableCell>
