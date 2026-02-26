@@ -224,7 +224,7 @@ describe('Auth Integration — Fluxo de Registro', () => {
 
       await expect(
         service.login({ email: 'carlos@padariaintegracao.com', senha: 'Senha@Forte123' }),
-      ).rejects.toThrow(new UnauthorizedException('Cadastro da empresa foi rejeitado'));
+      ).rejects.toThrow(new UnauthorizedException('O cadastro da sua empresa foi rejeitado.'));
     });
   });
 

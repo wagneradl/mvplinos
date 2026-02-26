@@ -48,13 +48,18 @@ export default function LoginPage() {
       login(data.access_token, data.refresh_token, data.usuario);
     } catch (error: any) {
       logger.error('Erro de login:', error);
-      if (!error.response) {
-        // Erro de rede — servidor indisponível
+
+      // auth.service usa fetch nativo → lança Error plain com message do backend
+      const message = error?.message || '';
+
+      if (error instanceof TypeError && message.includes('fetch')) {
+        // Erro de rede real — servidor down ou CORS
         setError('Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.');
-      } else if (error.response?.status === 401) {
-        setError('Email ou senha incorretos.');
+      } else if (message) {
+        // Mensagem do backend (via auth.service.ts throw new Error(errorMessage))
+        setError(message);
       } else {
-        setError(error.response?.data?.message || 'Erro ao fazer login. Tente novamente.');
+        setError('Erro ao fazer login. Tente novamente.');
       }
       setLoading(false);
     }

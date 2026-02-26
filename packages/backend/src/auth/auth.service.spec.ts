@@ -305,7 +305,7 @@ describe('AuthService', () => {
 
       await expect(
         service.login({ email: 'admin@padaria.com', senha: 'senha123' }),
-      ).rejects.toThrow(new UnauthorizedException('Empresa aguardando aprovação'));
+      ).rejects.toThrow(new UnauthorizedException('Seu cadastro está em análise. Você será notificado quando aprovado.'));
     });
 
     it('deve bloquear login para cliente rejeitado', async () => {
@@ -318,7 +318,7 @@ describe('AuthService', () => {
 
       await expect(
         service.login({ email: 'admin@padaria.com', senha: 'senha123' }),
-      ).rejects.toThrow(new UnauthorizedException('Cadastro da empresa foi rejeitado'));
+      ).rejects.toThrow(new UnauthorizedException('O cadastro da sua empresa foi rejeitado.'));
     });
 
     it('deve bloquear login para cliente suspenso', async () => {

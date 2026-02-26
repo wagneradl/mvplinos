@@ -133,14 +133,35 @@ export class AuthService {
       where: { email: loginDto.email },
       include: {
         papel: true,
+        cliente: true,
       },
     });
 
-    if (!usuario || usuario.status.toLowerCase() !== 'ativo') {
+    if (!usuario) {
       this.structuredLogger.logWithContext('warn', 'Login falhou', 'AuthService', {
         email: loginDto.email,
-        motivo: !usuario ? 'usuario_nao_encontrado' : 'usuario_inativo',
+        motivo: 'usuario_nao_encontrado',
       });
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (usuario.status.toLowerCase() !== 'ativo') {
+      this.structuredLogger.logWithContext('warn', 'Login falhou', 'AuthService', {
+        email: loginDto.email,
+        motivo: 'usuario_inativo',
+        clienteStatus: usuario.cliente?.status,
+      });
+
+      // Mensagem específica baseada no status do cliente vinculado
+      if (usuario.cliente?.status === 'pendente_aprovacao') {
+        throw new UnauthorizedException(
+          'Seu cadastro está em análise. Você será notificado quando aprovado.',
+        );
+      }
+      if (usuario.cliente?.status === 'rejeitado') {
+        throw new UnauthorizedException('O cadastro da sua empresa foi rejeitado.');
+      }
+
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
@@ -154,16 +175,20 @@ export class AuthService {
     }
 
     // Verificar status do cliente vinculado (se houver)
+    // Cobre tanto usuários inativos (tratados acima) quanto usuários ativos cujo
+    // cliente mudou de status após a aprovação inicial
     if (usuario.cliente_id) {
       const cliente = await this.prisma.cliente.findUnique({
         where: { id: usuario.cliente_id },
       });
       if (cliente) {
         if (cliente.status === 'pendente_aprovacao') {
-          throw new UnauthorizedException('Empresa aguardando aprovação');
+          throw new UnauthorizedException(
+            'Seu cadastro está em análise. Você será notificado quando aprovado.',
+          );
         }
         if (cliente.status === 'rejeitado') {
-          throw new UnauthorizedException('Cadastro da empresa foi rejeitado');
+          throw new UnauthorizedException('O cadastro da sua empresa foi rejeitado.');
         }
         if (cliente.status === 'suspenso') {
           throw new UnauthorizedException(
